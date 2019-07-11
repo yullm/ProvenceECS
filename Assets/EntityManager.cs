@@ -7,7 +7,7 @@ public class EntityDictionary : SerializableDicitonary<Entity, GameObject>{};
 public class EntityManager : MonoBehaviour
 {   
 
-    public int worldId;
+    public World world;
     public EntityDictionary entities = new EntityDictionary();
     //Pooling old Entities
     public List<Entity> availableEntities = new List<Entity>();
@@ -35,6 +35,7 @@ public class EntityManager : MonoBehaviour
             obj.transform.parent = this.gameObject.transform;
             //REGISTER TRANSFORM WHEN COMPONENT MANAGER IS CREATED
             entity =  entities.Count;
+            entity.worldId = world.id;
             entities.Add(entity,obj);
         }
         return entity;

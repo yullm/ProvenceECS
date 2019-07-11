@@ -39,6 +39,7 @@ public class EntityManagerEditor : Editor
                 if(GUILayout.Button("Remove")){
                     ((EntityManager)target).RemoveEntity(entityId);
                     EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                    Selection.selectionChanged();
                 }
                 
                 EditorGUILayout.EndHorizontal();
@@ -52,16 +53,18 @@ public class EntityManagerEditor : Editor
     public override void OnInspectorGUI(){
         obj.Update();
 
-        GUILayout.Label("World ID: " + obj.FindProperty("worldId").intValue.ToString(), EditorStyles.boldLabel); 
+        //GUILayout.Label("World ID: " + obj.FindProperty("world").FindPropertyRelative("id").intValue.ToString(), EditorStyles.boldLabel); 
 
         GUILayout.Label("Methods: ", EditorStyles.boldLabel);  
         if(GUILayout.Button("Create Entity")){
             ((EntityManager)target).CreateEntity();
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            Selection.selectionChanged();
         }
         if(GUILayout.Button("Clear Entities")){
             ((EntityManager)target).ClearEntities();
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            Selection.selectionChanged();
         }        
         DrawEntities();
         obj.ApplyModifiedProperties();

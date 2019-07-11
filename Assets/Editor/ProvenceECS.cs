@@ -10,8 +10,15 @@ public class ProvenceECS : EditorWindow
     private const string dir = "ProvenceECS/";
     private WorldManager worldManager;
     private SerializedObject so;
-
     private GUISkin defaultSkin;
+    //DISPLAY VARIABLES
+    private bool creatingWorld = false;
+    string newWorldName = "New World";
+    World selectedWorld;
+    SerializedObject serializedEntityManager;
+    int worldToolbarIndex = 0;
+    string[] worldToolbarTitles = {"Entities","Systems","Events"};
+    //END DISPLAY VARIABLES
 
     [MenuItem(dir + "Open")]
     public static void ShowWindow(){
@@ -24,6 +31,11 @@ public class ProvenceECS : EditorWindow
         so = new UnityEditor.SerializedObject(this);
         worldManager = FindObjectOfType<WorldManager>();
         defaultSkin = (GUISkin) Resources.Load("ProvenceDefaultSkin");
+    }
+
+    public void OnEnable(){
+        Selection.selectionChanged += SelectionChanged;
+        SelectionChanged();
     }
 
     public void Initialize(){
@@ -53,11 +65,93 @@ public class ProvenceECS : EditorWindow
 
     void DrawWorldManager(){
         GUILayout.BeginHorizontal();
-        foreach(World world in worldManager.worlds.values){
-            if(GUILayout.Button(world.name)) Debug.Log(world.name);
-            worldManager.activeWorld = world;
+        if(!creatingWorld){
+            foreach(World world in worldManager.worlds){
+                if(world){
+                    if(GUILayout.Button(world.worldName,GUILayout.Width(50),GUILayout.Height(50))){ 
+                        Selection.objects = new Object[]{world.gameObject};
+                    }
+                }
+            }
+
+            GUILayout.FlexibleSpace();
+
+            if(GUILayout.Button("New World",GUILayout.Width(50),GUILayout.Height(50))){
+                creatingWorld = true;
+            }
+            
+        }else{
+            newWorldName = GUILayout.TextField(newWorldName,GUILayout.ExpandWidth(true),
+                GUILayout.Height(50),
+                GUILayout.Width(position.width - 120)
+            );
+            GUILayout.FlexibleSpace();
+            if(GUILayout.Button("Done",GUILayout.Width(50),GUILayout.Height(50))){
+                worldManager.CreateNewWorld(newWorldName);
+                creatingWorld = false;
+                newWorldName = "New World";
+            }
+            if(GUILayout.Button("X",GUILayout.Width(50),GUILayout.Height(50))){
+                creatingWorld = false;
+                newWorldName = "New World";
+            }
         }
         GUILayout.EndHorizontal();
+        if(selectedWorld && !creatingWorld){
+            worldToolbarIndex = GUILayout.Toolbar(worldToolbarIndex,worldToolbarTitles);
+            DrawEntitiesForWorld();
+        }
+    }
+
+    void SelectionChanged(){
+        GameObject selectedObject = null;
+        if(Selection.objects.Length >= 1){
+            selectedObject = (GameObject)Selection.objects[0];
+            if(selectedObject){
+                switch(selectedObject.tag){
+                    case "World":
+                        selectedWorld = selectedObject.GetComponent<World>();
+                        serializedEntityManager = new SerializedObject(selectedWorld.entityManager);
+                        break;
+                }
+                Repaint();
+            }
+        }
+    }
+
+    void DrawEntitiesForWorld(){
+        if(selectedWorld && serializedEntityManager != null){
+            SerializedProperty entityKeys = serializedEntityManager.FindProperty("entities.keys");
+            SerializedProperty entityValues = serializedEntityManager.FindProperty("entities.values");
+
+            GUILayout.Label("Available Entities: " + serializedEntityManager.FindProperty("availableEntities").arraySize, EditorStyles.boldLabel);  
+
+            GUILayout.Label("Live Entities: ", EditorStyles.boldLabel);  
+            EditorGUI.indentLevel += 1;
+            for(int i = 0; i < entityKeys.arraySize; i++){
+                
+                int entityId = entityKeys.GetArrayElementAtIndex(i).FindPropertyRelative("id").intValue;
+                GameObject go = entityValues.GetArrayElementAtIndex(i).objectReferenceValue as GameObject;
+                if(go && go.activeSelf){
+                    
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField(entityKeys.GetArrayElementAtIndex(i).FindPropertyRelative("id").intValue.ToString(), EditorStyles.boldLabel, GUILayout.MaxWidth(30));
+                    EditorGUILayout.PropertyField(entityValues.GetArrayElementAtIndex(i),GUIContent.none);
+                    
+                    if(GUILayout.Button("Select")){
+                        Selection.objects = new GameObject[]{go};
+                    }
+                    if(GUILayout.Button("Remove")){
+                        selectedWorld.RemoveEntity(entityId);
+                        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                    }
+                    
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
+
+            EditorGUI.indentLevel -= 1;
+        }
     }
 
 }
