@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
-public class EntityDictionary : SerializableDicitonary<Entity, GameObject>{};
+public class EntityDictionary : SerializableDictionary<Entity, GameObject>{};
 public class EntityManager : MonoBehaviour
 {   
 

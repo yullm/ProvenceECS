@@ -4,7 +4,7 @@ using UnityEngine;
 
 
 [System.Serializable]
-public class SerializableDicitonary<K,V> : Dictionary<K,V>, ISerializationCallbackReceiver
+public class SerializableDictionary<K,V> : Dictionary<K,V>, ISerializationCallbackReceiver
 {
     public List<K> keys = new List<K>();
     public List<V> values = new List<V>();

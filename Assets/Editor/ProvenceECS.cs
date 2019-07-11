@@ -99,15 +99,18 @@ public class ProvenceECS : EditorWindow
         GUILayout.EndHorizontal();
         if(selectedWorld && !creatingWorld){
             worldToolbarIndex = GUILayout.Toolbar(worldToolbarIndex,worldToolbarTitles);
-            DrawEntitiesForWorld();
+            switch(worldToolbarIndex){
+                case 0:
+                    DrawEntitiesForWorld();
+                    break;
+            }
         }
     }
 
     void SelectionChanged(){
-        GameObject selectedObject = null;
         if(Selection.objects.Length >= 1){
-            selectedObject = (GameObject)Selection.objects[0];
-            if(selectedObject){
+            var selectedObject = Selection.objects[0] as GameObject;
+            if(selectedObject != null){
                 switch(selectedObject.tag){
                     case "World":
                         selectedWorld = selectedObject.GetComponent<World>();
@@ -120,7 +123,16 @@ public class ProvenceECS : EditorWindow
     }
 
     void DrawEntitiesForWorld(){
+        EditorGUI.indentLevel += 1;
         if(selectedWorld && serializedEntityManager != null){
+            ((SerializedObject) serializedEntityManager).Update();
+            GUILayout.Label("Methods: ", EditorStyles.boldLabel);  
+            if(GUILayout.Button("Create Entity")){
+                selectedWorld.CreateEntity();
+                EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                Selection.selectionChanged();
+            }      
+
             SerializedProperty entityKeys = serializedEntityManager.FindProperty("entities.keys");
             SerializedProperty entityValues = serializedEntityManager.FindProperty("entities.values");
 
@@ -151,6 +163,7 @@ public class ProvenceECS : EditorWindow
             }
 
             EditorGUI.indentLevel -= 1;
+            ((SerializedObject) serializedEntityManager).ApplyModifiedProperties();
         }
     }
 
