@@ -123,8 +123,8 @@ public class ProvenceECS : EditorWindow
     }
 
     void DrawEntitiesForWorld(){
-        EditorGUI.indentLevel += 1;
         if(selectedWorld && serializedEntityManager != null){
+            GUILayout.Label("World ID: " + selectedWorld.id, EditorStyles.boldLabel); 
             ((SerializedObject) serializedEntityManager).Update();
             GUILayout.Label("Methods: ", EditorStyles.boldLabel);  
             if(GUILayout.Button("Create Entity")){

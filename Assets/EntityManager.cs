@@ -4,6 +4,7 @@ using UnityEngine;
 
 [System.Serializable]
 public class EntityDictionary : SerializableDictionary<Entity, GameObject>{};
+
 public class EntityManager : MonoBehaviour
 {   
 
@@ -44,7 +45,6 @@ public class EntityManager : MonoBehaviour
     public void RemoveEntity(Entity entity){
         entities[entity].SetActive(false);
         if(!availableEntities.Contains(entity)) availableEntities.Add(entity);
-        //availableEntities.Sort();
     }
 
     public void RemoveEntity(int id){
@@ -54,6 +54,10 @@ public class EntityManager : MonoBehaviour
                 return;
             }
         }
+    }
+
+    public GameObject LookUpEntity(Entity entity){
+        return entities[entity];
     }
 
     public void ClearEntities(){

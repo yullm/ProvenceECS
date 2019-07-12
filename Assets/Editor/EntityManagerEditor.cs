@@ -53,7 +53,7 @@ public class EntityManagerEditor : Editor
     public override void OnInspectorGUI(){
         obj.Update();
 
-        //GUILayout.Label("World ID: " + obj.FindProperty("world").FindPropertyRelative("id").intValue.ToString(), EditorStyles.boldLabel); 
+        GUILayout.Label("World ID: " + ((EntityManager)target).world.id, EditorStyles.boldLabel); 
 
         GUILayout.Label("Methods: ", EditorStyles.boldLabel);  
         if(GUILayout.Button("Create Entity")){

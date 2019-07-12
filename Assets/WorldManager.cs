@@ -20,7 +20,7 @@ public class WorldManager : MonoBehaviour
 
         EntityManager em = world.entityManager = go.AddComponent<EntityManager>();
         em.world = world;
-        ComponentManager cm = world.ComponentManager = go.AddComponent<ComponentManager>();
+        ComponentManager cm = world.componentManager = go.AddComponent<ComponentManager>();
         cm.world = world;
         
     }

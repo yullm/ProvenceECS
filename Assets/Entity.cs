@@ -42,3 +42,7 @@ public class Entity
     }*/
 
 }
+
+public class EntityHandle{
+    
+}
