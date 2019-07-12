@@ -8,6 +8,6 @@ public class ComponentDictionary : SerializableDictionary<System.Type,Dictionary
 
 public class ComponentManager : MonoBehaviour{
 
-    
+    public World world;
     
 }

@@ -8,6 +8,7 @@ public class WorldManager : MonoBehaviour
     public World activeWorld;
 
     public void CreateNewWorld(string worldName){
+
         GameObject go = new GameObject("World: " + worldName);
         go.tag = "World";
         go.transform.parent = transform;
@@ -16,8 +17,12 @@ public class WorldManager : MonoBehaviour
         world.worldName = worldName;
         world.manager = this;
         worlds[world.id] = world;
+
         EntityManager em = world.entityManager = go.AddComponent<EntityManager>();
         em.world = world;
+        ComponentManager cm = world.ComponentManager = go.AddComponent<ComponentManager>();
+        cm.world = world;
+        
     }
 
     public int GetNewWorldID(){

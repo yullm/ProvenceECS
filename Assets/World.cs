@@ -8,6 +8,7 @@ public class World : MonoBehaviour
     public string worldName;
     public WorldManager manager;
     public EntityManager entityManager;
+    public ComponentManager ComponentManager;
 
     public Entity CreateEntity(){
         return entityManager.CreateEntity();
