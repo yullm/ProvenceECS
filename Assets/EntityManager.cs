@@ -12,10 +12,9 @@ namespace ProvenceECS{
 
         public World world;
         public EntityDictionary entities = new EntityDictionary();
-        //Pooling old Entities
         public List<Entity> availableEntities = new List<Entity>();
 
-        public Entity CreateEntity(){
+        public EntityHandle CreateEntity(){
             Entity entity;
             if(availableEntities.Count > 0){
                 entity = availableEntities[0];
@@ -40,25 +39,25 @@ namespace ProvenceECS{
                 entity =  entities.Count;
                 entities.Add(entity,obj);
             }
-            return entity;
+            return new EntityHandle(){entity = entity, world = world, manager = this, gameObject = entities[entity]};
         }
 
-        public void RemoveEntity(Entity entity){
-            entities[entity].SetActive(false);
-            if(!availableEntities.Contains(entity)) availableEntities.Add(entity);
+        public void RemoveEntity(EntityHandle entityHandle){
+            entityHandle.gameObject.SetActive(false);
+            if(!availableEntities.Contains(entityHandle.entity)) availableEntities.Add(entityHandle.entity);
         }
 
         public void RemoveEntity(int id){
             foreach(KeyValuePair<Entity,GameObject> kvp in entities){
                 if(kvp.Key == id) {
-                    RemoveEntity(kvp.Key);
+                    RemoveEntity(LookUpEntity(kvp.Key));
                     return;
                 }
             }
         }
 
-        public GameObject LookUpEntity(Entity entity){
-            return entities[entity];
+        public EntityHandle LookUpEntity(Entity entity){
+            return new EntityHandle(){entity = entity, world = world, manager = this, gameObject = entities[entity]};
         }
 
         public void ClearEntities(){

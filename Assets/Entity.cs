@@ -45,9 +45,21 @@ namespace ProvenceECS{
     }
 
     public class EntityHandle{
-        public World world;
         public Entity entity;
+        public World world;
         public EntityManager manager;
-        public GameObject GameObject;
+        public GameObject gameObject;
+
+        public ComponentHandle<T> AddComponent<T>() where T : ProvenceComponent{
+            return world.AddComponent<T>(this);
+        }
+
+        public void RemoveComponent<T>() where T : ProvenceComponent{
+            world.RemoveComponent<T>(this);
+        }
+
+        public void Destroy(){
+            world.RemoveEntity(this);
+        }
     }
 }

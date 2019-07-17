@@ -8,8 +8,13 @@ namespace ProvenceECS{
 
     public class ComponentHandle<T> where T : ProvenceComponent{
         public Entity entity;
-        public ProvenceComponent component;
+        public T component;
         public World world;
+
+        public void Destroy(){
+            world.LookUpEntity(entity).RemoveComponent<T>();
+        }
+
     }
 
 }

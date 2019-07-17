@@ -12,25 +12,25 @@ namespace ProvenceECS{
         public EntityManager entityManager;
         public ComponentManager componentManager;
 
-        public Entity CreateEntity(){
+        public EntityHandle CreateEntity(){
             return entityManager.CreateEntity();
         }
 
-        public void RemoveEntity(Entity entity){
-            entityManager.RemoveEntity(entity);
-            componentManager.RemoveEntityEntries(entity);
+        public void RemoveEntity(EntityHandle entityHandle){
+            entityManager.RemoveEntity(entityHandle);
+            componentManager.RemoveEntityEntries(entityHandle);
         }
 
-        public GameObject LookUpEntity(Entity entity){
+        public EntityHandle LookUpEntity(Entity entity){
             return entityManager.LookUpEntity(entity);
         }
 
-        public T AddComponent<T>(Entity entity) where T : ProvenceComponent{
-            return componentManager.AddComponent<T>(entity);
+        public ComponentHandle<T> AddComponent<T>(EntityHandle entityHandle) where T : ProvenceComponent{
+            return componentManager.AddComponent<T>(entityHandle);
         }
 
-        public void RemoveComponent<T>(Entity entity) where T : ProvenceComponent{
-            entityManager.RemoveEntity(entity);
+        public void RemoveComponent<T>(EntityHandle entityHandle) where T : ProvenceComponent{
+            componentManager.RemoveComponent<T>(entityHandle);
         }
 
     }

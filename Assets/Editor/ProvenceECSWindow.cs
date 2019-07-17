@@ -156,7 +156,7 @@ namespace ProvenceECS{
                             Selection.objects = new GameObject[]{go};
                         }
                         if(GUILayout.Button("Remove")){
-                            selectedWorld.RemoveEntity(entityId);
+                            selectedWorld.RemoveEntity(selectedWorld.LookUpEntity(entityId));
                             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
                         }
                         
