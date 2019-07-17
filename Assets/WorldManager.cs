@@ -2,39 +2,42 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WorldManager : MonoBehaviour
-{
-    public World[] worlds = new World[0];
-    public World activeWorld;
+namespace ProvenceECS{
 
-    public void CreateNewWorld(string worldName){
+    public class WorldManager : MonoBehaviour
+    {
+        public World[] worlds = new World[0];
+        public World activeWorld;
 
-        GameObject go = new GameObject("World: " + worldName);
-        go.tag = "World";
-        go.transform.parent = transform;
-        World world = go.AddComponent<World>();
-        world.id = GetNewWorldID();
-        world.worldName = worldName;
-        world.manager = this;
-        worlds[world.id] = world;
+        public void CreateNewWorld(string worldName){
 
-        EntityManager em = world.entityManager = go.AddComponent<EntityManager>();
-        em.world = world;
-        ComponentManager cm = world.componentManager = go.AddComponent<ComponentManager>();
-        cm.world = world;
-        
-    }
+            GameObject go = new GameObject("World: " + worldName);
+            go.tag = "World";
+            go.transform.parent = transform;
+            World world = go.AddComponent<World>();
+            world.id = GetNewWorldID();
+            world.worldName = worldName;
+            world.manager = this;
+            worlds[world.id] = world;
 
-    public int GetNewWorldID(){
-        for(int i = 0; i < worlds.Length; i++){
-            if(worlds[i] == null) return i;
+            EntityManager em = world.entityManager = go.AddComponent<EntityManager>();
+            em.world = world;
+            ComponentManager cm = world.componentManager = go.AddComponent<ComponentManager>();
+            cm.world = world;
+            
         }
-        print("No room");
-        World[] newWorlds = new World[worlds.Length + 1];
-        for(int i = 0; i < worlds.Length; i++){
-            newWorlds[i] = worlds[i];
+
+        public int GetNewWorldID(){
+            for(int i = 0; i < worlds.Length; i++){
+                if(worlds[i] == null) return i;
+            }
+            print("No room");
+            World[] newWorlds = new World[worlds.Length + 1];
+            for(int i = 0; i < worlds.Length; i++){
+                newWorlds[i] = worlds[i];
+            }
+            worlds = newWorlds;
+            return worlds.Length - 1;
         }
-        worlds = newWorlds;
-        return worlds.Length - 1;
     }
 }

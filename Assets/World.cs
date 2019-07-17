@@ -2,33 +2,37 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class World : MonoBehaviour
-{
-    public int id;
-    public string worldName;
-    public WorldManager manager;
-    public EntityManager entityManager;
-    public ComponentManager componentManager;
+namespace ProvenceECS{
 
-    public Entity CreateEntity(){
-        return entityManager.CreateEntity();
-    }
+    public class World : MonoBehaviour
+    {
+        public int id;
+        public string worldName;
+        public WorldManager manager;
+        public EntityManager entityManager;
+        public ComponentManager componentManager;
 
-    public void RemoveEntity(Entity entity){
-        entityManager.RemoveEntity(entity);
-        componentManager.RemoveEntityEntries(entity);
-    }
+        public Entity CreateEntity(){
+            return entityManager.CreateEntity();
+        }
 
-    public GameObject LookUpEntity(Entity entity){
-        return entityManager.LookUpEntity(entity);
-    }
+        public void RemoveEntity(Entity entity){
+            entityManager.RemoveEntity(entity);
+            componentManager.RemoveEntityEntries(entity);
+        }
 
-    public T AddComponent<T>(Entity entity) where T : IComponent{
-        return componentManager.AddComponent<T>(entity);
-    }
+        public GameObject LookUpEntity(Entity entity){
+            return entityManager.LookUpEntity(entity);
+        }
 
-    public void RemoveComponent<T>(Entity entity) where T : IComponent{
-        entityManager.RemoveEntity(entity);
+        public T AddComponent<T>(Entity entity) where T : ProvenceComponent{
+            return componentManager.AddComponent<T>(entity);
+        }
+
+        public void RemoveComponent<T>(Entity entity) where T : ProvenceComponent{
+            entityManager.RemoveEntity(entity);
+        }
+
     }
 
 }
