@@ -16,11 +16,14 @@ namespace ProvenceECS{
 
         public EntityHandle CreateEntity(){
             Entity entity;
+            EntityHandle entityHandle = new EntityHandle{world = world, manager = this};
             if(availableEntities.Count > 0){
                 entity = availableEntities[0];
                 try{
                     entities[entity].SetActive(true);
                     availableEntities.Remove(entity);
+                    entityHandle.entity = entity;
+                    entityHandle.gameObject = entities[entity];
                 }catch(KeyNotFoundException e){
                     Debug.Log("Missing keys caught and solved, " + e);
                     foreach(KeyValuePair<Entity,GameObject> kvp in entities){
@@ -33,13 +36,19 @@ namespace ProvenceECS{
                 }  
             }else{
                 GameObject obj = new GameObject("Entity:" + entities.Count);
+                entity = obj.AddComponent<Entity>();
                 obj.tag = "Entity";
                 obj.transform.parent = this.gameObject.transform;
-                //REGISTER TRANSFORM WHEN COMPONENT MANAGER IS CREATED
-                entity =  entities.Count;
+                entity.id = entities.Count > 0 ? entities.keys[entities.keys.Count-1].id + 1 : 0;
                 entities.Add(entity,obj);
+                entityHandle.entity = entity;
+                entityHandle.gameObject = obj;
+                entityHandle.RegisterComponent<Transform>();
+                
+                entityHandle.AddComponent<TestComponentA>();
             }
-            return new EntityHandle(){entity = entity, world = world, manager = this, gameObject = entities[entity]};
+            print(entities.Count);
+            return entityHandle;
         }
 
         public void RemoveEntity(EntityHandle entityHandle){
@@ -49,11 +58,15 @@ namespace ProvenceECS{
 
         public void RemoveEntity(int id){
             foreach(KeyValuePair<Entity,GameObject> kvp in entities){
-                if(kvp.Key == id) {
+                if(kvp.Key.id == id) {
                     RemoveEntity(LookUpEntity(kvp.Key));
                     return;
                 }
             }
+        }
+
+        public void RemoveEntityPermanently(Entity entity){
+            entities.Remove(entity);
         }
 
         public EntityHandle LookUpEntity(Entity entity){
@@ -62,7 +75,7 @@ namespace ProvenceECS{
 
         public void ClearEntities(){
             foreach(KeyValuePair<Entity,GameObject> kvp in entities){
-                DestroyImmediate(kvp.Value);
+                world.RemoveEntity(world.LookUpEntity(kvp.Key));
             }
             availableEntities.Clear();
             entities.Clear();       

@@ -21,15 +21,24 @@ namespace ProvenceECS{
             componentManager.RemoveEntityEntries(entityHandle);
         }
 
+        public void RemoveEntityPermanently(Entity entity){
+            entityManager.RemoveEntityPermanently(entity);
+            componentManager.RemoveEntityEntriesPermanently(entity);
+        }
+
         public EntityHandle LookUpEntity(Entity entity){
             return entityManager.LookUpEntity(entity);
         }
 
-        public ComponentHandle<T> AddComponent<T>(EntityHandle entityHandle) where T : ProvenceComponent{
+        public ComponentHandle<T> AddComponent<T>(EntityHandle entityHandle) where T : Component{
             return componentManager.AddComponent<T>(entityHandle);
         }
 
-        public void RemoveComponent<T>(EntityHandle entityHandle) where T : ProvenceComponent{
+        public ComponentHandle<T> RegisterComponent<T>(EntityHandle entityHandle) where T : Component{
+            return componentManager.RegisterComponent<T>(entityHandle);
+        }
+
+        public void RemoveComponent<T>(EntityHandle entityHandle) where T : Component{
             componentManager.RemoveComponent<T>(entityHandle);
         }
 
