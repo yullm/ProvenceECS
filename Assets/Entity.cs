@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace ProvenceECS{
+    [ExecuteInEditMode]
     [System.Serializable]
     public class Entity : MonoBehaviour{
-        public int id;
-
-        public void OnDestroy(){
-            GetComponentInParent<World>().RemoveEntityPermanently(this);
+        public int id = -1;
+        void OnDestroy(){
+            if(!Application.isPlaying && Application.isEditor){
+                World world = GetComponentInParent<World>();
+                if(world) world.RemoveEntityPermanently(this);
+            }
         }
     }
 

@@ -9,7 +9,7 @@ namespace ProvenceECS{
         public float y = 0;
     }
 
-    public class TestComponentB : MonoBehaviour{
+    public class TestComponents : MonoBehaviour{
         public Vector3 up = new Vector3(0,1,0);
         public Vector3 down = new Vector3(0,-1,0);
     }

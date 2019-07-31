@@ -103,7 +103,7 @@ namespace ProvenceECS{
                 worldToolbarIndex = GUILayout.Toolbar(worldToolbarIndex,worldToolbarTitles);
                 switch(worldToolbarIndex){
                     case 0:
-                        DrawEntitiesForWorld();
+                        //DrawEntitiesForWorld();
                         break;
                 }
             }

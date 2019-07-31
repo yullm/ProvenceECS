@@ -17,7 +17,7 @@ namespace ProvenceECS{
         public EntityHandle CreateEntity(){
             Entity entity;
             EntityHandle entityHandle = new EntityHandle{world = world, manager = this};
-            if(availableEntities.Count > 0){
+            if(availableEntities.Count > 0 && availableEntities[0] != null){
                 entity = availableEntities[0];
                 try{
                     entities[entity].SetActive(true);
@@ -35,11 +35,11 @@ namespace ProvenceECS{
                     }
                 }  
             }else{
-                GameObject obj = new GameObject("Entity:" + entities.Count);
+                GameObject obj = new GameObject("Entity:" + (entities.Count > 0 ? entities.keys[entities.keys.Count - 1].id + 1 : 0));
                 entity = obj.AddComponent<Entity>();
                 obj.tag = "Entity";
                 obj.transform.parent = this.gameObject.transform;
-                entity.id = entities.Count > 0 ? entities.keys[entities.keys.Count-1].id + 1 : 0;
+                entity.id = entities.Count > 0 ? entities.keys[entities.keys.Count - 1].id + 1 : 0;
                 entities.Add(entity,obj);
                 entityHandle.entity = entity;
                 entityHandle.gameObject = obj;

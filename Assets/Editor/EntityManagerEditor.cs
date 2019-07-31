@@ -27,22 +27,22 @@ namespace ProvenceECS{
             EditorGUI.indentLevel += 1;
             for(int i = 0; i < entityKeys.arraySize; i++){
                 
-                int entityId = entityKeys.GetArrayElementAtIndex(i).FindPropertyRelative("id").intValue;
+                //int entityId = entityKeys.GetArrayElementAtIndex(i).FindPropertyRelative("id").intValue;
                 GameObject go = entityValues.GetArrayElementAtIndex(i).objectReferenceValue as GameObject;
                 if(go && go.activeSelf){
                     
                     EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField(entityKeys.GetArrayElementAtIndex(i).FindPropertyRelative("id").intValue.ToString(), EditorStyles.boldLabel, GUILayout.MaxWidth(30));
+                    //EditorGUILayout.LabelField(entityKeys.GetArrayElementAtIndex(i).FindPropertyRelative("id").intValue.ToString(), EditorStyles.boldLabel, GUILayout.MaxWidth(30));
                     EditorGUILayout.PropertyField(entityValues.GetArrayElementAtIndex(i),GUIContent.none);
                     
                     if(GUILayout.Button("Select")){
                         Selection.objects = new GameObject[]{go};
                     }
-                    if(GUILayout.Button("Remove")){
+                    /* if(GUILayout.Button("Remove")){
                         ((EntityManager)target).RemoveEntity(entityId);
                         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
                         Selection.selectionChanged();
-                    }
+                    }*/
                     
                     EditorGUILayout.EndHorizontal();
             }

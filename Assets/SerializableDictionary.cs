@@ -28,7 +28,7 @@ namespace ProvenceECS{
             Clear();
 
             for (int i = 0; i != Mathf.Min(keys.Count, values.Count); i++)
-                this.Add(keys[i], values[i]);
+                if(keys[i] != null & values[i] != null) this.Add(keys[i], values[i]);
         }
 
     }
