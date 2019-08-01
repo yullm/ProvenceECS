@@ -41,8 +41,10 @@ namespace ProvenceECS{
             worlds[world.id] = world;
             if(world.entityManager == null) world.entityManager = world.GetComponent<EntityManager>();
             if(world.componentManager == null) world.componentManager = world.GetComponent<ComponentManager>();
+            if(world.eventManager == null) world.eventManager = world.GetComponent<EventManager>();
             world.entityManager.world = world;
             world.componentManager.world = world;
+            world.eventManager.world = world;
         }
 
         public int GetNewWorldID(){

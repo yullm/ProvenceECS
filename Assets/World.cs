@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace ProvenceECS{
-    [RequireComponent(typeof(EntityManager),typeof(ComponentManager))]
+    [RequireComponent(typeof(EntityManager),typeof(ComponentManager),typeof(EventManager))]
     public class World : MonoBehaviour
     {
         public int id;
@@ -11,6 +11,11 @@ namespace ProvenceECS{
         public WorldManager manager;
         public EntityManager entityManager;
         public ComponentManager componentManager;
+        public EventManager eventManager;
+
+        void Update(){
+            eventManager.worldUpdate.Raise(this,this);
+        }
 
         public EntityHandle CreateEntity(){
             return entityManager.CreateEntity();
