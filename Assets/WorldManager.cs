@@ -9,6 +9,14 @@ namespace ProvenceECS{
         public World[] worlds = new World[0];
         public World activeWorld;
 
+        public void Start(){
+            World[] startingWorlds = GetComponentsInChildren<World>();
+            foreach(World world in startingWorlds){
+                RegisterExistingWorld(world);
+                world.RegisterInitialEntities();
+            }
+        }
+
         public void CreateNewWorld(string worldName){
 
             GameObject go = new GameObject("World: " + worldName);
@@ -25,6 +33,16 @@ namespace ProvenceECS{
             ComponentManager cm = world.componentManager = go.AddComponent<ComponentManager>();
             cm.world = world;
             
+        }
+
+        public void RegisterExistingWorld(World world){
+            world.id = GetNewWorldID();
+            world.manager = this;
+            worlds[world.id] = world;
+            if(world.entityManager == null) world.entityManager = world.GetComponent<EntityManager>();
+            if(world.componentManager == null) world.componentManager = world.GetComponent<ComponentManager>();
+            world.entityManager.world = world;
+            world.componentManager.world = world;
         }
 
         public int GetNewWorldID(){

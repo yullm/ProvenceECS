@@ -21,13 +21,27 @@ namespace ProvenceECS{
             return new ComponentHandle<T>(){entity = entityHandle.entity, component = component, world = world};
         }
 
-        public ComponentHandle<T> RegisterComponent<T>(EntityHandle entityHandle)where T : Component{
+        public ComponentHandle<T> RegisterComponent<T>(EntityHandle entityHandle) where T : Component{
             if(!componentDictionary.ContainsKey(typeof(T))){
                 componentDictionary[typeof(T)] = new SerializableDictionary<Entity,Component>();
             }
             T component = entityHandle.gameObject.GetComponent<T>() as T;
             componentDictionary[typeof(T)][entityHandle.entity] = component;
             return new ComponentHandle<T>(){entity = entityHandle.entity, component = component, world = world};
+        }
+
+        private void RegisterComponent(EntityHandle entityHandle, System.Type type){
+            if(!componentDictionary.ContainsKey(type)){
+                componentDictionary[type] = new SerializableDictionary<Entity,Component>();
+            }
+            Component component = entityHandle.gameObject.GetComponent(type);
+            componentDictionary[type][entityHandle.entity] = component;
+        }
+
+        public void RegisterAllComponents(EntityHandle entityHandle){
+            Component[] components = entityHandle.gameObject.GetComponents<Component>();
+            foreach(Component component in components) 
+                if(component.GetType() != typeof(Entity)) RegisterComponent(entityHandle,component.GetType());
         }
 
         public void RemoveComponent<T>(EntityHandle entityHandle) where T : Component{
@@ -57,12 +71,14 @@ namespace ProvenceECS{
             }
         }
 
-        public void RemoveEntityEntriesPermanently(Entity entity){
-            foreach(KeyValuePair<System.Type,SerializableDictionary<Entity,Component>> kvp in componentDictionary){
-                if(kvp.Value[entity] != null){
-                    kvp.Value.Remove(entity);
+        public List<ComponentHandle<T>> GetAllComponentsOfType<T>() where T : Component{
+            List<ComponentHandle<T>> handles = new List<ComponentHandle<T>>();
+            if(componentDictionary.ContainsKey(typeof(T))){
+                foreach(KeyValuePair<Entity,Component> kvp in componentDictionary[typeof(T)]){
+                    handles.Add(new ComponentHandle<T>{entity = kvp.Key, component = kvp.Value as T, world = world});
                 }
             }
+            return handles;
         }
         
     }

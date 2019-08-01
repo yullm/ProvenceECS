@@ -35,19 +35,26 @@ namespace ProvenceECS{
                     }
                 }  
             }else{
-                GameObject obj = new GameObject("Entity:" + (entities.Count > 0 ? entities.keys[entities.keys.Count - 1].id + 1 : 0));
+                GameObject obj = new GameObject("Entity:" + entities.Count);
                 entity = obj.AddComponent<Entity>();
                 obj.tag = "Entity";
                 obj.transform.parent = this.gameObject.transform;
-                entity.id = entities.Count > 0 ? entities.keys[entities.keys.Count - 1].id + 1 : 0;
+                entity.id = entities.Count;
                 entities.Add(entity,obj);
                 entityHandle.entity = entity;
                 entityHandle.gameObject = obj;
                 entityHandle.RegisterComponent<Transform>();
-                
-                entityHandle.AddComponent<TestComponentA>();
             }
-            print(entities.Count);
+            return entityHandle;
+        }
+
+        public EntityHandle RegisterEntity(Entity entity){
+            EntityHandle entityHandle = new EntityHandle{world = world, manager = this};
+            entity.id = entities.Count;
+            entity.gameObject.tag = "Entity";
+            entities.Add(entity, entity.gameObject);
+            entityHandle.entity = entity;
+            entityHandle.gameObject = entity.gameObject;
             return entityHandle;
         }
 
@@ -63,10 +70,6 @@ namespace ProvenceECS{
                     return;
                 }
             }
-        }
-
-        public void RemoveEntityPermanently(Entity entity){
-            entities.Remove(entity);
         }
 
         public EntityHandle LookUpEntity(Entity entity){

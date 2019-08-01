@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace ProvenceECS{
-
+    [RequireComponent(typeof(EntityManager),typeof(ComponentManager))]
     public class World : MonoBehaviour
     {
         public int id;
@@ -21,11 +21,6 @@ namespace ProvenceECS{
             componentManager.RemoveEntityEntries(entityHandle);
         }
 
-        public void RemoveEntityPermanently(Entity entity){
-            entityManager.RemoveEntityPermanently(entity);
-            componentManager.RemoveEntityEntriesPermanently(entity);
-        }
-
         public EntityHandle LookUpEntity(Entity entity){
             return entityManager.LookUpEntity(entity);
         }
@@ -40,6 +35,14 @@ namespace ProvenceECS{
 
         public void RemoveComponent<T>(EntityHandle entityHandle) where T : Component{
             componentManager.RemoveComponent<T>(entityHandle);
+        }
+
+        public void RegisterInitialEntities(){
+            Entity[] initialEntities = GetComponentsInChildren<Entity>();
+            foreach(Entity entity in initialEntities){
+                EntityHandle entityHandle = entityManager.RegisterEntity(entity);
+                componentManager.RegisterAllComponents(entityHandle);
+            }
         }
 
     }

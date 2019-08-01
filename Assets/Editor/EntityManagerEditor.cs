@@ -9,7 +9,7 @@ namespace ProvenceECS{
     [CustomEditor(typeof(EntityManager))]
     public class EntityManagerEditor : Editor
     {
-
+        /*
         private SerializedObject obj;
 
         public void OnEnable(){
@@ -38,11 +38,11 @@ namespace ProvenceECS{
                     if(GUILayout.Button("Select")){
                         Selection.objects = new GameObject[]{go};
                     }
-                    /* if(GUILayout.Button("Remove")){
+                    if(GUILayout.Button("Remove")){
                         ((EntityManager)target).RemoveEntity(entityId);
                         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
                         Selection.selectionChanged();
-                    }*/
+                    }
                     
                     EditorGUILayout.EndHorizontal();
             }
@@ -55,7 +55,7 @@ namespace ProvenceECS{
         public override void OnInspectorGUI(){
             obj.Update();
 
-            GUILayout.Label("World ID: " + ((EntityManager)target).world.id, EditorStyles.boldLabel); 
+            //GUILayout.Label("World ID: " + ((EntityManager)target).world.id, EditorStyles.boldLabel); 
 
             GUILayout.Label("Methods: ", EditorStyles.boldLabel);  
             if(GUILayout.Button("Create Entity")){
@@ -70,6 +70,6 @@ namespace ProvenceECS{
             }        
             DrawEntities();
             obj.ApplyModifiedProperties();
-        }
-    }
+        }*/
+    } 
 }
