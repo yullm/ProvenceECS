@@ -11,6 +11,18 @@ namespace ProvenceECS{
         public T component;
         public World world;
 
+        public ComponentHandle(){
+            this.entity = null;
+            this.component = null;
+            this.world = null;
+        }
+
+        public ComponentHandle(Entity entity, T component, World world){
+            this.entity = entity;
+            this.component = component;
+            this.world = world;
+        }
+
         public void Destroy(){
             world.LookUpEntity(entity).RemoveComponent<T>();
         }

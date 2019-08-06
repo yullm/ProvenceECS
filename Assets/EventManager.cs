@@ -14,7 +14,6 @@ namespace ProvenceECS{
     public class EventManager : MonoBehaviour
     {
         public World world;
-
         public EventHandle<World> worldUpdate = new EventHandle<World>();
     
     }

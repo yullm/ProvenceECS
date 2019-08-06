@@ -18,7 +18,7 @@ namespace ProvenceECS{
             }
             T component = entityHandle.gameObject.AddComponent<T>() as T;
             componentDictionary[typeof(T)][entityHandle.entity] = component as T;
-            return new ComponentHandle<T>(){entity = entityHandle.entity, component = component, world = world};
+            return new ComponentHandle<T>(entityHandle.entity, component, world);
         }
 
         public ComponentHandle<T> RegisterComponent<T>(EntityHandle entityHandle) where T : Component{
@@ -27,7 +27,7 @@ namespace ProvenceECS{
             }
             T component = entityHandle.gameObject.GetComponent<T>() as T;
             componentDictionary[typeof(T)][entityHandle.entity] = component;
-            return new ComponentHandle<T>(){entity = entityHandle.entity, component = component, world = world};
+            return new ComponentHandle<T>(entityHandle.entity, component, world);
         }
 
         private void RegisterComponent(EntityHandle entityHandle, System.Type type){
@@ -75,7 +75,7 @@ namespace ProvenceECS{
             List<ComponentHandle<T>> handles = new List<ComponentHandle<T>>();
             if(componentDictionary.ContainsKey(typeof(T))){
                 foreach(KeyValuePair<Entity,Component> kvp in componentDictionary[typeof(T)]){
-                    handles.Add(new ComponentHandle<T>{entity = kvp.Key, component = kvp.Value as T, world = world});
+                    handles.Add(new ComponentHandle<T>(kvp.Key,kvp.Value as T, world));
                 }
             }
             return handles;
