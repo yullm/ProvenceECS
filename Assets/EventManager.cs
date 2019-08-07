@@ -7,7 +7,7 @@ namespace ProvenceECS{
     public class EventHandle<T>{
         public event System.EventHandler<T> ev;
         public void Raise(Object sender, T args){
-            ev.Invoke(sender, args);
+            if(ev != null)ev.Invoke(sender, args);
         } 
     }
 

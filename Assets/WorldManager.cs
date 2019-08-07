@@ -28,11 +28,12 @@ namespace ProvenceECS{
             world.manager = this;
             worlds[world.id] = world;
 
-            EntityManager em = world.entityManager = go.AddComponent<EntityManager>();
-            em.world = world;
-            ComponentManager cm = world.componentManager = go.AddComponent<ComponentManager>();
-            cm.world = world;
-            
+            /* not necessary???
+                EntityManager em = world.entityManager = go.AddComponent<EntityManager>();
+                em.world = world;
+                ComponentManager cm = world.componentManager = go.AddComponent<ComponentManager>();
+                cm.world = world;
+            */
         }
 
         public void RegisterExistingWorld(World world){
@@ -42,9 +43,11 @@ namespace ProvenceECS{
             if(world.entityManager == null) world.entityManager = world.GetComponent<EntityManager>();
             if(world.componentManager == null) world.componentManager = world.GetComponent<ComponentManager>();
             if(world.eventManager == null) world.eventManager = world.GetComponent<EventManager>();
+            if(world.systemManager == null) world.systemManager = world.GetComponent<SystemManager>();
             world.entityManager.world = world;
             world.componentManager.world = world;
             world.eventManager.world = world;
+            world.systemManager.world = world;
         }
 
         public int GetNewWorldID(){
