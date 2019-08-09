@@ -5,17 +5,24 @@ using UnityEngine;
 
 namespace ProvenceECS{
     [System.Serializable]
-    public class ProvenceSystem {
+    public class ProvenceSystem : ScriptableObject {
         public World world;
     }
 
     public class SystemManager : MonoBehaviour
     {
         public World world;
-        public List<ProvenceSystem> systems = new List<ProvenceSystem>();  
+        public List<ProvenceSystem> systems = new List<ProvenceSystem>();
+
+        public void BroadcastWorld(){
+            foreach(ProvenceSystem system in systems) system.world = world;
+        }
 
         public void AddSystem<T>() where T : ProvenceSystem{
-            T system = System.Activator.CreateInstance(typeof(T)) as T;
+            foreach(ProvenceSystem sys in systems){
+                if(sys.GetType() == typeof(T)) return;
+            }
+            T system = ScriptableObject.CreateInstance(typeof(T)) as T;
             systems.Add(system);
             system.world = world;
         }

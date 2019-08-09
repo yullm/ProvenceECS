@@ -17,9 +17,11 @@ namespace ProvenceECS{
         
         public override void OnInspectorGUI(){
             obj.Update();
+            EditorGUILayout.PropertyField(obj.FindProperty("world"),true);
+            List<ProvenceSystem> list = ((SystemManager)target).systems;
             EditorGUILayout.PropertyField(obj.FindProperty("systems"),true);
-            for(int i = 0; i < ((SystemManager)target).systems.Count; i++){
-                GUILayout.Label(((SystemManager)target).systems[i].GetType().ToString());
+            for(int i = 0; i < list.Count; i++){
+                GUILayout.Label( (list[i] is TestSystem).ToString() );
             }
             if(GUILayout.Button("Add System")){
                 SystemWizard wiz = (SystemWizard)EditorWindow.GetWindow(typeof(SystemWizard));
