@@ -20,9 +20,6 @@ namespace ProvenceECS{
             EditorGUILayout.PropertyField(obj.FindProperty("world"),true);
             List<ProvenceSystem> list = ((SystemManager)target).systems;
             EditorGUILayout.PropertyField(obj.FindProperty("systems"),true);
-            for(int i = 0; i < list.Count; i++){
-                GUILayout.Label( (list[i] is TestSystem).ToString() );
-            }
             if(GUILayout.Button("Add System")){
                 SystemWizard wiz = (SystemWizard)EditorWindow.GetWindow(typeof(SystemWizard));
                 wiz.manager = target as SystemManager;

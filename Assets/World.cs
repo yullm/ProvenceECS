@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace ProvenceECS{
+
+    public class WorldUpdateEvent : ProvenceEventArgs{
+        public World world;
+    }
+
     [RequireComponent(typeof(EntityManager),typeof(ComponentManager),typeof(EventManager))]
     [RequireComponent(typeof(SystemManager))]
     public class World : MonoBehaviour
@@ -16,7 +21,7 @@ namespace ProvenceECS{
         public SystemManager systemManager;
 
         void Update(){
-            if(eventManager) eventManager.worldUpdate.Raise(this,this);
+            if(eventManager) eventManager.Raise<WorldUpdateEvent>(new WorldUpdateEvent(){world = this});
         }
 
         public EntityHandle CreateEntity(){

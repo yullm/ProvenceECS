@@ -48,7 +48,7 @@ namespace ProvenceECS{
             world.componentManager.world = world;
             world.eventManager.world = world;
             world.systemManager.world = world;
-            world.systemManager.BroadcastWorld();
+            world.systemManager.InitializeSystems();
         }
 
         public int GetNewWorldID(){

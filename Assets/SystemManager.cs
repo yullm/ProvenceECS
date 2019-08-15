@@ -4,9 +4,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace ProvenceECS{
-    [System.Serializable]
+
     public class ProvenceSystem : ScriptableObject {
         public World world;
+        public SystemManager manager;
+
+        public virtual void Init(){}
     }
 
     public class SystemManager : MonoBehaviour
@@ -14,17 +17,21 @@ namespace ProvenceECS{
         public World world;
         public List<ProvenceSystem> systems = new List<ProvenceSystem>();
 
-        public void BroadcastWorld(){
-            foreach(ProvenceSystem system in systems) system.world = world;
+        public void InitializeSystems(){
+            foreach(ProvenceSystem system in systems){ 
+                system.world = world;
+                system.Init();
+            }
         }
 
         public void AddSystem<T>() where T : ProvenceSystem{
             foreach(ProvenceSystem sys in systems){
                 if(sys.GetType() == typeof(T)) return;
             }
-            T system = ScriptableObject.CreateInstance(typeof(T)) as T;
-            systems.Add(system);
+            T system = ScriptableObject.CreateInstance<T>() as T;
             system.world = world;
+            system.manager = this;
+            systems.Add(system);
         }
 
         public void AddSystemByType(System.Type type){
@@ -34,5 +41,6 @@ namespace ProvenceECS{
                 reference.Invoke(this,null);
             }
         }
+
     }
 }
