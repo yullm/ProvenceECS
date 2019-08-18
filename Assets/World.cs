@@ -37,8 +37,8 @@ namespace ProvenceECS{
             return entityManager.LookUpEntity(entity);
         }
 
-        public ComponentHandle<T> AddComponent<T>(EntityHandle entityHandle) where T : Component{
-            return componentManager.AddComponent<T>(entityHandle);
+        public ComponentHandle<T> AddComponent<T>(EntityHandle entityHandle, params object[] paramList) where T : Component{
+            return componentManager.AddComponent<T>(entityHandle,paramList);
         }
 
         public ComponentHandle<T> RegisterComponent<T>(EntityHandle entityHandle) where T : Component{

@@ -15,8 +15,8 @@ namespace ProvenceECS{
         public EntityManager manager;
         public GameObject gameObject;
 
-        public ComponentHandle<T> AddComponent<T>() where T : Component{
-            return world.AddComponent<T>(this);
+        public ComponentHandle<T> AddComponent<T>(params object[] paramList) where T : Component{
+            return world.AddComponent<T>(this,paramList);
         }
 
         public ComponentHandle<T> RegisterComponent<T>() where T : Component{

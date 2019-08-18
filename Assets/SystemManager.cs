@@ -9,7 +9,7 @@ namespace ProvenceECS{
         public World world;
         public SystemManager manager;
 
-        public virtual void Init(){}
+        public virtual void RegisterForEvents(WorldRegistrationComplete args){}
     }
 
     public class SystemManager : MonoBehaviour
@@ -18,9 +18,9 @@ namespace ProvenceECS{
         public List<ProvenceSystem> systems = new List<ProvenceSystem>();
 
         public void InitializeSystems(){
-            foreach(ProvenceSystem system in systems){ 
+            foreach(ProvenceSystem system in systems){
                 system.world = world;
-                system.Init();
+                world.eventManager.AddListener<WorldRegistrationComplete>(system.RegisterForEvents);
             }
         }
 

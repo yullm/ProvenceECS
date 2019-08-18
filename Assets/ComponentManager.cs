@@ -12,12 +12,21 @@ namespace ProvenceECS{
         public World world;
         public ComponentDictionary componentDictionary = new ComponentDictionary();
 
-        public ComponentHandle<T> AddComponent<T>(EntityHandle entityHandle) where T : Component{
+        public ComponentHandle<T> AddComponent<T>(EntityHandle entityHandle, params object[] paramList) where T : Component{
             if(!componentDictionary.ContainsKey(typeof(T))){
                 componentDictionary[typeof(T)] = new SerializableDictionary<Entity,Component>();
             }
             T component = entityHandle.gameObject.AddComponent<T>() as T;
             componentDictionary[typeof(T)][entityHandle.entity] = component as T;
+            if(paramList.Length > 0){
+                PropertyInfo[] props = typeof(T).GetProperties();
+                for(int i = 0; i < props.Length; i++){
+                    //if(i >= props.Length) break;
+                    //print(props[i]);
+                    //props[i].SetValue(component, paramList[i]);
+                }
+                
+            }
             return new ComponentHandle<T>(entityHandle.entity, component, world);
         }
 

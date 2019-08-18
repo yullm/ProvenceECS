@@ -4,6 +4,10 @@ using UnityEngine;
 
 namespace ProvenceECS{
 
+    public class WorldRegistrationComplete : ProvenceEventArgs{
+        public World world;
+    }
+
     public class WorldManager : MonoBehaviour
     {
         public World[] worlds = new World[0];
@@ -49,6 +53,7 @@ namespace ProvenceECS{
             world.eventManager.world = world;
             world.systemManager.world = world;
             world.systemManager.InitializeSystems();
+            world.eventManager.Raise<WorldRegistrationComplete>(new WorldRegistrationComplete(){world = world});
         }
 
         public int GetNewWorldID(){
