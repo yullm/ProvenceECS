@@ -19,11 +19,12 @@ namespace ProvenceECS{
             T component = entityHandle.gameObject.AddComponent<T>() as T;
             componentDictionary[typeof(T)][entityHandle.entity] = component as T;
             if(paramList.Length > 0){
-                PropertyInfo[] props = typeof(T).GetProperties();
-                for(int i = 0; i < props.Length; i++){
-                    //if(i >= props.Length) break;
-                    //print(props[i]);
-                    //props[i].SetValue(component, paramList[i]);
+                print(typeof(T));
+                FieldInfo[] fields = typeof(T).GetFields();
+                for(int i = 0; i < fields.Length; i++){
+                    //if(i >= fields.Length) break;
+                    print(fields[i]);
+                    //fields[i].SetValue(component, paramList[i]);
                 }
                 
             }
