@@ -5,6 +5,7 @@ using UnityEngine;
 namespace ProvenceECS{
     // Systems must be in own file
     public class TestSystem : ProvenceSystem {
+        
         public float timer = 0f;
         public float target = 1f;
 
@@ -14,11 +15,9 @@ namespace ProvenceECS{
 
         public void Test(WorldUpdateEvent args){
             timer += Time.deltaTime;
-            if(timer >= target){
-                Debug.Log("Boop");
+            if(timer >= target){ 
                 EntityHandle entity = world.CreateEntity();
-                ComponentHandle<TestComponents> testComponent = entity.AddComponent<TestComponents>(4);
-                Debug.Log(testComponent.component.x);
+                ComponentHandle<TestComponents> testComponent = entity.AddComponent<TestComponents>(4,4.5f);
                 timer = 0;
             }
         }

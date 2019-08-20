@@ -5,11 +5,12 @@ using UnityEngine;
 
 namespace ProvenceECS{
 
-    public class ProvenceSystem : ScriptableObject {
+    public abstract class ProvenceSystem : ScriptableObject {
         public World world;
-        public SystemManager manager;
-
-        public virtual void RegisterForEvents(WorldRegistrationComplete args){}
+        public bool cacheIsSafe = false;
+        public Dictionary<System.Type,List<Component>> cache;
+        //public abstract void DefineComponentPattern();
+        public abstract void RegisterForEvents(WorldRegistrationComplete args);
     }
 
     public class SystemManager : MonoBehaviour
@@ -30,8 +31,17 @@ namespace ProvenceECS{
             }
             T system = ScriptableObject.CreateInstance<T>() as T;
             system.world = world;
-            system.manager = this;
             systems.Add(system);
+            if(Application.isPlaying && system.world != null) system.RegisterForEvents(new WorldRegistrationComplete(world));
+        }
+
+        public void RemoveSystem<T>() where T : ProvenceSystem{
+            foreach(ProvenceSystem system in systems){
+                if(system.GetType() == typeof(T)){
+                    systems.Remove(system);
+                    return;
+                }
+            }
         }
 
         public void AddSystemByType(System.Type type){

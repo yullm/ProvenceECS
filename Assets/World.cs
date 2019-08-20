@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace ProvenceECS{
 
-    public class WorldUpdateEvent : ProvenceEventArgs{
-        public World world;
-    }
-
     [RequireComponent(typeof(EntityManager),typeof(ComponentManager),typeof(EventManager))]
     [RequireComponent(typeof(SystemManager))]
     public class World : MonoBehaviour
@@ -20,8 +16,19 @@ namespace ProvenceECS{
         public EventManager eventManager;
         public SystemManager systemManager;
 
+        public void InitWorld(){
+            if(entityManager == null) entityManager = GetComponent<EntityManager>();
+            if(componentManager == null) componentManager = GetComponent<ComponentManager>();
+            if(eventManager == null) eventManager = GetComponent<EventManager>();
+            if(systemManager == null) systemManager = GetComponent<SystemManager>();
+            if(entityManager.world == null) entityManager.world = this;
+            if(componentManager.world == null) componentManager.world = this;
+            if(eventManager.world == null) eventManager.world = this;
+            if(systemManager.world == null) systemManager.world = this;  
+        }
+
         void Update(){
-            if(eventManager) eventManager.Raise<WorldUpdateEvent>(new WorldUpdateEvent(){world = this});
+            if(eventManager) eventManager.Raise<WorldUpdateEvent>(new WorldUpdateEvent(this,Time.time));
         }
 
         public EntityHandle CreateEntity(){
@@ -47,6 +54,14 @@ namespace ProvenceECS{
 
         public void RemoveComponent<T>(EntityHandle entityHandle) where T : Component{
             componentManager.RemoveComponent<T>(entityHandle);
+        }
+
+        public void AddSystem<T>() where T : ProvenceSystem{
+            systemManager.AddSystem<T>();
+        }
+
+        public void RemoveSystem<T>() where T : ProvenceSystem{
+            systemManager.RemoveSystem<T>();
         }
 
         public void RegisterInitialEntities(){

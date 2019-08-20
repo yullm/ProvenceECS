@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace ProvenceECS{
 
-    public class WorldRegistrationComplete : ProvenceEventArgs{
-        public World world;
-    }
-
     public class WorldManager : MonoBehaviour
     {
         public World[] worlds = new World[0];
@@ -27,33 +23,18 @@ namespace ProvenceECS{
             go.tag = "World";
             go.transform.parent = transform;
             World world = go.AddComponent<World>();
-            world.id = GetNewWorldID();
             world.worldName = worldName;
             world.manager = this;
-            worlds[world.id] = world;
-
-            /* not necessary???
-                EntityManager em = world.entityManager = go.AddComponent<EntityManager>();
-                em.world = world;
-                ComponentManager cm = world.componentManager = go.AddComponent<ComponentManager>();
-                cm.world = world;
-            */
+            world.InitWorld();        
         }
 
         public void RegisterExistingWorld(World world){
             world.id = GetNewWorldID();
             world.manager = this;
             worlds[world.id] = world;
-            if(world.entityManager == null) world.entityManager = world.GetComponent<EntityManager>();
-            if(world.componentManager == null) world.componentManager = world.GetComponent<ComponentManager>();
-            if(world.eventManager == null) world.eventManager = world.GetComponent<EventManager>();
-            if(world.systemManager == null) world.systemManager = world.GetComponent<SystemManager>();
-            world.entityManager.world = world;
-            world.componentManager.world = world;
-            world.eventManager.world = world;
-            world.systemManager.world = world;
+            world.InitWorld();
             world.systemManager.InitializeSystems();
-            world.eventManager.Raise<WorldRegistrationComplete>(new WorldRegistrationComplete(){world = world});
+            world.eventManager.Raise<WorldRegistrationComplete>(new WorldRegistrationComplete(world));
         }
 
         public int GetNewWorldID(){

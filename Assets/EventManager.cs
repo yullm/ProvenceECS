@@ -7,6 +7,32 @@ namespace ProvenceECS{
     public class ProvenceEventArgs{}
 
     public delegate void ProvenceDelegate<T> (T e) where T : ProvenceEventArgs;
+
+    public class WorldUpdateEvent : ProvenceEventArgs{
+        public World world;
+        float time;
+        public WorldUpdateEvent(World world, float time){
+            this.world = world;
+            this.time = time;
+        }
+    }
+
+    public class WorldRegistrationComplete : ProvenceEventArgs{
+        public World world;
+        public WorldRegistrationComplete(World world){
+            this.world = world;
+        }
+    }
+
+    public class CacheIntegrityChange : ProvenceEventArgs{
+        public World world;
+        public System.Type type;
+        public CacheIntegrityChange(World world, System.Type type){
+            this.world = world;
+            this.type = type;
+        }
+    }
+
     public class EventManager : MonoBehaviour
     {
         public World world;

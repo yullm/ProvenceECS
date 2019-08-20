@@ -13,45 +13,39 @@ namespace ProvenceECS{
         public ComponentDictionary componentDictionary = new ComponentDictionary();
 
         public ComponentHandle<T> AddComponent<T>(EntityHandle entityHandle, params object[] paramList) where T : Component{
-            if(!componentDictionary.ContainsKey(typeof(T))){
+            if(!componentDictionary.ContainsKey(typeof(T)))
                 componentDictionary[typeof(T)] = new SerializableDictionary<Entity,Component>();
-            }
             T component = entityHandle.gameObject.AddComponent<T>() as T;
             componentDictionary[typeof(T)][entityHandle.entity] = component as T;
             if(paramList.Length > 0){
-                print(typeof(T));
                 FieldInfo[] fields = typeof(T).GetFields();
-                for(int i = 0; i < fields.Length; i++){
-                    //if(i >= fields.Length) break;
-                    print(fields[i]);
-                    //fields[i].SetValue(component, paramList[i]);
-                }
-                
+                for(int i = 0; i < paramList.Length; i++){
+                    if(i >= fields.Length) break;
+                    try{ fields[i].SetValue(component, paramList[i]); }
+                    catch(System.Exception e){ print(e); }
+                } 
             }
             return new ComponentHandle<T>(entityHandle.entity, component, world);
         }
 
         public ComponentHandle<T> RegisterComponent<T>(EntityHandle entityHandle) where T : Component{
-            if(!componentDictionary.ContainsKey(typeof(T))){
+            if(!componentDictionary.ContainsKey(typeof(T)))
                 componentDictionary[typeof(T)] = new SerializableDictionary<Entity,Component>();
-            }
             T component = entityHandle.gameObject.GetComponent<T>() as T;
             componentDictionary[typeof(T)][entityHandle.entity] = component;
             return new ComponentHandle<T>(entityHandle.entity, component, world);
         }
 
-        private void RegisterComponent(EntityHandle entityHandle, System.Type type){
-            if(!componentDictionary.ContainsKey(type)){
-                componentDictionary[type] = new SerializableDictionary<Entity,Component>();
-            }
-            Component component = entityHandle.gameObject.GetComponent(type);
-            componentDictionary[type][entityHandle.entity] = component;
-        }
-
         public void RegisterAllComponents(EntityHandle entityHandle){
             Component[] components = entityHandle.gameObject.GetComponents<Component>();
-            foreach(Component component in components) 
-                if(component.GetType() != typeof(Entity)) RegisterComponent(entityHandle,component.GetType());
+            foreach(Component component in components) {
+                System.Type type = component.GetType();
+                if(type != typeof(Entity)){
+                    var method = typeof(ComponentManager).GetMethod("RegisterComponent");
+                    var reference = method.MakeGenericMethod(type);
+                    reference.Invoke(this,new object[]{entityHandle});
+                }
+            }
         }
 
         public void RemoveComponent<T>(EntityHandle entityHandle) where T : Component{
