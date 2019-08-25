@@ -7,10 +7,19 @@ namespace ProvenceECS{
 
     public abstract class ProvenceSystem : ScriptableObject {
         public World world;
-        public bool cacheIsSafe = false;
-        public Dictionary<System.Type,List<Component>> cache;
-        //public abstract void DefineComponentPattern();
+        private bool cacheIsSafe = false;
+        private Dictionary<System.Type,List<ComponentHandle<Component>>> cache;
         public abstract void RegisterForEvents(WorldRegistrationComplete args);
+
+        private Dictionary<System.Type,List<ComponentHandle<Component>>> LookUpComponents(){
+            return null;
+        }
+
+        public void IntegrityCheck(CacheIntegrityChange args){
+            if(cacheIsSafe){
+
+            }
+        }
     }
 
     public class SystemManager : MonoBehaviour

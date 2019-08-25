@@ -511,8 +511,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   world: {fileID: 0}
   systems:
-  - {fileID: 2094031989}
---- !u!114 &2094031989
+  - {fileID: 1512588651}
+--- !u!114 &1512588651
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -525,7 +525,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   world: {fileID: 0}
-  manager: {fileID: 1345548497}
   cacheIsSafe: 0
   timer: 0
   target: 1
