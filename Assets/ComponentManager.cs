@@ -75,6 +75,14 @@ namespace ProvenceECS{
             }
         }
 
+        public ComponentHandle<T> GetComponentByEntity<T>(EntityHandle entityHandle) where T : Component{
+            if(componentDictionary.ContainsKey(typeof(T))){
+                T component = componentDictionary[typeof(T)][entityHandle.entity] as T;
+                if(component != null) return new ComponentHandle<T>(entityHandle.entity, component, world);
+            }
+            return null;
+        }
+
         public List<ComponentHandle<T>> GetAllComponentsOfType<T>() where T : Component{
             List<ComponentHandle<T>> handles = new List<ComponentHandle<T>>();
             if(componentDictionary.ContainsKey(typeof(T))){

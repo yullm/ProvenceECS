@@ -52,12 +52,20 @@ namespace ProvenceECS{
             return componentManager.RegisterComponent<T>(entityHandle);
         }
 
+        public ComponentHandle<T> GetComponentByEntity<T>(EntityHandle entityHandle) where T : Component{
+            return componentManager.GetComponentByEntity<T>(entityHandle);
+        }
+
         public void RemoveComponent<T>(EntityHandle entityHandle) where T : Component{
             componentManager.RemoveComponent<T>(entityHandle);
         }
 
         public void AddSystem<T>() where T : ProvenceSystem{
             systemManager.AddSystem<T>();
+        }
+
+        public ProvenceSystem GetSystem<T>() where T : ProvenceSystem{
+            return systemManager.GetSystem<T>();
         }
 
         public void RemoveSystem<T>() where T : ProvenceSystem{

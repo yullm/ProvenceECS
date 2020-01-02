@@ -1,16 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading.Tasks;
 
 namespace ProvenceECS{
 
+    [System.Serializable]
     public class ProvenceEventArgs{}
 
     public delegate void ProvenceDelegate<T> (T e) where T : ProvenceEventArgs;
-
     public class WorldUpdateEvent : ProvenceEventArgs{
         public World world;
-        float time;
+        public float time;
         public WorldUpdateEvent(World world, float time){
             this.world = world;
             this.time = time;
@@ -61,6 +62,21 @@ namespace ProvenceECS{
                 return;
             }
             if(delegates.ContainsKey(typeof(T))) delegates[typeof(T)].DynamicInvoke(args);
+        }
+
+        public async Task<T> WaitForEvent<T>() where T : ProvenceEventArgs{
+            bool waiting = true;
+            T eventArgs = null;
+            ProvenceDelegate<T> del = (e) => { 
+                eventArgs = e; 
+                waiting = false; 
+            };
+            AddListener<T>(del);
+            while(waiting){
+                await Task.Delay(1);
+            }
+            RemoveListener<T>(del);
+            return eventArgs;
         }
     
     }

@@ -23,6 +23,10 @@ namespace ProvenceECS{
             return world.RegisterComponent<T>(this);
         }
 
+        public ComponentHandle<T> GetComponent<T>() where T : Component{
+            return world.GetComponentByEntity<T>(this);
+        }
+
         public void RemoveComponent<T>() where T : Component{
             world.RemoveComponent<T>(this);
         }

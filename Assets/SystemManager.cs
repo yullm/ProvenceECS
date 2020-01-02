@@ -9,7 +9,7 @@ namespace ProvenceECS{
         public World world;
         private bool cacheIsSafe = false;
         private Dictionary<System.Type,List<ComponentHandle<Component>>> cache;
-        public abstract void RegisterForEvents(WorldRegistrationComplete args);
+        public abstract void Initialize(WorldRegistrationComplete args);
 
         private Dictionary<System.Type,List<ComponentHandle<Component>>> LookUpComponents(){
             return null;
@@ -30,7 +30,7 @@ namespace ProvenceECS{
         public void InitializeSystems(){
             foreach(ProvenceSystem system in systems){
                 system.world = world;
-                world.eventManager.AddListener<WorldRegistrationComplete>(system.RegisterForEvents);
+                world.eventManager.AddListener<WorldRegistrationComplete>(system.Initialize);
             }
         }
 
@@ -41,7 +41,14 @@ namespace ProvenceECS{
             T system = ScriptableObject.CreateInstance<T>() as T;
             system.world = world;
             systems.Add(system);
-            if(Application.isPlaying && system.world != null) system.RegisterForEvents(new WorldRegistrationComplete(world));
+            if(Application.isPlaying && system.world != null) system.Initialize(new WorldRegistrationComplete(world));
+        }
+
+        public ProvenceSystem GetSystem<T>() where T : ProvenceSystem{
+            foreach(ProvenceSystem sys in systems){
+                if(sys.GetType() == typeof(T)) return sys;
+            }
+            return null;
         }
 
         public void RemoveSystem<T>() where T : ProvenceSystem{

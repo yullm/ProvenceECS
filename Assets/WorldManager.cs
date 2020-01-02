@@ -11,10 +11,7 @@ namespace ProvenceECS{
 
         public void Start(){
             World[] startingWorlds = GetComponentsInChildren<World>();
-            foreach(World world in startingWorlds){
-                RegisterExistingWorld(world);
-                world.RegisterInitialEntities();
-            }
+            foreach(World world in startingWorlds) RegisterExistingWorld(world);
         }
 
         public void CreateNewWorld(string worldName){
@@ -34,6 +31,7 @@ namespace ProvenceECS{
             worlds[world.id] = world;
             world.InitWorld();
             world.systemManager.InitializeSystems();
+            world.RegisterInitialEntities();
             world.eventManager.Raise<WorldRegistrationComplete>(new WorldRegistrationComplete(world));
         }
 
