@@ -7,6 +7,8 @@ namespace ProvenceECS{
     [RequireComponent(typeof(EntityManager),typeof(ComponentManager),typeof(EventManager))]
     [RequireComponent(typeof(SystemManager),typeof(SwitchManager))]
     public class World : MonoBehaviour{
+        public enum GameState {MENU, GAMEPLAY};
+        public GameState gameState = GameState.GAMEPLAY;
         public int id;
         public string worldName;
         public WorldManager manager;
@@ -30,7 +32,7 @@ namespace ProvenceECS{
         }
 
         void Update(){
-            if(eventManager) eventManager.Raise<WorldUpdateEvent>(WorldUpdateEvent.CreateInstance(this,Time.time));
+            if(eventManager) eventManager.Raise<WorldUpdateEvent>(WorldUpdateEvent.CreateInstance(this, Time.time));
         }
         void LateUpdate(){
             if(eventManager) eventManager.Raise<WorldLateUpdateEvent>(WorldLateUpdateEvent.CreateInstance(this, Time.fixedTime));
@@ -38,6 +40,10 @@ namespace ProvenceECS{
 
         void FixedUpdate(){
             if(eventManager) eventManager.Raise<WorldFixedUpdateEvent>(WorldFixedUpdateEvent.CreateInstance(this, Time.fixedTime));
+        }
+
+        void OnGUI(){
+            if(eventManager) eventManager.Raise<WorldOnGUIEvent>(WorldOnGUIEvent.CreateInstance(this, Time.time));
         }
 
         public EntityHandle CreateEntity(){
