@@ -1,0 +1,8 @@
+﻿#main-page{
+    border-width: 0px;
+}
+
+#system-title{
+    -unity-text-align: middle-left;
+    padding-left: 10px;
+}

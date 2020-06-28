@@ -1,0 +1,7 @@
+#pair-list{
+    border-width: 0px;
+}
+
+.asset-label{
+    border-left-width:1px;
+}

@@ -1,0 +1,11 @@
+.page-column{
+    border-width: 0px;
+}
+
+#clear-search-button{
+    margin-top: 1px;
+}
+
+ListItemText{
+    font-size: 16px;
+}

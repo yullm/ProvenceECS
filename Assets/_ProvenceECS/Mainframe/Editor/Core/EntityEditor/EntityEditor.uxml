@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns="ProvenceECS.Mainframe"
+    xsi:noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd"
+>
+    <Wrapper>
+        <MenuBar>
+            <ListItem>
+                <ListItemText name="select-menu-button" class="list-item-button alternate" text="Select"/>
+                <ListItemText name="archetype-menu-button" class="list-item-button alternate" text="Archetype"/>
+            </ListItem>
+        </MenuBar>
+        <TableWrapper>
+            <PageColumn name="component-list" class="page-column">
+                <ListItem name="component-list-title" class="spacer">
+                    <Div class="list-item-filler"/>
+                    <ListItemImage src="Assets/Icons/menuList.png" />
+                    <ListItemText class="list-item-title third-alternate" text="Component List:"/>
+                    <Div class="list-item-filler"/>
+                </ListItem>
+                <ColumnScroller name="component-list-scroller" class="column-scroller"/>
+                <ListItem name="add-component-button" class="spacer hoverable selectable">
+                    <ListItemImage src="Assets/Icons/plus.png" />
+                    <ListItemText class="list-item-text-display" text="Add Component"/>
+                </ListItem>
+            </PageColumn>
+            <PageColumn name="editor" class="page-column">
+                <ListItem class="spacer">
+                    <Div class="list-item-indent" />
+                    <ListItemImage class="icon" src="Assets/Icons/circle-notch.png" />
+                    <ListItemText class="list-item-title alternate title" text="Entity Info:"/>
+                </ListItem>
+                <Div name="entity-stats">
+                    <ListItem>
+                        <ListItemText class="list-item-label alternate editor-label" text="Name:"/>
+                        <ListItemTextInput name="entity-name"/>
+                    </ListItem>
+                    <ListItem class="alternate">
+                        <ListItemText class="list-item-label alternate editor-label" text="Game Object:"/>
+                        <ListItemText name="add-gameobject-button" class="list-item-button third-alternate" text="Add Game Object"/>
+                        <ListItemText name="select-gameobject-button" class="list-item-button third-alternate" text="Select"/>
+                        <ListItemText name="remove-gameobject-button" class="list-item-button third-alternate" text="Remove"/>
+                    </ListItem>
+                </Div>
+                <ListItem class="spacer">
+                    <Div class="list-item-indent" />
+                    <ListItemImage class="icon" src="Assets/Icons/sliders-h.png" />
+                    <ListItemText class="list-item-title alternate title" text="Component Editor:"/>
+                </ListItem>
+                <ColumnScroller name="editor-scroller" class="column-scroller"/>
+            </PageColumn>
+        </TableWrapper>
+
+        <Div name="drop-downs">
+            <DropDownMenu name="archetype-menu">
+                <ListItem>
+                    <ListItemText class="list-item-button third-alternate" text="Make Archetype"/>
+                </ListItem>
+                <ListItem class="alternate">
+                    <ListItemText class="list-item-button third-alternate" text="Clone Archetype"/>
+                </ListItem>
+            </DropDownMenu>
+            <DropDownMenu name="component-list-context-menu">
+                <ListItem>
+                    <ListItemText name="component-list-context-menu-remove-button" class="list-item-button third-alternate" text="Remove Component"/>
+                </ListItem>
+            </DropDownMenu>
+        </Div>
+    </Wrapper>
+</engine:UXML>

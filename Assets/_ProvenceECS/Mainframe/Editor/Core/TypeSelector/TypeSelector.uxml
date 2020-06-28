@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xsi:noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd"
+>
+    <VisualElement class="wrapper">
+        <VisualElement class="page-column">
+            <VisualElement class="list-item alternate">
+                <TextElement class="list-item-label second-alternate" text="Search:"/>
+                <TextField name="search-bar" class="list-item-input list-item-text-input"/>
+                <TextElement name="clear-search-button" class="list-item-button second-alternate" text="X"/>
+            </VisualElement>
+            <ScrollView name="type-list" class="column-scroller"/>
+        </VisualElement>
+    </VisualElement>    
+</UXML>

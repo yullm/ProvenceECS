@@ -1,0 +1,4 @@
+#table-list{
+    margin: 0px;
+    border-width: 0px;
+}

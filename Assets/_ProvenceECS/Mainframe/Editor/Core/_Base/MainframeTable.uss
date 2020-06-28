@@ -1,0 +1,427 @@
+﻿#wrapper, .wrapper, TemplateContainer{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #383838;
+    color: #aaa;
+}
+
+.model-preview-wrapper{
+    background-color: #2a2a2a;
+    flex:1;
+}
+
+.prompt{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0.1, 0.1, 0.1, 0.5);
+}
+
+.prompt-window{
+    width: 50%;
+    min-width: 250px;
+    overflow: hidden;
+    border-radius: 3px;
+}
+
+.menu-bar{
+    position: absolute;
+    top: 0;
+    height: 30px;
+    left: 0;
+    right: 0;
+    border-bottom-color: #1a1a1a;
+    border-bottom-width: 1px;
+    justify-content: center;
+    overflow: hidden;
+}
+
+TableWrapper{
+    position: absolute;
+    top: 30px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    flex-direction: row;
+}
+
+.page-column{
+    flex: 1;
+    border-right-width: 1px;
+    border-color: #1a1a1a;
+    
+    background-color: #2a2a2a;
+}
+
+.column-scroller{
+    flex: 1;
+}
+
+.drop-down-menu{
+    position: absolute;
+    width: 150px;
+
+    border-width: 1px;
+    border-bottom-width: 0px;
+    border-color: #1a1a1a;
+    
+    flex-direction: column;
+    display: none;
+}
+
+.list-item{
+    height: 30px;
+    min-height: 30px;
+    font-size: 14px;
+
+    background-color: #383838;
+    border-bottom-width: 1px;
+    border-color: #1a1a1a;
+
+    flex-direction: row;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+
+.list-item.alternate{
+    background-color: #333;
+}
+
+Div.alternate{
+    flex-direction: row;
+    align-items: center;
+}
+
+Div.spacer,
+.list-item.spacer{
+    background-color: #2a2a2a;
+    cursor: arrow;
+}
+
+Div.hoverable:hover, .list-item.hoverable:hover{
+    background-color: #444;
+}
+
+Div.selected, Div.hoverable.selected,
+.list-item.selected, .list-item.hoverable.selected{
+    background-color: #555;
+}
+
+.selectable,
+.spacer.selectable,
+Div.selectable .list-item-title,
+Div.selectable .list-item-label,
+Div.selectable .list-item-text-display,
+Div.selectable ListItemImage,
+.list-item.selectable .list-item-title,
+.list-item.selectable .list-item-label,
+.list-item.selectable .list-item-text-display,
+.list-item.selectable ListItemImage{
+    cursor: Link;
+}
+
+.list-item-filler{
+    height:29px;
+    flex:1;
+}
+
+.list-item-indent{
+    height: 29px;
+    width: 10px;
+}
+
+.list-item-indent.alternate{
+    width: 5px;
+}
+
+.list-item-label{
+    height: 29px;
+    min-width: 50px;
+    width: 50px;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    overflow: hidden;
+
+    border-color: #1a1a1a;
+    border-right-width: 1px;
+}
+
+.list-item-label.alternate{
+    width: 100px;
+    min-width: 100px;
+}
+
+.list-item-label.second-alternate{
+    width: auto;
+    padding: 5px;
+    min-width: 0px;
+}
+
+.list-item-label.third-alternate{
+    font-size: 12px;
+}
+
+.list-item-title{
+    height: 29px;
+    flex:1;
+    -unity-text-align: middle-center;
+    font-size: 16px;
+    overflow: hidden;
+}
+
+.list-item-title.alternate{
+    padding-left: 5px;
+    -unity-text-align: middle-left;
+}
+
+.list-item-title.second-alternate{
+    color: #666;
+}
+
+.list-item-title.third-alternate{
+    flex: none;
+    padding: 5px;
+    width: auto;
+}
+
+.list-item-text-display{
+    height:29px;
+    flex:1;
+    -unity-text-align: middle-left;
+    overflow: hidden;
+    padding-left: 5px;
+}
+
+.list-item-text-display.alternate{
+    padding-left: 0px;
+    -unity-text-align: middle-center;
+}
+
+.list-item-text-display.second-alternate{
+    padding-left: 0px;
+    padding-right: 5px;
+    -unity-text-align: middle-right;
+} 
+
+.list-item-type-indicator{
+    height: 29px;
+    padding: 5px;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    
+    border-left-width: 1px;
+    border-color: #1a1a1a;
+}
+
+.list-item-button{
+    height: 29px;
+    width: 100px;
+    min-width: 100px;
+    
+    -unity-text-align: middle-center;
+    overflow: hidden;
+    white-space: nowrap;
+
+    border-color: #1a1a1a;
+    border-left-width: 1px;
+
+    cursor: Link;
+}
+
+.list-item-button.alternate{
+    border-left-width: 0px;
+    border-right-width: 1px;
+}
+
+.list-item-button.second-alternate{
+    width: auto;
+    min-width: 0px;
+    padding: 5px;
+}
+
+.list-item-button.third-alternate{
+    width: auto;
+    min-width: 0px;
+    flex:1;
+    border-width: 0px;
+}
+
+.list-item-button:hover{
+    background-color: #444;
+}
+
+.list-item.selected .list-item-button{
+    background-color: #555;
+}
+
+ListItemImage{
+    width:29px;
+    min-width:29px;
+    height: 29px;
+    white-space: nowrap;
+    overflow: hidden;
+    -unity-background-image-tint-color : #aaa;
+    border-color: #1a1a1a;
+}
+
+ListItemImage.alternate{
+    width: auto;
+    height: auto;
+    flex:1;
+    align-self: stretch;
+}
+
+ListItemImage.icon{
+    min-width:24px;
+    height: 24px;
+    width: 24px;
+    margin-left: 3px;
+    margin-right: 2px;
+    margin-top: 3px;
+    margin-bottom: 2px;
+}
+
+ListItemImage.second-alternate{
+    border-left-width: 1px;
+}
+
+ListItemImage.third-alternate{
+    border-right-width: 1px;
+}
+
+ListItemImage.hoverable:hover{
+    -unity-background-image-tint-color : #eee;
+}
+
+.list-item-input{
+    flex: 1;
+    height: 29px;
+    -unity-text-align: middle-left;
+    overflow: hidden;
+}
+
+.list-item-text-input,
+.list-item-int-input,
+.list-item-float-input,
+.list-item-vector-input,
+.list-item-enum-input,
+.list-item-color-input,
+.list-item-object-input{
+    margin: 0px;
+}
+
+.list-item-enum-input{
+    cursor: Link;
+}
+
+.list-item-text-input TextInput, 
+.list-item-int-input IntegerInput,
+.list-item-float-input FloatInput,
+.list-item-vector-input FloatInput,
+.list-item-enum-input .unity-enum-field__input,
+.list-item-object-input .unity-object-field__input{
+    border-width: 0px;
+    border-radius: 0px;
+    margin: 0px;
+    padding: 0px;
+    padding-left: 5px;
+    background-color: #363636;
+    color: #aaa;
+}
+
+.list-item-text-input.alternate TextInput, 
+.list-item-int-input.alternate IntegerInput,
+.list-item-float-input.alternate FloatInput,
+.list-item-vector-input.alternate FloatInput,
+.list-item-enum-input.alternate .unity-enum-field__text,
+.list-item-object-input.alternate .unity-object-field__input{
+    color: #777;
+}
+
+.alternate .list-item-text-input TextInput, 
+.alternate .list-item-int-input IntegerInput,
+.alternate .list-item-float-input FloatInput,
+.alternate .list-item-vector-input FloatInput,
+.alternate .list-item-enum-input .unity-enum-field__input,
+.alternate .list-item-object-input .unity-object-field__input{
+    background-color: #2d2d2d;
+}
+
+.list-item-text-input TextInput:hover,
+.list-item-int-input IntegerInput:hover,
+.list-item-float-input FloatInput:hover,
+.list-item-vector-input FloatInput:hover{
+    border-width: 1px;
+    padding-left: 4px;
+}
+
+.list-item-text-input.second-alternate TextInput{
+    -unity-text-align: middle-center;
+    padding: 0px;
+}
+
+.list-item-vector-input Label{
+    margin: 4px;
+    padding: 0px;
+    -unity-text-align: middle-center;
+}
+
+.unity-enum-field__text,
+.unity-object-field-display__label{
+    color: #aaa;
+}
+
+.list-item-object-input.second-alternate ObjectFieldSelector{
+    display: none;
+}
+
+.list-item-color-input{
+    margin-top: 10px;
+}
+
+.field-control .list-item-label{
+    width: 150px;
+    min-width: 150px;
+}
+
+/*creation prompt*/
+
+#creation-prompt{
+    -unity-font-style: bold;
+    font-size: 16px;
+    display: none;
+}
+
+#creation-prompt-label{
+    white-space: nowrap;
+}
+
+#creation-prompt-button{
+    margin: 5px;
+    padding: 5px;
+    border-radius: 10px;
+    background-color: #555;
+    cursor: Link;
+}
+
+#creation-prompt-button:hover{
+    padding: 4px;
+    border-width: 1px;
+    border-color: #aaa;
+}
+
+#index-taken-prompt{
+    background-color: rgba(0.1, 0.1, 0.1, 0.8);
+    -unity-font-style: bold;
+    font-size: 18px;
+    display: none;
+}
