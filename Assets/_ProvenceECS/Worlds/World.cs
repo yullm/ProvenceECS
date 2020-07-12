@@ -10,15 +10,10 @@ namespace ProvenceECS{
             this.world = world;
         }
     }
-
-    public enum GameState {MENU, COMBAT, FROZEN, CUTSCENE}; // replace with state manager????
-    public enum GameSubState {RECEIVING_ORDERS, ISSUING_ORDERS}
     
     [DontDisplayInEditor]
     public class World {
         
-        public GameState gameState = GameState.COMBAT;
-        public GameSubState gameSubState = GameSubState.RECEIVING_ORDERS;
         public string id;
         public string worldName;
         
@@ -97,12 +92,16 @@ namespace ProvenceECS{
             componentManager.RemoveComponent<T>(entityHandle);
         }
 
-        public void AddSystem<T>() where T : ProvenceSystem, new(){
-            systemManager.AddSystem<T>();
+        public T AddSystem<T>() where T : ProvenceSystem, new(){
+            return systemManager.AddSystem<T>();
         }
 
-        public ProvenceSystem GetSystem<T>() where T : ProvenceSystem{
+        public T GetSystem<T>() where T : ProvenceSystem{
             return systemManager.GetSystem<T>();
+        }
+
+        public T GetOrAddSystem<T>() where T : ProvenceSystem, new(){
+            return systemManager.GetOrAddSystem<T>();
         }
 
         public void RemoveSystem<T>() where T : ProvenceSystem{

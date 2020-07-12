@@ -40,15 +40,14 @@ namespace ProvenceECS.Mainframe{
             //world.eventManager.AddListener<EditorPersistanceUpdateEvent>(EditorPersistanceUpdate);
             world.eventManager.AddListener<SetEntityToManualEntry>(SetEntityToManualEntry);
             world.eventManager.AddListener<ComponentAdded<ActorManualInstance>>(InstanceAdded);
-            world.eventManager.AddListener<AllSystemsReadyEvent>(SetInitialInstances);
+            world.eventManager.AddListener<WakeSystemEvent>(SetInitialInstances);
             world.eventManager.Raise<SystemReadyEvent>(new SystemReadyEvent(this));
         }
 
-        protected void SetInitialInstances(AllSystemsReadyEvent args){
+        protected void SetInitialInstances(WakeSystemEvent args){
             foreach(KeyValuePair<Entity,ComponentHandle<ActorManualInstance>> kvp in world.componentManager.GetAllComponentsAsDictionary<ActorManualInstance>()){
                 SetEntityToManualEntry(new SetEntityToManualEntry(kvp.Key,kvp.Value));
             }
-            world.eventManager.RemoveListener<AllSystemsReadyEvent>(SetInitialInstances);
         }
 
         protected void InstanceAdded(ComponentAdded<ActorManualInstance> args){

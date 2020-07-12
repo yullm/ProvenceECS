@@ -12,10 +12,10 @@ namespace ProvenceECS{
         }
     }
 
-    public class AllSystemsReadyEvent : ProvenceEventArgs{
+    public class WakeSystemEvent : ProvenceEventArgs{
         public World world;
 
-        public AllSystemsReadyEvent(World world){
+        public WakeSystemEvent(World world){
             this.world = world;
         }
 
@@ -40,6 +40,8 @@ namespace ProvenceECS{
             this.world = null;
             this.cacheIsSafe = false;
         }
+
+        public virtual void Awaken(WakeSystemEvent args){}
         
         public abstract void Initialize(WorldRegistrationComplete args);
 
@@ -73,19 +75,26 @@ namespace ProvenceECS{
 
         protected void SystemReadyCheck(SystemReadyEvent args){
             readyCount++;
-            if(readyCount >= readyTarget) world.eventManager.Raise<AllSystemsReadyEvent>(new AllSystemsReadyEvent(world));
+            if(readyCount == readyTarget) world.eventManager.Raise<WakeSystemEvent>(new WakeSystemEvent(world));
+            if(readyCount > readyTarget) args.system.Awaken(new WakeSystemEvent(world));
         }
 
-        public void AddSystem<T>() where T : ProvenceSystem, new(){
+        public T AddSystem<T>() where T : ProvenceSystem, new(){
             T system = new T();
             system.world = world;
             systemDictionary[typeof(T)] = system;
             if(system.world != null) system.Initialize(new WorldRegistrationComplete(world));
+            return system;
         }
 
-        public ProvenceSystem GetSystem<T>() where T : ProvenceSystem{
-            if(systemDictionary.ContainsKey(typeof(T))) return systemDictionary[typeof(T)];
+        public T GetSystem<T>() where T : ProvenceSystem{
+            if(systemDictionary.ContainsKey(typeof(T))) return (T)systemDictionary[typeof(T)];
             return null;
+        }
+
+        public T GetOrAddSystem<T>() where T : ProvenceSystem, new(){
+            if(systemDictionary.ContainsKey(typeof(T))) return (T)systemDictionary[typeof(T)];
+            else return AddSystem<T>();
         }
 
         public void RemoveSystem<T>() where T : ProvenceSystem{

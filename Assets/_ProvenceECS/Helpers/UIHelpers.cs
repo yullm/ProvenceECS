@@ -32,15 +32,19 @@ namespace ProvenceECS{
         }
 
         public static Rect GetScreenRect(Vector3 pos1, Vector3 pos2){
-            Vector3 screenPosition1 = new Vector3(pos1.x,pos1.y,pos1.z);
-            screenPosition1.y = Screen.height - screenPosition1.y;
-            Vector3 screenPosition2 = new Vector3(pos2.x,pos2.y,pos2.z);
-            screenPosition2.y = Screen.height - screenPosition2.y;
+            Vector3 screenPosition1 = GetScreenRectPosition(pos1);
+            Vector3 screenPosition2 = GetScreenRectPosition(pos2);
 
             Vector3 topLeft = Vector3.Min(screenPosition1, screenPosition2);
             Vector3 bottomRight = Vector3.Max(screenPosition1, screenPosition2);
 
             return Rect.MinMaxRect(topLeft.x,topLeft.y,bottomRight.x, bottomRight.y);
+        }
+
+        public static Vector3 GetScreenRectPosition(Vector3 pos){
+            Vector3 screenPosition = new Vector3(pos.x,pos.y,pos.z);
+            screenPosition.y = Screen.height - screenPosition.y;
+            return screenPosition;
         }
 
         public static void DrawScreenRect(Rect rect, Color color ){

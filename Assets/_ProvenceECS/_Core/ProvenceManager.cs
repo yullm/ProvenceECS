@@ -36,8 +36,7 @@ namespace ProvenceECS{
                 return assetManager;
             }
         }
-        
-
+     
         public ProvenceManager(){
             this.worlds = new List<World>();
             this.managerID = System.Guid.NewGuid().ToString();
