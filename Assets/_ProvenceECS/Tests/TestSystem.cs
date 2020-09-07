@@ -25,16 +25,16 @@ namespace ProvenceECS{
         protected EntityHandle testHandle;
                 
         public override void Initialize(WorldRegistrationComplete args){
-            if(Application.isPlaying) world.eventManager.AddListener<AllSystemsReadyEvent>(Test);         
+            if(Application.isPlaying) world.eventManager.AddListener<WakeSystemEvent>(Awaken);         
             world.eventManager.Raise<SystemReadyEvent>(new SystemReadyEvent(this));
         }
 
-        protected void Test(AllSystemsReadyEvent args){
+        public override void Awaken(WakeSystemEvent args){
             testHandle = world.CreateEntity();
             GameObject go = testHandle.AddGameObject();
             NavMeshSurface surface = go.AddComponent<NavMeshSurface>();
             surface.layerMask = ~(1 << 8);
-            surface.BuildNavMesh();
+            //surface.BuildNavMesh();
         }
 
         public override void GatherCache(){}
