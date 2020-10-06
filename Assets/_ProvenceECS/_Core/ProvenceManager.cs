@@ -94,7 +94,6 @@ namespace ProvenceECS{
         public  void Backup(){
             Helpers.BackUpFile(TableDirectory.GetSubKey("worlds",TableDirectoryKey.DIRECTORY),managerID,".meglo",5);
             AssetManager.Backup();
-            Ransacked.Mainframe.RansackedMainframe.Backup();
         }
         
     }
