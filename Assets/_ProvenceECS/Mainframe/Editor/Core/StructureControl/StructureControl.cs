@@ -24,12 +24,7 @@ namespace ProvenceECS.Mainframe{
 
     public class StructureControl<T> : VisualElement{
 
-        protected List<Type> specifiedStructures = new List<Type>(){
-            typeof(ActorManualInstance)
-        };
-
         public List<Type> specifiedFields = new List<Type>(){
-            typeof(Entity),
             typeof(bool),
             typeof(int),
             typeof(float),
@@ -37,6 +32,7 @@ namespace ProvenceECS.Mainframe{
             typeof(Color),
             typeof(Vector2),
             typeof(Vector3),
+            typeof(Vector4),
             typeof(GameObject)
         };
 
@@ -64,13 +60,14 @@ namespace ProvenceECS.Mainframe{
 
         private void InitControl(){
             this.AddToClassList("structure-control");
-            if(specifiedStructures.Contains(typeof(T)))
+            if((typeof(T).IsDefined(typeof(CustomStructureControl),false))){
                 try{
                     Helpers.InvokeExtensionMethod(this,"CreateControl",typeof(StructureControlExtensions));
                 }catch(Exception e){
                     Debug.Log(e);
                     CreateDefaultControl();
                 }
+            }
             else
                 CreateDefaultControl();
         }
@@ -89,7 +86,7 @@ namespace ProvenceECS.Mainframe{
                         }
                     }
                     if(hide) continue;
-                    if(specifiedFields.Contains(fieldType)  || fieldType.IsEnum)
+                    if(specifiedFields.Contains(fieldType) || fieldType.IsDefined(typeof(CustomFieldControl), false) || fieldType.IsEnum)
                         Helpers.InvokeGenericMethod(this,"CreateFieldControl", fieldType, fields[i], alternate);
                     else
                         Helpers.InvokeGenericMethod(this,"CreateNestedStructureControl", fieldType, fields[i]);

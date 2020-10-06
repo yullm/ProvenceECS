@@ -37,19 +37,20 @@ namespace ProvenceECS{
         }
 
         public void Initialize(){
-            gameObjectManager.Initialize();
+            gameObjectManager.Initialize();            
+            componentManager.Initialize();
             systemManager.Initialize();
             eventManager.Raise<WorldRegistrationComplete>(new WorldRegistrationComplete(this));
         }
 
-        public EntityHandle CreateEntity(){
-            return entityManager.CreateEntity();
+        public EntityHandle CreateEntity(string name = ""){
+            return entityManager.CreateEntity(name);
         }
 
-        public void RemoveEntity(EntityHandle entityHandle){
-            gameObjectManager.RemoveGameObject(entityHandle);
-            entityManager.RemoveEntity(entityHandle);
-            componentManager.RemoveEntityEntries(entityHandle);
+        public void RemoveEntity(Entity entity){
+            componentManager.RemoveEntityEntries(entity);
+            gameObjectManager.RemoveGameObject(entity);
+            entityManager.RemoveEntity(entity);
         }
 
         public EntityHandle LookUpEntity(Entity entity){
@@ -60,36 +61,35 @@ namespace ProvenceECS{
             return entityManager.LookUpAllEntities();
         }
 
-        public EntityHandle LookUpEntityByComponent<T>(T component) where T : ProvenceComponent{
-            return componentManager.GetEntityByComponent<T>(component);
+        public EntityHandle DuplicateEntity(Entity entity){
+            EntityHandle duplicateHandle = CreateEntity();
+            gameObjectManager.DuplicateGameObject(entity, duplicateHandle.entity);
+            componentManager.CopyComponentsToOtherEntity(entity, duplicateHandle.entity);
+            return duplicateHandle;
         }
 
-        public ComponentHandle<T> AddComponent<T>(EntityHandle entityHandle) where T : ProvenceComponent, new(){
-            return componentManager.AddComponent<T>(entityHandle);
+        public ComponentHandle<T> AddComponent<T>(Entity entity) where T : ProvenceComponent, new(){
+            return componentManager.AddComponent<T>(entity);
         }
 
-        public ComponentHandle<T> AddComponent<T>(EntityHandle entityHandle, T component) where T : ProvenceComponent{
-            return componentManager.AddComponent<T>(entityHandle,component);
+        public ComponentHandle<T> AddComponent<T>(Entity entity, T component) where T : ProvenceComponent{
+            return componentManager.AddComponent<T>(entity,component);
         }
 
-        public ComponentHandle<T> GetOrCreateComponent<T>(EntityHandle entityHandle) where T : ProvenceComponent, new(){
-            return componentManager.GetOrCreateComponent<T>(entityHandle);
+        public ComponentHandle<T> GetOrCreateComponent<T>(Entity entity) where T : ProvenceComponent, new(){
+            return componentManager.GetOrCreateComponent<T>(entity);
         }
 
-        public ComponentHandle<T> GetComponent<T>(EntityHandle entityHandle) where T : ProvenceComponent{
-            return componentManager.GetComponent<T>(entityHandle);
+        public ComponentHandle<T> GetComponent<T>(Entity entity) where T : ProvenceComponent{
+            return componentManager.GetComponent<T>(entity);
         }
 
-        public List<ComponentHandle<ProvenceComponent>> GetAllComponents(EntityHandle entityHandle){
-            return componentManager.GetAllComponents(entityHandle);
+        public HashSet<ComponentHandle<ProvenceComponent>> GetAllComponents(Entity entity){
+            return componentManager.GetAllComponents(entity);
         }
 
-        public List<ComponentHandle<ProvenceComponent>> GetAllComponents(Entity entity){
-            return componentManager.GetAllComponents(LookUpEntity(entity));
-        }
-
-        public void RemoveComponent<T>(EntityHandle entityHandle) where T : ProvenceComponent{
-            componentManager.RemoveComponent<T>(entityHandle);
+        public void RemoveComponent<T>(Entity entity) where T : ProvenceComponent{
+            componentManager.RemoveComponent<T>(entity);
         }
 
         public T AddSystem<T>() where T : ProvenceSystem, new(){
@@ -108,16 +108,20 @@ namespace ProvenceECS{
             systemManager.RemoveSystem<T>();
         }
 
-        public GameObject AddGameObject(EntityHandle entityHandle){
-            return gameObjectManager.AddGameObject(entityHandle);
+        public GameObject AddGameObject(Entity entity){
+            return gameObjectManager.AddGameObject(entity);
         }
 
-        public GameObject GetGameObject(EntityHandle entityHandle){
-            return gameObjectManager.GetGameObject(entityHandle);
+        public GameObject GetGameObject(Entity entity){
+            return gameObjectManager.GetGameObject(entity);
         }
 
-        public void RemoveGameObject(EntityHandle entityHandle){
-            gameObjectManager.RemoveGameObject(entityHandle);
+        public GameObject SetGameObject(Entity entity, GameObject gameObject){
+            return gameObjectManager.SetGameObject(entity,gameObject);
+        }
+
+        public void RemoveGameObject(Entity entity){
+            gameObjectManager.RemoveGameObject(entity);
         }
 
         public void Organize(){

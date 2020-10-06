@@ -22,39 +22,59 @@ namespace ProvenceECS{
             }
         }
 
-        public GameObject this[EntityHandle entityHandle]{
+        public GameObject this[Entity entity]{
             get{
-                if(gameObjectDictionary.ContainsKey(entityHandle.entity)) return gameObjectDictionary[entityHandle.entity];
+                if(gameObjectDictionary.ContainsKey(entity)) return gameObjectDictionary[entity];
                 return null;
             }
         }
 
-        public GameObject GetGameObject(EntityHandle entityHandle){
-            if(gameObjectDictionary.ContainsKey(entityHandle.entity)){
-                if(gameObjectDictionary[entityHandle.entity] == null){
-                    gameObjectDictionary.Remove(entityHandle.entity);
+        public GameObject GetGameObject(Entity entity){
+            if(entity == null) return null;
+            if(gameObjectDictionary.ContainsKey(entity)){
+                if(gameObjectDictionary[entity] == null){
+                    gameObjectDictionary.Remove(entity);
                     return null;
                 }
-                return gameObjectDictionary[entityHandle.entity];
+                return gameObjectDictionary[entity];
             }        
             return null;
         }
 
-        public GameObject AddGameObject(EntityHandle entityHandle){
-            if(gameObjectDictionary.ContainsKey(entityHandle.entity) && gameObjectDictionary[entityHandle.entity] != null)
-                return gameObjectDictionary[entityHandle.entity];     
+        public GameObject AddGameObject(Entity entity){
+            if(gameObjectDictionary.ContainsKey(entity) && gameObjectDictionary[entity] != null)
+                return gameObjectDictionary[entity];     
             
-            GameObject go = new GameObject(entityHandle.entity.ToString());
-            gameObjectDictionary[entityHandle.entity] = go;
-            world.eventManager.Raise<CacheIntegrityChange>(new CacheIntegrityChange(typeof(GameObject)));
+            GameObject go = new GameObject(entity.ToString());
+            gameObjectDictionary[entity] = go;
+            world.eventManager.Raise<CacheIntegrityChange<GameObject>>(new CacheIntegrityChange<GameObject>(world));
             return go;
         }
 
-        public void RemoveGameObject(EntityHandle entityHandle){
-            if(gameObjectDictionary.ContainsKey(entityHandle.entity)){
-                UnityEngine.Object.DestroyImmediate(gameObjectDictionary[entityHandle.entity]);
-                world.eventManager.Raise<CacheIntegrityChange>(new CacheIntegrityChange(typeof(GameObject)));                
+        public GameObject SetGameObject(Entity entity, GameObject gameObject){
+            if(gameObjectDictionary.ContainsKey(entity))
+                UnityEngine.Object.DestroyImmediate(gameObjectDictionary[entity]);
+            gameObject.name = entity.ToString();
+            gameObjectDictionary[entity] = gameObject;
+            world.eventManager.Raise<CacheIntegrityChange<GameObject>>(new CacheIntegrityChange<GameObject>(world));
+            return gameObject;
+        }
+
+        public void RemoveGameObject(Entity entity){
+            if(gameObjectDictionary.ContainsKey(entity)){
+                UnityEngine.Object.DestroyImmediate(gameObjectDictionary[entity]);
+                world.eventManager.Raise<CacheIntegrityChange<GameObject>>(new CacheIntegrityChange<GameObject>(world));                
             }
+        }
+        
+        public GameObject DuplicateGameObject(Entity original, Entity copy){
+            GameObject originalObject = GetGameObject(original);
+            if(originalObject == null) return null;
+            GameObject copyObject = AddGameObject(copy);
+            copyObject.transform.position = originalObject.transform.position;
+            copyObject.transform.rotation = originalObject.transform.rotation;
+            copyObject.transform.localScale = originalObject.transform.localScale;
+            return copyObject;
         }
 
         public void Clear(){

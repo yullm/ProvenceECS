@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using UnityEngine;
+using Ransacked.Mainframe;
 
 namespace ProvenceECS.Mainframe{
 
@@ -41,6 +42,15 @@ namespace ProvenceECS.Mainframe{
                 if(e.input != input) return;
                 control.value = input.value;
                 control.eventManager.Raise<FieldControlUpdated<string>>(new FieldControlUpdated<string>(control));
+            });
+        }
+
+        public static void DrawControl(this FieldControl<Vector4> control){
+            Vector4Field input = control.AddVector4Field(control.value);
+            control.eventManager.AddListener<ListItemInputChange>(e =>{
+                if(e.input != input) return;
+                control.value = input.value;
+                control.eventManager.Raise<FieldControlUpdated<Vector4>>(new FieldControlUpdated<Vector4>(control));
             });
         }
 

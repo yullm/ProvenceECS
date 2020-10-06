@@ -42,6 +42,17 @@ namespace ProvenceECS{
     
     }
 
+    public class WorldDrawGizmosUpdateEvent : ProvenceEventArgs{
+
+        public World world;
+        public float time;
+        public WorldDrawGizmosUpdateEvent(World world, float time){
+            this.world = world;
+            this.time = time;
+        }
+    
+    }
+
     public class EditorPersistanceUpdateEvent : ProvenceEventArgs{
         public World world;
         public EditorPersistanceUpdateEvent(World world){

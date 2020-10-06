@@ -33,10 +33,38 @@ namespace ProvenceECS{
         }
 
         public static List<T> Add<T>(this List<T> list, params T[] items){
-            for(int i = 0; i < items.Length; i++){
-                list.Add(items[i]);
+            foreach(T item in items){
+                list.Add(item);
             }
             return list;
+        }
+
+        public static List<T> Add<T>(this List<T> list, IEnumerable<T> items){
+            foreach(T item in items){
+                list.Add(item);
+            }
+            return list;
+        }
+
+        public static HashSet<T> Add<T>(this HashSet<T> set, IEnumerable<T> items){
+            foreach(T item in items){
+                set.Add(item);
+            }
+            return set;
+        }
+
+        public static List<T> Remove<T>(this List<T> list, IEnumerable<T> items){
+            foreach(T item in items){
+                list.Remove(item);
+            }
+            return list;
+        }
+
+        public static IEnumerable<T> Remove<T>(this HashSet<T> set, IEnumerable<T> items){
+            foreach(T item in items){
+                set.Remove(item);
+            }
+            return set;
         }
 
         public static List<T> Swap<T>(this List<T> list, int indexA, int indexB){
@@ -44,6 +72,18 @@ namespace ProvenceECS{
             list[indexA] = list[indexB];
             list[indexB] = temp;
             return list;
+        }
+
+        public static bool SetEquals<T>(this List<T> list1, List<T> list2){
+            return new HashSet<T>(list1).SetEquals(list2);
+        }
+
+        public static bool IsInRange(this int value, int min, int max){
+            return value >= min && value <= max;
+        }
+
+        public static bool IsInRange(this float value, float min, float max){
+            return value >= min && value <= max;
         }
 
     }

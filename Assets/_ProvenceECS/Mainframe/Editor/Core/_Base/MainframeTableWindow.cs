@@ -12,7 +12,6 @@ using UnityEngine.SceneManagement;
 
 namespace ProvenceECS.Mainframe{
 
-    public abstract class MainframeUIArgs {}
 
     public class DrawColumnEventArgs<T> : MainframeUIArgs{
         public int column;
@@ -72,21 +71,31 @@ namespace ProvenceECS.Mainframe{
     }
 
     public abstract class MainframeTableWindow<T> : EditorWindow{
+
+        protected string uiKey;
         
         protected VisualElement root;
         protected T chosenKey;
         protected GUIStyle previewStyle;
-        protected EventManager<MainframeUIArgs> eventManager = new EventManager<MainframeUIArgs>();
+        public EventManager<MainframeUIArgs> eventManager = new EventManager<MainframeUIArgs>();
         protected PlayModeStateChange playModeState;
 
         public MainframeTableWindow(){
-            EditorApplication.playModeStateChanged += (state)=>{
+            EditorApplication.playModeStateChanged += (state) =>{
                 playModeState = state;
                 EditorStateChange(state);
             };
         }
 
-        public abstract void OnEnable();
+        /// <summary>
+        ///     Set Title and uiKey
+        /// </summary>
+        protected abstract void SetEditorSettings();
+
+        public virtual void OnEnable(){
+            SetEditorSettings();
+            LoadTree(ProvenceECS.Mainframe.UIDirectories.GetPath(uiKey,"uxml"), ProvenceECS.Mainframe.UIDirectories.GetPath(uiKey,"uss"));
+        }
 
         protected void LoadTree(string xmlPath, params string[] ussPaths){
             root = rootVisualElement;
@@ -111,7 +120,7 @@ namespace ProvenceECS.Mainframe{
             EditorSceneManager.sceneSaved += scene =>{
                 eventManager.Raise<SceneSavedEvent>(new SceneSavedEvent(scene));
             };
-            EditorSceneManager.sceneLoaded += (scene, mode) =>{
+            EditorSceneManager.sceneOpened += (scene, mode) =>{
                 eventManager.Raise<SceneLoadedEvent>(new SceneLoadedEvent(scene));
             };
             eventManager.AddListener<SetSceneDirtyEvent>(SetSceneDirty);
@@ -167,6 +176,23 @@ namespace ProvenceECS.Mainframe{
                 gameObjectEditor.OnInteractivePreviewGUI(wrapper.contentRect, previewStyle);
             }
             
+        }
+
+        protected ListItem DrawShelf(string titleText, out Div container){
+            ListItem titleItem = new ListItem();
+            titleItem.AddToClassList("spacer","selectable","container-title");
+            ListItemText title = titleItem.AddTitle(titleText);
+            container = new Div();
+            container.AddToClassList("category-container");
+            
+            Div containerRef = container;
+            titleItem.eventManager.AddListener<MouseClickEvent>(e =>{
+                if(e.button != 0) return;
+                if(title.ClassListContains("second-alternate")) title.RemoveFromClassList("second-alternate");
+                else title.AddToClassList("second-alternate");
+                containerRef.Toggle();
+            });
+            return titleItem; 
         }
     }
 }

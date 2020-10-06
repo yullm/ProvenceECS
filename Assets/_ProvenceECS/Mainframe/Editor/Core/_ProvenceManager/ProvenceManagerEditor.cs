@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ProvenceECS.Mainframe{
 
@@ -14,6 +15,7 @@ namespace ProvenceECS.Mainframe{
         protected Texture worldTableItemIcon;
         protected Texture entityIcon;
         protected Texture systemIcon;
+        protected Texture packageIcon;
         protected float persistanceRate = 0.2f;
         protected float persistanceTimer = 0f;
         protected float backupTimer = 0f;
@@ -22,7 +24,6 @@ namespace ProvenceECS.Mainframe{
         [MenuItem("ProvenceECS/Manager &`")]
         public static void ShowWindow(){
             ProvenceManagerEditor window = GetWindow<ProvenceManagerEditor>();
-            window.titleContent = new GUIContent("Provence ECS");
         }
 
         public void OnInspectorUpdate(){
@@ -40,18 +41,34 @@ namespace ProvenceECS.Mainframe{
             }
         }
 
+        protected override void SetEditorSettings(){
+            this.titleContent = new GUIContent("Provence ECS");
+            this.uiKey = "provence-manager";
+        }
+
         public override void OnEnable(){
             if(root != null) root.Clear();
             if(playModeState != PlayModeStateChange.ExitingEditMode){
                 ProvenceSceneHook hook = FindObjectOfType<ProvenceSceneHook>();
-                if(hook == null) return;
-                if(hook.id.Equals("")) hook.id = System.Guid.NewGuid().ToString();
+                if(hook == null){
+                    CreateNewManagerHook();
+                    return;
+                }
                 ProvenceManager.Load(hook.id);
             }
-            LoadTree(UIDirectories.GetPath("provence-manager","uxml"),UIDirectories.GetPath("provence-manager","uss"));
+            base.OnEnable();
+        }
+
+        protected void CreateNewManagerHook(){
+            GameObject managerObj = new GameObject("ProvenceECS Manager");
+            ProvenceSceneHook sceneHook = managerObj.AddComponent<ProvenceSceneHook>();
+            sceneHook.id = System.Guid.NewGuid().ToString();
+            Debug.Log("New Provence Manager Created");
+            OnEnable();
         }
 
         protected override void EditorStateChange(PlayModeStateChange args){
+            ProvenceSceneHook hook = FindObjectOfType<ProvenceSceneHook>();
             switch(args){
                 case PlayModeStateChange.EnteredEditMode:
                     OnEnable();
@@ -63,11 +80,25 @@ namespace ProvenceECS.Mainframe{
         }
 
         protected override void RegisterEventListeners(){
+            eventManager.AddListener<SceneLoadedEvent>(SceneLoaded);
             eventManager.AddListener<SelectKey<World>>(SelectKey);
             eventManager.AddListener<DrawColumnEventArgs<World>>(DrawColumn);
             eventManager.AddListener<SceneSavedEvent>(SaveManager);
             RegisterWorldTableEventListeners();
             RegisterWorldEditorEventListeners();
+        }
+
+        protected void SceneLoaded(SceneLoadedEvent args){
+            ProvenceSceneHook hook = FindObjectOfType<ProvenceSceneHook>();
+            if(hook == null){
+                OnEnable();
+                return;
+            }else{
+                if(hook.id != ProvenceManager.Instance.managerID){
+                    OnEnable();
+                    return;
+                }
+            }
         }
 
         protected void RegisterWorldTableEventListeners(){
@@ -76,14 +107,15 @@ namespace ProvenceECS.Mainframe{
             });
 
             root.Q<ListItemImage>("add-world-button").eventManager.AddListener<MouseClickEvent>(AddWorld);
-
-            root.Q<ListItem>("actor-manual-button").eventManager.AddListener<MouseClickEvent>(e => {
-                if(e.button != 0) return;
-                EditorWindow.GetWindow<Ransacked.ActorManualEditor>();
-            });            
+           
             root.Q<ListItem>("asset-manager-button").eventManager.AddListener<MouseClickEvent>(e => {
                 if(e.button != 0) return;
                 EditorWindow.GetWindow<AssetManagerEditor>();
+            });
+
+            root.Q<ListItem>("system-package-manager-button").eventManager.AddListener<MouseClickEvent>(e => {
+                if(e.button != 0) return;
+                EditorWindow.GetWindow<SystemPackageManagerEditor>();
             }); 
         }
 
@@ -119,8 +151,9 @@ namespace ProvenceECS.Mainframe{
             root.Q<ListItemImage>("world-editor-system-toggle").eventManager.AddListener<MouseClickEvent>(e => {
                 root.Q<ColumnScroller>("world-editor-system-scroller").Toggle();
             });
-        
-            root.Q<ListItemImage>("add-system-button").eventManager.AddListener<MouseClickEvent>(AddSystemButtonPressed);
+            
+            root.Q<Div>("add-package-button").eventManager.AddListener<MouseClickEvent>(AddPackageButtonPressed);
+            root.Q<Div>("add-system-button").eventManager.AddListener<MouseClickEvent>(AddSystemButtonPressed);
         }
 
         protected override void InitializeWindow(){
@@ -128,6 +161,7 @@ namespace ProvenceECS.Mainframe{
             worldTableItemIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/globe-europe.png");
             entityIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/circle-notch.png");
             systemIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/leaf.png");
+            packageIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/clone-open.png");
             eventManager.Raise<DrawColumnEventArgs<World>>(new DrawColumnEventArgs<World>(0));
         }
 
@@ -238,6 +272,14 @@ namespace ProvenceECS.Mainframe{
                             break;
                         case 1:
                             contextMenu.Show(root,e,true);
+                            ListItemText duplicateButton = root.Q<ListItemText>("entity-list-context-menu-duplicate-button");
+                            duplicateButton.eventManager.ClearListeners();
+                            duplicateButton.eventManager.AddListener<MouseClickEvent>(ev =>{
+                                if(ev.button != 0) return;
+                                DuplicateEntity(entityHandle);
+                                contextMenu.style.display = DisplayStyle.None;
+                            });
+
                             ListItemText removeButton = root.Q<ListItemText>("entity-list-context-menu-remove-button");
                             removeButton.eventManager.ClearListeners();
                             removeButton.eventManager.AddListener<MouseClickEvent>(ev => {
@@ -259,6 +301,38 @@ namespace ProvenceECS.Mainframe{
             scroller.Clear();
             bool alternate = false;
             DropDownMenu contextMenu = root.Q<DropDownMenu>("system-list-context-menu");
+
+            foreach(string package in chosenKey.systemManager.systemPackages){
+                ListItem item = new ListItem(alternate,true,true);
+                item.AddIndent();
+                item.AddImage(packageIcon).AddToClassList("icon");
+                item.AddTextDisplay(package);
+                scroller.Add(item);
+
+                item.eventManager.AddListener<MouseClickEvent>(e => {
+                    switch(e.button){
+                        case 0:                            
+                            ListItem selected = scroller.Q<ListItem>(null,"selected");
+                            if(selected != null) selected.RemoveFromClassList("selected");
+                            item.AddToClassList("selected");                            
+                            break;
+                        case 1:
+                            contextMenu.Show(root,e,true);
+                            ListItemText removeButton = root.Q<ListItemText>("system-list-context-menu-remove-button");
+                            removeButton.eventManager.ClearListeners();
+                            removeButton.eventManager.AddListener<MouseClickEvent>(ev => {
+                                if(ev.button != 0) return;
+                                chosenKey.systemManager.systemPackages.Remove(package);
+                                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
+                                eventManager.Raise<DrawColumnEventArgs<World>>(new DrawColumnEventArgs<World>(1));
+                            });
+                            break;
+                    }
+                });
+            
+                alternate = !alternate;
+            }
+
             foreach(System.Type systemType in chosenKey.systemManager.GetCurrentSystemTypes()){
                 ListItem item = new ListItem(alternate,true,true);
                 item.AddIndent();
@@ -350,7 +424,13 @@ namespace ProvenceECS.Mainframe{
         }
 
         protected void RemoveEntity(EntityHandle entityHandle){
-            chosenKey.RemoveEntity(entityHandle);
+            chosenKey.RemoveEntity(entityHandle.entity);
+            eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
+            eventManager.Raise<SelectKey<World>>(new SelectKey<World>(chosenKey));
+        }
+
+        protected void DuplicateEntity(EntityHandle entityHandle){
+            entityHandle.Duplicate();
             eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
             eventManager.Raise<SelectKey<World>>(new SelectKey<World>(chosenKey));
         }
@@ -374,6 +454,23 @@ namespace ProvenceECS.Mainframe{
             chosenKey.RemoveSystem<T>();
             eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
             eventManager.Raise<DrawColumnEventArgs<World>>(new DrawColumnEventArgs<World>(1));
+        }
+
+        protected void AddPackageButtonPressed(MouseClickEvent e){
+            if(e.button != 0) return;
+            HashSet<string> set = new HashSet<string>();
+            foreach(string key in ProvenceManager.SystemPackageManager.Keys){
+                if(!chosenKey.systemManager.systemPackages.Contains(key))
+                    set.Add(key);
+            }
+            KeySelector keySelector = KeySelector.Open();
+            keySelector.eventManager.AddListener<MainframeKeySelection<string>>(ev =>{
+                chosenKey.systemManager.systemPackages.Add(ev.value);
+                chosenKey.systemManager.systemPackages = new HashSet<string>(chosenKey.systemManager.systemPackages.OrderBy(p => p));
+                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
+                eventManager.Raise<DrawColumnEventArgs<World>>(new DrawColumnEventArgs<World>(1));
+            });
+            keySelector.eventManager.Raise<SetSelectorParameters<HashSet<string>>>(new SetSelectorParameters<HashSet<string>>(set));
         }
 
         protected void OpenSystemEditor<T>() where T : ProvenceSystem{

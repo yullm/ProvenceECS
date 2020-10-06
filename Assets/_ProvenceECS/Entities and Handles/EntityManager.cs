@@ -16,18 +16,14 @@ namespace ProvenceECS{
             this.entities = new List<Entity>();
         }
 
-        public EntityHandle CreateEntity(){
+        public EntityHandle CreateEntity(string name = ""){
             Entity entity;
             EntityHandle entityHandle = new EntityHandle(world);
             entity = new Entity();
             entities.Add(entity);
             entityHandle.entity = entity;
-            entityHandle.AddComponent<Name>(new Name(entity.ToString()));            
+            entityHandle.AddComponent<Name>(new Name(!name.Equals("") ? name : entity.ToString()));            
             return entityHandle;
-        }
-
-        public void RemoveEntity(EntityHandle entityHandle){
-            RemoveEntity(entityHandle.entity);
         }
 
         public void RemoveEntity(Entity entity){

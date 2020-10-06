@@ -30,22 +30,22 @@ namespace ProvenceECS.Mainframe{
                     {TableDirectoryKey.EXTENSION,   @".meglo"}
                 }
             },{
-                "actor-manual", new Dictionary<TableDirectoryKey, string>{
-                    {TableDirectoryKey.DIRECTORY,   ROOT+@"/ActorManual/"},
-                    {TableDirectoryKey.FILE,        @"ActorManual"},
-                    {TableDirectoryKey.EXTENSION,   @".meglo"}
-                }
-            },{
-                "actor-manual-keys", new Dictionary<TableDirectoryKey, string>{
-                    {TableDirectoryKey.DIRECTORY,   @"./Assets/_ProvenceECS/Mainframe/ActorManual/"},
-                    {TableDirectoryKey.FILE,        @"ActorManualKeys"},
-                    {TableDirectoryKey.EXTENSION,   @".cs"}
-                }
-            },{
                 "asset-manager", new Dictionary<TableDirectoryKey, string>{
                     {TableDirectoryKey.DIRECTORY,   ROOT+@"/AssetManager/"},
                     {TableDirectoryKey.FILE,        @"AssetManager"},
                     {TableDirectoryKey.EXTENSION,   @".meglo"}
+                }
+            },{
+                "system-package-manager", new Dictionary<TableDirectoryKey, string>{
+                    {TableDirectoryKey.DIRECTORY,   ROOT+@"/SystemPackageManager/"},
+                    {TableDirectoryKey.FILE,        @"SystemPackageManager"},
+                    {TableDirectoryKey.EXTENSION,   @".meglo"}
+                }
+            },{
+                "system-package-manager-keys", new Dictionary<TableDirectoryKey, string>{
+                    {TableDirectoryKey.DIRECTORY,   ROOT+@"/SystemPackageManagerKeys/"},
+                    {TableDirectoryKey.FILE,        @"SystemPackageManagerKeys"},
+                    {TableDirectoryKey.EXTENSION,   @".cs"}
                 }
             }
         };

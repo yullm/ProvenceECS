@@ -21,11 +21,21 @@ namespace ProvenceECS{
 
     }
 
-    public class CacheIntegrityChange : ProvenceEventArgs{
-        public Type type;
+    public class CacheIntegrityChange<T> : ProvenceEventArgs{
+        public World world;
 
-        public CacheIntegrityChange(Type type){
-            this.type = type;
+        public CacheIntegrityChange(World world){
+            this.world = world;
+        }
+    }
+
+    public class PlayStart : ProvenceEventArgs{
+        public World world;
+        public float time;
+        
+        public PlayStart(World world, float time){
+            this.world = world;
+            this.time = time;
         }
     }
 
@@ -41,13 +51,21 @@ namespace ProvenceECS{
             this.cacheIsSafe = false;
         }
 
-        public virtual void Awaken(WakeSystemEvent args){}
-        
-        public abstract void Initialize(WorldRegistrationComplete args);
+        public virtual void Initialize(WorldRegistrationComplete args){
+            RegisterEventListeners();
+            world.eventManager.Raise<SystemReadyEvent>(new SystemReadyEvent(this));
+        }
 
-        public abstract void GatherCache();
+        public virtual void Awaken(WakeSystemEvent args){}      
 
-        public abstract void IntegrityCheck(CacheIntegrityChange args);
+        protected abstract void RegisterEventListeners();
+
+        protected abstract void GatherCache();
+
+        protected virtual void IntegrityCheck<T>(CacheIntegrityChange<T> args){
+            cacheIsSafe = false;
+        }
+
     }
 
     [System.Serializable]
@@ -55,16 +73,22 @@ namespace ProvenceECS{
         
         public World world;
         [JsonProperty]
-        protected Dictionary<Type,ProvenceSystem> systemDictionary = new Dictionary<Type, ProvenceSystem>();
+        protected Dictionary<Type,ProvenceSystem> systemDictionary;
+        public HashSet<string> systemPackages;
         protected int readyCount = 0;
         protected int readyTarget = 0;
+        protected float playStartTimer = 0f;
+        protected float playStartGoal = 0.1f;
 
         public SystemManager(World world){
+            this.systemDictionary = new Dictionary<Type, ProvenceSystem>();
+            this.systemPackages = new HashSet<string>();
             this.world = world;  
         }
 
         public void Initialize(){
             world.eventManager.AddListener<SystemReadyEvent>(SystemReadyCheck);
+            if(Application.isPlaying) AddPackageSystems();
             foreach(KeyValuePair<Type, ProvenceSystem> kvp in systemDictionary){
                 if(kvp.Value == null) continue;
                 readyTarget++;
@@ -73,10 +97,29 @@ namespace ProvenceECS{
             }
         }
 
+        protected void AddPackageSystems(){
+            foreach(string packageName in systemPackages){
+                if(ProvenceManager.SystemPackageManager.ContainsKey(packageName)){
+                    HashSet<Type> package = ProvenceManager.SystemPackageManager[packageName].systems;
+                    foreach(Type systemType in package){
+                        if(!systemDictionary.ContainsKey(systemType)){
+                            systemDictionary[systemType] = (ProvenceSystem) Activator.CreateInstance(systemType);
+                        }
+                    }
+                }
+            }
+        }
+
         protected void SystemReadyCheck(SystemReadyEvent args){
             readyCount++;
-            if(readyCount == readyTarget) world.eventManager.Raise<WakeSystemEvent>(new WakeSystemEvent(world));
-            if(readyCount > readyTarget) args.system.Awaken(new WakeSystemEvent(world));
+            if(readyCount > readyTarget){
+                args.system.Awaken(new WakeSystemEvent(world));
+                return;
+            }
+            if(readyCount == readyTarget){
+                world.eventManager.Raise<WakeSystemEvent>(new WakeSystemEvent(world));
+                world.eventManager.AddListener<WorldUpdateEvent>(WaitForPlayStart);
+            }
         }
 
         public T AddSystem<T>() where T : ProvenceSystem, new(){
@@ -103,6 +146,15 @@ namespace ProvenceECS{
 
         public List<Type> GetCurrentSystemTypes(){
             return systemDictionary.Keys.ToList();
+        }
+
+        protected void WaitForPlayStart(WorldUpdateEvent args){
+            if(playStartTimer < playStartGoal){
+                playStartTimer += Time.deltaTime;
+                return;
+            }
+            world.eventManager.RemoveListener<WorldUpdateEvent>(WaitForPlayStart);
+            world.eventManager.Raise<PlayStart>(new PlayStart(world, Time.time));
         }
 
     }

@@ -15,6 +15,10 @@ namespace ProvenceECS.Mainframe{
                     {"inspector-uss","/Core/_Base/Unity Inspector/MainframeUnityInspector.uss"}
                 }
             },{
+                "collection-editor", new Dictionary<string, string>(){
+                    {"uss", "/Core/_Base/ProvenceCollectionEditor/ProvenceCollectionEditorBase.uss"}
+                }
+            },{
                 "provence-manager", new Dictionary<string, string>(){
                     {"cs",  "/Core/_ProvenceManager/ProvenceManagerEditor.cs"},
                     {"uxml","/Core/_ProvenceManager/ProvenceManagerEditor.uxml"},
@@ -80,17 +84,23 @@ namespace ProvenceECS.Mainframe{
                     {"uxml","/Core/AssetManager/AssetManagerEditor.uxml"},
                     {"uss", "/Core/AssetManager/AssetManagerEditor.uss"}
                 }
+            },{
+                "key-selector", new Dictionary<string, string>(){
+                    {"cs",  "/Core/KeySelector/KeySelector.cs"},
+                    {"uxml","/Core/KeySelector/KeySelector.uxml"},
+                    {"uss", "/Core/KeySelector/KeySelector.uss"}
+                }
+            },{
+                "system-package-manager", new Dictionary<string, string>(){
+                    {"cs",  "/Core/SystemPackageManager/SystemPackageManagerEditor.cs"},
+                    {"uxml","/Core/SystemPackageManager/SystemPackageManagerEditor.uxml"},
+                    {"uss", "/Core/SystemPackageManager/SystemPackageManagerEditor.uss"}
+                }
             }
         };
 
         public static readonly Dictionary<string,Dictionary<string,string>> additionsDirectory = new Dictionary<string, Dictionary<string, string>>(){
-            {
-                "main", new Dictionary<string, string>(){
-                    {"cs",  "/Main Window/Mainframe.cs"},
-                    {"uxml","/Main Window/Mainframe.uxml"},
-                    {"uss", "/Main Window/Mainframe.uss"}
-                }
-            }
+            
         };
 
         

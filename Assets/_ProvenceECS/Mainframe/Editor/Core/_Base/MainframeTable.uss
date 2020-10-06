@@ -57,7 +57,7 @@ TableWrapper{
     border-right-width: 1px;
     border-color: #1a1a1a;
     
-    background-color: #2a2a2a;
+    background-color: #262626;
 }
 
 .column-scroller{
@@ -145,7 +145,7 @@ Div.selectable ListItemImage,
 
 .list-item-label{
     height: 29px;
-    min-width: 50px;
+    min-width: 100px;
     width: 50px;
     -unity-text-align: middle-center;
     white-space: nowrap;
@@ -156,8 +156,8 @@ Div.selectable ListItemImage,
 }
 
 .list-item-label.alternate{
-    width: 100px;
-    min-width: 100px;
+    width: 150px;
+    min-width: 150px;
 }
 
 .list-item-label.second-alternate{
@@ -391,6 +391,28 @@ ListItemImage.hoverable:hover{
 .field-control .list-item-label{
     width: 150px;
     min-width: 150px;
+}
+
+.container-title{
+    border-top-width: 1px;
+    height: 31px;
+    margin-top: -1px;
+}
+
+KeySelectorElement, HierarchySelectorElement{
+    height: 29px;
+    border-color: #1a1a1a;
+    border-right-width: 1px;
+    flex-direction: row;
+    flex: 1;
+}
+
+KeySelectorElement.alternate, HierarchySelectorElement.alternate{
+    border-right-width: 0px;
+}
+
+.soundbank-input{
+    flex: 0.7;
 }
 
 /*creation prompt*/

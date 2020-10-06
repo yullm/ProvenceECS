@@ -19,21 +19,21 @@ namespace ProvenceECS{
             }
         }
 
-        protected static Mainframe.ActorManual actorManual;
-        public static Mainframe.ActorManual ActorManual{
-            get{
-                if(actorManual == null || !actorManual.cacheIsSafe)
-                    actorManual = Mainframe.ActorManual.Load();
-                return actorManual;
-            }
-        }
-
         protected static Mainframe.AssetManager assetManager;
         public static Mainframe.AssetManager AssetManager{
             get{
                 if(assetManager == null || !assetManager.cacheIsSafe)
                     assetManager = Mainframe.AssetManager.Load();
                 return assetManager;
+            }
+        }
+
+        protected static Mainframe.SystemPackageManager systemPackageManager;
+        public static Mainframe.SystemPackageManager SystemPackageManager{
+            get{
+                if(systemPackageManager == null || !systemPackageManager.cacheIsSafe)
+                    systemPackageManager = Mainframe.SystemPackageManager.Load();
+                return systemPackageManager;
             }
         }
      
@@ -70,10 +70,16 @@ namespace ProvenceECS{
             return null;
         }
 
+        public void BroadcastEvent<T>(T args) where T : ProvenceEventArgs{
+            foreach(World world in worlds){
+                world.eventManager.Raise<T>(args);                
+            }
+        }
+
         public static void Load(string id){
             ProvenceManager current = null;
             current = Helpers.LoadFromSerializedFile<ProvenceManager>(Mainframe.TableDirectory.GetSubKey("worlds", Mainframe.TableDirectoryKey.DIRECTORY) + id + ".meglo");
-            if(current == null) current = new ProvenceManager(id);            
+            if(current.managerID != id) current = new ProvenceManager(id);        
             foreach(World world in current.worlds) world.Initialize();
             ProvenceManager.instance = current;
         }
@@ -87,8 +93,8 @@ namespace ProvenceECS{
 
         public  void Backup(){
             Helpers.BackUpFile(TableDirectory.GetSubKey("worlds",TableDirectoryKey.DIRECTORY),managerID,".meglo",5);
-            ActorManual.Backup();
             AssetManager.Backup();
+            Ransacked.Mainframe.RansackedMainframe.Backup();
         }
         
     }

@@ -14,8 +14,9 @@ namespace ProvenceECS.Mainframe{
             window.highestIndex = highestIndex;
         }
 
-        public override void OnEnable(){
-            LoadTree(UIDirectories.GetPath("index-selector","uxml"),UIDirectories.GetPath("index-selector","uss"));
+        protected override void SetEditorSettings(){
+            this.titleContent = new GUIContent("Index Selector");
+            this.uiKey = "index-selector";
         }
 
         protected override void RegisterEventListeners(){

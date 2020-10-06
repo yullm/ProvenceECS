@@ -41,8 +41,9 @@ namespace ProvenceECS.Mainframe{
 
         // Init Methods
 
-        public override void OnEnable(){
-            LoadTree(UIDirectories.GetPath("entity-editor","uxml"),UIDirectories.GetPath("entity-editor","uss"));
+        protected override void SetEditorSettings(){
+            this.titleContent = new GUIContent("Provence Asset Manager");
+            this.uiKey = "entity-editor";
         }
 
         protected override void RegisterEventListeners(){

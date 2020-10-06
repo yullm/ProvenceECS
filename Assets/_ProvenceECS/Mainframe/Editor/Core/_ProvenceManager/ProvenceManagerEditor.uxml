@@ -32,11 +32,11 @@
                     <ListItemImage src="Assets/Icons/menuList.png"/>
                     <ListItemText class="list-item-title alternate" text="Editors:"/>
                 </ListItem>
-                <ListItem name="actor-manual-button" class="selectable hoverable">
-                    <ListItemText class="list-item-title" text="Actor Manual"/>
-                </ListItem>
                 <ListItem name="asset-manager-button" class="alternate selectable hoverable">
                     <ListItemText class="list-item-title" text="Asset Manager"/>
+                </ListItem>
+                <ListItem name="system-package-manager-button" class="selectable hoverable">
+                    <ListItemText class="list-item-title" text="System Package Manager"/>
                 </ListItem>
             </PageColumn>
             <PageColumn name="world-editor">
@@ -57,7 +57,14 @@
                 <ListItem class="alternate spacer">
                     <ListItemImage name="world-editor-system-toggle" class="menu-bar-icon selectable hoverable" src="Assets/Icons/menuList.png"/>
                     <ListItemText class="list-item-title alternate" text="System List:"/>
-                    <ListItemImage name="add-system-button" class="selectable hoverable" src="Assets/Icons/plus.png"/>
+                    <Div name="add-package-button" class="selectable hoverable alternate menu-button">
+                        <ListItemText class="list-item-text-display" text="Package"/>
+                        <ListItemImage name="add-system-button" class="selectable hoverable" src="Assets/Icons/plus.png"/>
+                    </Div>
+                    <Div name="add-system-button" class="selectable hoverable alternate menu-button">
+                        <ListItemText class="list-item-text-display" text="System"/>
+                        <ListItemImage name="add-system-button" class="selectable hoverable" src="Assets/Icons/plus.png"/>
+                    </Div>
                 </ListItem>
                 <ColumnScroller name="world-editor-system-scroller"/>
                 <ListItem name="world-editor-delete" class="alternate">

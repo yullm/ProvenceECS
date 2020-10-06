@@ -7,6 +7,37 @@ using UnityEngine;
 
 namespace ProvenceECS{
 
+    public class Vector4Converter : JsonConverter{
+
+        public struct SerializedVector4{
+            public float x;
+            public float y;
+            public float z;
+            public float w;
+
+            public SerializedVector4(float x, float y, float z, float w){
+                this.x = x;
+                this.y = y;
+                this.z = z;
+                this.w = w;
+            }
+        }
+
+        public override bool CanConvert(Type objectType){
+            return (objectType == typeof(Vector3));
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){
+            SerializedVector4 sv = JsonConvert.DeserializeObject<SerializedVector4>(JToken.Load(reader).ToString());
+            return new Vector4(sv.x,sv.y,sv.z,sv.w);
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer){
+            SerializedVector4 sv = new SerializedVector4(((Vector4)value).x,((Vector4)value).y,((Vector4)value).z,((Vector4)value).w);
+            JToken.FromObject(JsonConvert.SerializeObject(sv)).WriteTo(writer);
+        }
+    }
+
     public class Vector3Converter : JsonConverter{
 
         public struct SerializedVector3{

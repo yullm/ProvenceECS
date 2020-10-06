@@ -8,6 +8,7 @@ using UnityEngine;
 namespace ProvenceECS{
     
     [System.Serializable]
+    [CustomFieldControl]
     [JsonConverter(typeof(EntityConverter))]
     public class Entity : System.IComparable{
         public string id;
@@ -82,47 +83,55 @@ namespace ProvenceECS{
         }
 
         public ComponentHandle<T> AddComponent<T>() where T : ProvenceComponent, new(){
-            return world.AddComponent<T>(this);
+            return world.AddComponent<T>(this.entity);
         }
 
         public ComponentHandle<T> AddComponent<T>(T component) where T : ProvenceComponent{
-            return world.AddComponent<T>(this, component);
+            return world.AddComponent<T>(this.entity, component);
         }
 
         public ComponentHandle<T> GetOrCreateComponent<T>() where T : ProvenceComponent, new(){
-            return world.GetOrCreateComponent<T>(this);
+            return world.GetOrCreateComponent<T>(this.entity);
         }
 
         public ComponentHandle<T> GetComponent<T>() where T : ProvenceComponent{
-            return world.GetComponent<T>(this);
+            return world.GetComponent<T>(this.entity);
         }
 
-        public List<ComponentHandle<ProvenceComponent>> GetAllComponents(){
-            return world.GetAllComponents(this);
+        public HashSet<ComponentHandle<ProvenceComponent>> GetAllComponents(){
+            return world.GetAllComponents(this.entity);
         }
 
         public void RemoveComponent<T>() where T : ProvenceComponent{
-            world.RemoveComponent<T>(this);
+            world.RemoveComponent<T>(this.entity);
         }
 
         public void RemoveComponent<T>(T component) where T : ProvenceComponent{
-            world.RemoveComponent<T>(this);
+            world.RemoveComponent<T>(this.entity);
         }
 
         public GameObject AddGameObject(){
-            return world.AddGameObject(this);
+            return world.AddGameObject(this.entity);
         }
 
         public GameObject GetGameObject(){
-            return world.GetGameObject(this);
+            return world.GetGameObject(this.entity);
+        }
+
+        public GameObject SetGameObject(GameObject gameObject){
+            return world.SetGameObject(this.entity, gameObject);
         }
 
         public void RemoveGameObject(){
-            world.RemoveGameObject(this);
+            world.RemoveGameObject(this.entity);
+        }
+
+        public EntityHandle Duplicate(){
+            return world.DuplicateEntity(this.entity);
         }
 
         public void Destroy(){
-            world.RemoveEntity(this);
+            world.RemoveEntity(this.entity);
         }
     }
 }

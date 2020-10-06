@@ -33,7 +33,7 @@ namespace ProvenceECS{
             }
 
             foreach(Type type in baseTypes){
-                if(type.IsSubclassOf(baseType) || baseType.IsAssignableFrom(type)) types.Add(type);
+                if((type.IsSubclassOf(baseType) || baseType.IsAssignableFrom(type)) && !type.IsAbstract) types.Add(type);
             }
 
             return types;
@@ -171,6 +171,22 @@ namespace ProvenceECS{
         public static async void Delay(Action action, int delay = 0){
             await System.Threading.Tasks.Task.Delay(delay);
             action.Invoke();
+        }
+
+    }
+
+    public class ProvenceMath{
+
+        public static Vector3 FloorVector3(Vector3 point){
+            return new Vector3(Mathf.Floor(point.x),Mathf.Floor(point.y),Mathf.Floor(point.z));
+        }
+
+        public static float DiagonalDistance(Vector3 start, Vector3 end){
+            float dx = end.x - start.x;
+            float dy = end.y - start.y;
+            float dz = end.z - start.z;
+            return Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy), Mathf.Abs(dz));
+            
         }
 
     }

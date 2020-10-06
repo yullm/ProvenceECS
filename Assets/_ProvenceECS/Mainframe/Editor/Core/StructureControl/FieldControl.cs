@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 namespace ProvenceECS.Mainframe{
 
     public class FieldControlUpdated<T> : MainframeUIArgs{
-        FieldControl<T> control;
+        public FieldControl<T> control;
         public FieldControlUpdated(FieldControl<T> control){
             this.control = control;
         }

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace ProvenceECS{
 
     public class ProvenceSceneHook : MonoBehaviour{
-        public string id;
+        public string id = "";
         public EventManager<ProvenceEventArgs> eventManager;
 
         void Start(){
@@ -30,6 +30,11 @@ namespace ProvenceECS{
         void OnGUI(){
             if(ProvenceManager.Instance.activeWorld != null)
                 ProvenceManager.Instance.activeWorld.eventManager.Raise<WorldGUIUpdateEvent>(new WorldGUIUpdateEvent(ProvenceManager.Instance.activeWorld, Time.fixedDeltaTime));
+        }
+
+        void OnDrawGizmos(){
+            if(ProvenceManager.Instance.activeWorld != null)
+                ProvenceManager.Instance.activeWorld.eventManager.Raise<WorldDrawGizmosUpdateEvent>(new WorldDrawGizmosUpdateEvent(ProvenceManager.Instance.activeWorld, Time.fixedDeltaTime));
         }
 
     }

@@ -18,8 +18,9 @@ namespace ProvenceECS.Mainframe{
             window.eventManager.Raise<SetSelectorParameters<World>>(new SetSelectorParameters<World>(world));
         }
 
-        public override void OnEnable(){
-            LoadTree(UIDirectories.GetPath("entity-selector","uxml"),UIDirectories.GetPath("entity-selector","uss"));
+        protected override void SetEditorSettings(){
+            this.titleContent = new GUIContent("Entity Selector");
+            this.uiKey = "entity-selector";
         }
 
         protected override void RegisterEventListeners(){

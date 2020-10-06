@@ -34,7 +34,7 @@ namespace ProvenceECS.Mainframe.IO{
                     sr.WriteLine( (hasNamespace ? "\t" : "") + "public class " + className + "{");
 
                     foreach(string c in constants){
-                        sr.WriteLine((hasNamespace ? "\t" : "") + "\tpublic static readonly string " + c.Replace(" ","") +" = " + "\"" + c +"\";");
+                        sr.WriteLine((hasNamespace ? "\t" : "") + "\tpublic static readonly string " + ValidateName(c) +" = " + "\"" + c +"\";");
                     }
 
                     sr.WriteLine((hasNamespace ? "\t" : "") + "}");
@@ -44,6 +44,12 @@ namespace ProvenceECS.Mainframe.IO{
                     sr.Close();
                 }
             }
+        }
+
+        protected string ValidateName(string name){
+            name = name.Replace(" ","");
+            name = name.Replace("-","");
+            return name;
         }
         
     }

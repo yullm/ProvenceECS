@@ -7,18 +7,15 @@ namespace ProvenceECS.Mainframe{
     public class AssetData{
         public string address;
         public string resourcePath;
-        public Vector3 offset;
 
         public AssetData(){
             this.address = "";
             this.resourcePath = "";
-            this.offset = new Vector3();
         }
 
         public AssetData(string address, string resourcePath){
             this.address = address;
             this.resourcePath = resourcePath;
-            this.offset = new Vector3();
         }
     }
 

@@ -5,6 +5,7 @@ using UnityEditor;
 
 namespace ProvenceECS.Mainframe{
 
+
     public class SetSelectorParameters<T> : MainframeUIArgs{
         public T paramaters;
 
@@ -12,10 +13,6 @@ namespace ProvenceECS.Mainframe{
             this.paramaters = paramaters;
         }
     }
-
-    //public delegate void MainframeKeySelection<T> (T index);
-
-    public class SelectorParameters{}
 
     public class MainframeKeySelection<T> : MainframeUIArgs{
         public T value;
@@ -27,8 +24,6 @@ namespace ProvenceECS.Mainframe{
 
     public abstract class MainframeSelectorWindow<T> : MainframeTableWindow<T>{
         
-        protected ProvenceDelegate<MainframeKeySelection<T>> callback;
-
         public static M Open<M>(string title, ProvenceDelegate<MainframeKeySelection<T>> callback) where M : MainframeSelectorWindow<T>{
             M window = GetWindow<M>();
             window.titleContent = new GUIContent(title);

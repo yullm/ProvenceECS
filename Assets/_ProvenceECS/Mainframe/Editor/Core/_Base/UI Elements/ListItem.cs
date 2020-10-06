@@ -8,59 +8,7 @@ using UnityEngine.UIElements;
 
 namespace ProvenceECS.Mainframe{
 
-    //Events
-
-    public class MouseClickEvent : MainframeUIArgs{
-        public VisualElement element;
-        public int button;
-        public Vector2 mousePosition;
-        public MouseClickEvent(VisualElement element, int button, Vector2 mousePosition){
-            this.element = element;
-            this.button = button;
-            this.mousePosition = mousePosition;
-        }
-    }
     
-    public class KeyPressEvent : MainframeUIArgs{
-
-        public VisualElement element;
-        public KeyCode keyCode;
-
-        public KeyPressEvent(VisualElement element, KeyCode keyCode){
-            this.element = element;
-            this.keyCode = keyCode;
-        }
-
-    }
-
-    public class ListItemInputChange : MainframeUIArgs{
-        public VisualElement input;
-        public ListItemInputChange(VisualElement input){
-            this.input = input;
-        }
-    }
-
-    public class ListItemInputCommit : MainframeUIArgs{
-        public VisualElement input;
-        public ListItemInputCommit(VisualElement input){
-            this.input = input;
-        }
-    }
-
-    public class ListItemInputCancel : MainframeUIArgs{
-        public VisualElement input;
-        public ListItemInputCancel(VisualElement input){
-            this.input = input;
-        }
-    }
-
-    public class LoseFocus : MainframeUIArgs{
-        public VisualElement input;
-        public LoseFocus(VisualElement input){
-            this.input = input;
-        }
-    }
-
     //Elements
 
     public class ListItem : VisualElement{
@@ -125,8 +73,9 @@ namespace ProvenceECS.Mainframe{
             return el;
         }
 
-        public Div AddDiv(){
+        public Div AddDiv(bool alternate = false){
             Div el = new Div();
+            if(alternate) el.AddToClassList("alternate");
             this.Add(el);
             return el;
         }
@@ -166,15 +115,9 @@ namespace ProvenceECS.Mainframe{
             return el;
         }
 
-        public IntegerField AddIntField(int value = 0, bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
-            IntegerField el = new IntegerField();
+        public ListItemIntInput AddIntField(int value = 0, bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
+            ListItemIntInput el = new ListItemIntInput();
             el.value = value;
-            el.AddToClassList("list-item-input");
-            el.AddToClassList("list-item-int-input");
-            AddAlternates(el, alternate, secondAlternate, thirdAlternate);
-            el.RegisterValueChangedCallback(e =>{
-                eventManager.Raise<ListItemInputChange>(new ListItemInputChange(el));
-            });
             this.Add(el);
             return el;
         }
@@ -194,6 +137,7 @@ namespace ProvenceECS.Mainframe{
 
         public ListItemTextInput AddTextField(string text = "", bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
             ListItemTextInput el = new ListItemTextInput(text);
+            AddAlternates(el, alternate, secondAlternate, thirdAlternate);
             el.eventManager.AddListener<ListItemInputChange>(e =>{
                 eventManager.Raise<ListItemInputChange>(new ListItemInputChange(el));
             });
@@ -201,8 +145,21 @@ namespace ProvenceECS.Mainframe{
             return el;
         }
 
-        public Vector3Field AddVector3Field(Vector3 value = new Vector3(),bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
+        public Vector3Field AddVector3Field(Vector3 value = new Vector3(), bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
             Vector3Field el = new Vector3Field();
+            el.value = value;
+            el.AddToClassList("list-item-input");
+            el.AddToClassList("list-item-vector-input");
+            AddAlternates(el, alternate, secondAlternate, thirdAlternate);
+            el.RegisterValueChangedCallback(e =>{
+                eventManager.Raise<ListItemInputChange>(new ListItemInputChange(el));
+            });
+            this.Add(el);
+            return el;
+        }
+
+        public Vector4Field AddVector4Field(Vector4 value = new Vector4(), bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
+            Vector4Field el = new Vector4Field();
             el.value = value;
             el.AddToClassList("list-item-input");
             el.AddToClassList("list-item-vector-input");
@@ -298,6 +255,26 @@ namespace ProvenceECS.Mainframe{
             this.Add(button);
             this.Add(clearButton);
             return el;
+        }
+
+        public KeySelectorElement AddKeySelector(string labelText, string value, HashSet<string> keys, bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
+            KeySelectorElement keySelector = new KeySelectorElement(labelText,value,keys);
+            keySelector.eventManager.AddListener<MainframeKeySelection<string>>(e =>{
+                this.eventManager.Raise<MainframeKeySelection<string>>(e);
+            });
+            AddAlternates(keySelector, alternate, secondAlternate, thirdAlternate);
+            this.Add(keySelector);
+            return keySelector;
+        }
+
+        public HierarchySelectorElement AddHierarchySelector(string labelText, GameObject root, GameObject objectValue = null, bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
+            HierarchySelectorElement hierarchySelector = new HierarchySelectorElement(labelText, root, objectValue);
+            hierarchySelector.eventManager.AddListener<MainframeKeySelection<int[]>>(e =>{
+                this.eventManager.Raise<MainframeKeySelection<int[]>>(e);
+            });
+            AddAlternates(hierarchySelector, alternate, secondAlternate, thirdAlternate);
+            this.Add(hierarchySelector);
+            return hierarchySelector;
         }
 
         public static void AddAlternates(VisualElement el, bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
@@ -512,6 +489,136 @@ namespace ProvenceECS.Mainframe{
             this.style.backgroundImage = (StyleBackground)image;
         }
 
+    }
+
+    public class ListItemSearchBar : ListItem{
+
+        public VisualElement container;
+        protected Texture searchIcon;
+        protected Texture delIcon;
+
+        public ListItemSearchBar(VisualElement container){
+            this.container = container;
+            this.searchIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/search.png");
+            this.delIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/times.png");
+            InitializeSearchBar();
+        }
+
+        protected void InitializeSearchBar(){
+            this.AddToClassList("spacer","alternate");
+            ListItemTextInput searchInput = this.AddTextField();
+            this.AddImage(searchIcon).AddToClassList("icon","selectable","hoverable");
+            ListItemImage searchClearButton = this.AddImage(delIcon);
+            searchClearButton.AddToClassList("icon","selectable","hoverable");
+
+            searchInput.eventManager.AddListener<ListItemInputChange>(e =>{
+                container.Query("","search-list-item").ForEach(item => {
+                    item.style.display = DisplayStyle.Flex;
+                });
+
+                if(!searchInput.value.Equals("")){
+                    container.Query("","search-list-item").ForEach(item => {
+                        string itemKey = ((string)item.userData);
+                        if(itemKey == null || !itemKey.ToLower().Contains(searchInput.value.ToLower()))
+                            item.style.display = DisplayStyle.None;
+                    });
+                }
+            });
+            searchInput.eventManager.AddListener<ListItemInputCancel>(e => {
+                searchInput.value = "";
+            });
+            searchClearButton.eventManager.AddListener<MouseClickEvent>(e =>{
+                if(e.button == 0) searchInput.eventManager.Raise<ListItemInputCancel>(new ListItemInputCancel(searchInput));
+            });
+        }
+
+    }
+
+    public class KeySelectorElement : Div{
+        public string value;
+        public HashSet<string> keys;
+        public ListItemText label;
+        public ListItemText keyDisplay;
+        public ListItemImage button;
+        protected Texture caretIcon;
+
+        public KeySelectorElement(string labelText, string value, HashSet<string> keys){
+            this.value = value;
+            this.keys = keys;
+            this.caretIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/caret-down.png");
+            InitializeElement(labelText,value);
+        }
+
+        protected void InitializeElement(string labelText, string value){
+            label = new ListItemText(labelText);
+            label.AddToClassList("list-item-label","alternate");
+            
+            keyDisplay = new ListItemText(value);
+            keyDisplay.AddToClassList("list-item-text-display");
+
+            button = new ListItemImage(caretIcon);
+            button.AddToClassList("selectable","hoverable");
+
+            button.eventManager.AddListener<MouseClickEvent>(e =>{
+                if(e.button != 0) return;
+                KeySelector keySelector = KeySelector.Open();
+                keySelector.eventManager.Raise<SetSelectorParameters<HashSet<string>>>(new SetSelectorParameters<HashSet<string>>(keys));
+                keySelector.eventManager.AddListener<MainframeKeySelection<string>>(ev =>{
+                    keyDisplay.text = ev.value;
+                    value = ev.value;
+                    this.eventManager.Raise<MainframeKeySelection<string>>(ev);
+                });
+            });
+
+            this.Add(label,keyDisplay,button);
+        }
+
+    }
+
+    public class HierarchySelectorElement : Div{
+        public GameObject root;
+        public GameObject objectValue;
+        public int[] value;
+
+        public ListItemText label;
+        public ObjectField objectDisplay;
+        public ListItemImage button;
+        protected Texture caretIcon;
+
+        public HierarchySelectorElement(string labelText, GameObject root, GameObject objectValue = null){
+            this.root = root;
+            this.objectValue = objectValue;
+            this.value = null;
+            this.caretIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/caret-down.png");
+            InitializeElement(labelText);
+        }
+
+        protected void InitializeElement(string labelText){
+            label = new ListItemText(labelText);
+            label.AddToClassList("list-item-label");
+            
+            objectDisplay = new ObjectField();
+            objectDisplay.allowSceneObjects = false;
+            objectDisplay.objectType = typeof(GameObject);
+            objectDisplay.value = objectValue;
+            objectDisplay.AddToClassList("list-item-input","list-item-object-input","second-alternate");
+
+            button = new ListItemImage(caretIcon);
+            button.AddToClassList("selectable","hoverable");
+
+            button.eventManager.AddListener<MouseClickEvent>(e =>{
+                if(e.button != 0) return;
+                HierarchySelector hierarchySelector = HierarchySelector.Open();
+                hierarchySelector.eventManager.Raise<SetSelectorParameters<GameObject>>(new SetSelectorParameters<GameObject>(root));
+                hierarchySelector.eventManager.AddListener<MainframeKeySelection<int[]>>(ev =>{
+                    this.value = ev.value;
+                    this.objectDisplay.value = HierarchySelector.GetChildByHierarhcy(root, ev.value);
+                    this.eventManager.Raise<MainframeKeySelection<int[]>>(ev);
+                });
+            });
+
+            this.Add(label,objectDisplay, button);
+        }
     }
 
 }

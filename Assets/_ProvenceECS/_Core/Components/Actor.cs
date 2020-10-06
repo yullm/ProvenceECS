@@ -9,8 +9,8 @@ namespace ProvenceECS{
         public float height;
 
         public Actor(){
-            this.width = 1;
-            this.height = 1;
+            this.width = 0.5f;
+            this.height = 2;
         }
 
         public Actor(float width, float height){

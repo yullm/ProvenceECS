@@ -14,14 +14,14 @@ namespace ProvenceECS.Mainframe{
         private GameObject parent;
         private ScrollView scroller;
 
-        public static void Open(GameObject parent, ProvenceDelegate<MainframeKeySelection<int[]>> callback){
+        public static HierarchySelector Open(){
             HierarchySelector.Close<HierarchySelector>();
-            HierarchySelector window = MainframeSelectorWindow<int[]>.Open<HierarchySelector>("Hierarchy Selector",callback);
-            window.eventManager.Raise<SetSelectorParameters<GameObject>>(new SetSelectorParameters<GameObject>(parent));
+            return HierarchySelector.GetWindow<HierarchySelector>();
         }
 
-        public override void OnEnable(){
-            LoadTree(UIDirectories.GetPath("hierarchy-selector","uxml"),UIDirectories.GetPath("hierarchy-selector","uss"));
+        protected override void SetEditorSettings(){
+            this.titleContent = new GUIContent("Hierarchy Selector");
+            this.uiKey = "hierarchy-selector";
         }
 
         protected override void RegisterEventListeners(){
@@ -42,7 +42,7 @@ namespace ProvenceECS.Mainframe{
             VisualElement root = CreateObjectListItem(parent, out rootShelf, depthPath);
             scroller.Add(root);
             scroller.Add(rootShelf);
-            DisplayChildren(parent,rootShelf, depthPath);
+            DisplayChildren(parent, rootShelf, depthPath);
         }
 
         private void DisplayChildren(GameObject current, VisualElement shelf, int[] depthPath){
@@ -124,8 +124,20 @@ namespace ProvenceECS.Mainframe{
             shelf = curShelf;
             return listItem;
         }
-       
 
+        public static GameObject GetChildByHierarhcy(GameObject root, int[] hierarchy){
+            GameObject current = root;
+            foreach(int i in hierarchy){
+                try{
+                    current = current.transform.GetChild(i).gameObject;
+                }catch(System.Exception e){
+                    Debug.LogWarning(e);
+                    return current;
+                }
+            }
+            return current;
+        }
+       
     }
 
 }

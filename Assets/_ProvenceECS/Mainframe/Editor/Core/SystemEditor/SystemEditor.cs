@@ -16,8 +16,9 @@ namespace ProvenceECS.Mainframe{
             window.eventManager.Raise<SelectKey<ProvenceSystem>>(new SelectKey<ProvenceSystem>(system));
         }
 
-        public override void OnEnable(){
-            LoadTree(UIDirectories.GetPath("system-editor","uxml"),UIDirectories.GetPath("system-editor","uss"));
+        protected override void SetEditorSettings(){
+            this.titleContent = new GUIContent("System Editor");
+            this.uiKey = "system-editor";
         }
 
         protected override void RegisterEventListeners(){
@@ -56,7 +57,7 @@ namespace ProvenceECS.Mainframe{
             T system = (T)chosenKey;
             if(scroller != null){
                 scroller.Clear();
-                StructureControl<T> control = new StructureControl<T>(ref system);
+                StructureControl<T> control = new StructureControl<T>(ref system, system.GetType().Name, false, chosenKey.world);
                 control.eventManager.AddListener<StructureControlUpdated<T>>(e =>{
                     eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
                 });

@@ -13,9 +13,9 @@ namespace ProvenceECS.Mainframe{
         protected ColumnScroller pairListScroller;
         protected Texture delButtonIcon;
 
-        public override void OnEnable(){
+        protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("Provence Asset Manager");
-            LoadTree(UIDirectories.GetPath("asset-manager","uxml"), UIDirectories.GetPath("asset-manager","uss"));
+            this.uiKey = "asset-manager";
         }
 
         protected override void InitializeWindow(){
@@ -52,8 +52,6 @@ namespace ProvenceECS.Mainframe{
                 item.AddLabel("Resource:",true).AddToClassList("asset-label");
                 ObjectField objectField = item.AddObjectField(typeof(Object));
                 if(!pair.Value.Equals("")) objectField.value = ProvenceManager.AssetManager.LoadAsset<Object>(pair.Key);
-                item.AddLabel("Offset:",true).AddToClassList("asset-label");
-                Vector3Field offsetField = item.AddVector3Field(ProvenceManager.AssetManager.addressCache[pair.Key].offset);
                 ListItemImage delButton = item.AddImage(delButtonIcon);
                 delButton.AddToClassList("icon","selectable","hoverable");
 
@@ -91,10 +89,6 @@ namespace ProvenceECS.Mainframe{
                                 objectField.value = null;
                             }
                         }
-                    }
-                    if(e.input == offsetField){
-                        ProvenceManager.AssetManager.addressCache[pair.Key].offset = offsetField.value;
-                        eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
                     }
                 });
 

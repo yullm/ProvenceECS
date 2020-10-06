@@ -33,8 +33,9 @@ namespace ProvenceECS.Mainframe{
             window.eventManager.Raise<SetSelectorParameters<TypeSelectorParameters>>(new SetSelectorParameters<TypeSelectorParameters>(args));
         }
 
-        public override void OnEnable(){
-            LoadTree(UIDirectories.GetPath("type-selector","uxml"),UIDirectories.GetPath("type-selector","uss"));
+        protected override void SetEditorSettings(){
+            this.titleContent = new GUIContent("Type Selector");
+            this.uiKey = "type-selector";
         }
 
         protected override void RegisterEventListeners(){
