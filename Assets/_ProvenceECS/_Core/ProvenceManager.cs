@@ -42,8 +42,7 @@ namespace ProvenceECS{
             this.managerID = System.Guid.NewGuid().ToString();
         }
 
-        public ProvenceManager(string id){
-            this.worlds = new List<World>();
+        public ProvenceManager(string id) : this(){
             this.managerID = id;
         }
 
@@ -79,9 +78,10 @@ namespace ProvenceECS{
         public static void Load(string id){
             ProvenceManager current = null;
             current = Helpers.LoadFromSerializedFile<ProvenceManager>(Mainframe.TableDirectory.GetSubKey("worlds", Mainframe.TableDirectoryKey.DIRECTORY) + id + ".meglo");
-            if(current.managerID != id) current = new ProvenceManager(id);        
+            if(current.managerID != id) current = new ProvenceManager(id);      
+            ProvenceManager.instance = current;  
             foreach(World world in current.worlds) world.Initialize();
-            ProvenceManager.instance = current;
+            
         }
 
         public void Save(){

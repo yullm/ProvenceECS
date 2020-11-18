@@ -6,8 +6,7 @@ using UnityEditor;
 namespace ProvenceECS.Mainframe{
 
     public static class StructureControlExtensions {
-        
-        
+
     }
 
 }

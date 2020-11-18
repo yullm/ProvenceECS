@@ -43,7 +43,7 @@ namespace ProvenceECS.Mainframe{
                 }
             },{
                 "system-package-manager-keys", new Dictionary<TableDirectoryKey, string>{
-                    {TableDirectoryKey.DIRECTORY,   ROOT+@"/SystemPackageManagerKeys/"},
+                    {TableDirectoryKey.DIRECTORY,   ROOT+@"/SystemPackageManager/"},
                     {TableDirectoryKey.FILE,        @"SystemPackageManagerKeys"},
                     {TableDirectoryKey.EXTENSION,   @".cs"}
                 }

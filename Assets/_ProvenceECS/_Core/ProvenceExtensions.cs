@@ -78,11 +78,15 @@ namespace ProvenceECS{
             return new HashSet<T>(list1).SetEquals(list2);
         }
 
-        public static bool IsInRange(this int value, int min, int max){
+        public static bool IsInRange(this int value, int a, int b){
+            int min = Mathf.Min(a,b);
+            int max = Mathf.Max(a,b);
             return value >= min && value <= max;
         }
 
-        public static bool IsInRange(this float value, float min, float max){
+        public static bool IsInRange(this float value, float a, float b){
+            float min = Mathf.Min(a,b);
+            float max = Mathf.Max(a,b);
             return value >= min && value <= max;
         }
 
