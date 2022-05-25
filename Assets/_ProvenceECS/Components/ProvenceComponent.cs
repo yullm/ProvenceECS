@@ -5,18 +5,22 @@ using UnityEngine;
 namespace ProvenceECS{
 
     public class ProvenceComponent{
-        [DontDisplayInEditor]
-        public string id;
+        
+        [DontDisplayInEditor] public string id;
+        [DontDisplayInEditor] public byte sortingIndex;
+        [DontDisplayInEditor] public HashSet<System.Type> requiredSystems;
 
         public ProvenceComponent(){
             this.id = System.Guid.NewGuid().ToString();
+            this.sortingIndex = 0;
+            this.requiredSystems = new HashSet<System.Type>();
         }
 
-        public ProvenceComponent(string id){
+        public ProvenceComponent(string id) : this(){
             this.id = id;
         }
 
-        public ProvenceComponent Clone(){
+        public virtual ProvenceComponent Clone(){
             ProvenceComponent clone = this.MemberwiseClone() as ProvenceComponent;
             clone.id = System.Guid.NewGuid().ToString();
             return clone;

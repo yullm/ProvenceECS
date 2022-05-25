@@ -1,40 +1,49 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ProvenceECS{
+    
+    //loaded worlds will have their own hook if it is a scene which the update events get sent from - maybe not the best
 
     public class ProvenceSceneHook : MonoBehaviour{
         public string id = "";
-        public EventManager<ProvenceEventArgs> eventManager;
+        protected World world;
 
         void Start(){
-            ProvenceManager.Load(id);
+            if(!ProvenceManager.Instance.worlds.ContainsKey(id))
+                ProvenceManager.Instance.AddWorld(id);
+            world = ProvenceManager.Instance.worlds[id];
         }
 
         void Update(){
-            if(ProvenceManager.Instance.activeWorld != null)
-                ProvenceManager.Instance.activeWorld.eventManager.Raise<WorldUpdateEvent>(new WorldUpdateEvent(ProvenceManager.Instance.activeWorld, Time.deltaTime));
+            if(world != null) world.eventManager.Raise(new WorldUpdateEvent(world, Time.deltaTime));
         }
 
         void LateUpate(){
-            if(ProvenceManager.Instance.activeWorld != null)
-                ProvenceManager.Instance.activeWorld.eventManager.Raise<WorldLateUpdateEvent>(new WorldLateUpdateEvent(ProvenceManager.Instance.activeWorld, Time.deltaTime));
+            if(world != null) world.eventManager.Raise(new WorldLateUpdateEvent(world, Time.deltaTime));
         }
 
         void FixedUpdate(){
-            if(ProvenceManager.Instance.activeWorld != null)
-                ProvenceManager.Instance.activeWorld.eventManager.Raise<WorldFixedUpdateEvent>(new WorldFixedUpdateEvent(ProvenceManager.Instance.activeWorld, Time.fixedDeltaTime));
+            if(world != null) world.eventManager.Raise(new WorldFixedUpdateEvent(world, Time.fixedDeltaTime));
         }
 
         void OnGUI(){
-            if(ProvenceManager.Instance.activeWorld != null)
-                ProvenceManager.Instance.activeWorld.eventManager.Raise<WorldGUIUpdateEvent>(new WorldGUIUpdateEvent(ProvenceManager.Instance.activeWorld, Time.fixedDeltaTime));
+            if(world != null) world.eventManager.Raise(new WorldGUIUpdateEvent(world, Time.fixedDeltaTime));
         }
 
         void OnDrawGizmos(){
-            if(ProvenceManager.Instance.activeWorld != null)
-                ProvenceManager.Instance.activeWorld.eventManager.Raise<WorldDrawGizmosUpdateEvent>(new WorldDrawGizmosUpdateEvent(ProvenceManager.Instance.activeWorld, Time.fixedDeltaTime));
+            if(world != null) world.eventManager.Raise(new WorldDrawGizmosUpdateEvent(world, Time.fixedDeltaTime));
+        }
+
+        void OnDestroy(){
+            if(world != null) world.eventManager.Raise(new WorldSafetyDestroy(world, Time.fixedDeltaTime));
+        }
+
+        void OnApplicationQuit(){
+            if(world != null) world.eventManager.Raise(new WorldSafetyDestroy(world, Time.fixedDeltaTime));
         }
 
     }

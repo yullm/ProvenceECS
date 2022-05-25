@@ -7,8 +7,19 @@ using UnityEditor.SceneManagement;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.ShortcutManagement;
+using ProvenceECS.Network;
 
 namespace ProvenceECS.Mainframe{
+
+    public class ProvenceManagerUIDirectory : UIDirectory{
+        public ProvenceManagerUIDirectory(){
+            this.uxmlPath = provenceEditorRoot + @"/Core/_ProvenceManager/ProvenceManagerEditor.uxml";
+            this.ussPaths = new string[]{
+                provenceEditorRoot + @"/Core/_ProvenceManager/ProvenceManagerEditor.uss"
+            };
+        }
+    }
 
     public class ProvenceManagerEditor : MainframeTableWindow<World>{
 
@@ -30,7 +41,7 @@ namespace ProvenceECS.Mainframe{
             if(persistanceTimer < persistanceRate) persistanceTimer += Time.fixedDeltaTime;
             else{
                 persistanceTimer = 0f;
-                foreach(World world in ProvenceManager.Instance.worlds){
+                foreach(World world in ProvenceManager.Instance.worlds.Values){
                     world.eventManager.Raise<EditorPersistanceUpdateEvent>(new EditorPersistanceUpdateEvent(world));
                 }
             }
@@ -43,10 +54,19 @@ namespace ProvenceECS.Mainframe{
 
         protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("Provence ECS");
-            this.uiKey = "provence-manager";
+            this.uiDirectory = new ProvenceManagerUIDirectory();
         }
 
-        public override void OnEnable(){
+        public override void OnEnable(){            
+            foreach(World world in ProvenceManager.Instance.worlds.Values){
+                world.eventManager.Raise(new WorldSafetyDestroy(world,Time.time));
+            }
+            if(playModeState == PlayModeStateChange.ExitingEditMode){
+                ShortcutManager.instance.activeProfileId = "playmode";
+            }
+            if(playModeState == PlayModeStateChange.EnteredEditMode){
+                ShortcutManager.instance.activeProfileId = "Default copy";
+            }
             if(root != null) root.Clear();
             if(playModeState != PlayModeStateChange.ExitingEditMode){
                 ProvenceSceneHook hook = FindObjectOfType<ProvenceSceneHook>();
@@ -107,10 +127,26 @@ namespace ProvenceECS.Mainframe{
             });
 
             root.Q<ListItemImage>("add-world-button").eventManager.AddListener<MouseClickEvent>(AddWorld);
+
+            root.Q<ListItem>("actor-manual-button").eventManager.AddListener<MouseClickEvent>(e => {
+                if(e.button != 0) return;
+                EditorWindow.GetWindow<ActorManualEditor>();
+            });
+
+            root.Q<ListItem>("model-bank-button").eventManager.AddListener<MouseClickEvent>(e => {
+                if(e.button != 0) return;
+                EditorWindow.GetWindow<ModelBankEditor>();
+            });
            
             root.Q<ListItem>("asset-manager-button").eventManager.AddListener<MouseClickEvent>(e => {
                 if(e.button != 0) return;
-                EditorWindow.GetWindow<AssetManagerEditor>();
+                AssetManager.CreateAssetLibrary();
+            });
+
+            root.Q<ListItem>("packet-button").eventManager.AddListener<MouseClickEvent>(e => {
+                if(e.button != 0) return;
+                ProvenceNetwork.GeneratePacketDictionary();
+                Helpers.SerializeAndSaveToFile(ProvenceNetwork.PacketDict.OrderBy(kvp => kvp.Key), ProvenceCollection<AssetData>.dataPath + "/Packets/", "provence-packets", ".meglo");
             });
 
             root.Q<ListItem>("system-package-manager-button").eventManager.AddListener<MouseClickEvent>(e => {
@@ -191,7 +227,7 @@ namespace ProvenceECS.Mainframe{
             scroller.Clear();
             bool alternate = false;
 
-            foreach(World world in ProvenceManager.Instance.worlds){
+            foreach(World world in ProvenceManager.Instance.worlds.Values){
 
                 ListItem item = new ListItem(alternate, true, true);
                 item.name = world.id;
@@ -227,10 +263,10 @@ namespace ProvenceECS.Mainframe{
             root.Q<ListItemText>("world-editor-active-display").style.display = DisplayStyle.None;
             root.Q<ListItemText>("world-editor-set-active-button").style.display = DisplayStyle.None;
 
-            if(ProvenceManager.Instance.activeWorld == chosenKey)
+            /* if(ProvenceManager.Instance.activeWorld == chosenKey)
                 root.Q<ListItemText>("world-editor-active-display").style.display = DisplayStyle.Flex;
             else
-                root.Q<ListItemText>("world-editor-set-active-button").style.display = DisplayStyle.Flex;
+                root.Q<ListItemText>("world-editor-set-active-button").style.display = DisplayStyle.Flex; */
 
             ListItemTextInput nameInput = root.Q<ListItemTextInput>("world-editor-name-input");
             if(nameInput != null) nameInput.value = chosenKey.worldName;
@@ -258,7 +294,8 @@ namespace ProvenceECS.Mainframe{
                 item.eventManager.AddListener<MouseClickEvent>(e => {
                     switch(e.button){
                         case 0:
-                            GameObject entityGO = entityHandle.GetGameObject();
+                            ComponentHandle<UnityGameObject> objectHandle = entityHandle.GetComponent<UnityGameObject>();
+                            GameObject entityGO = objectHandle != null ? objectHandle.component.gameObject : null;
                             if(entityGO != null){
                                 Selection.objects = new Object[]{entityGO};
                             }
@@ -380,9 +417,9 @@ namespace ProvenceECS.Mainframe{
 
         protected void AddWorld(MouseClickEvent e){
             if(e.button != 0) return;
-            ProvenceManager.Instance.AddWorld(new World());
-            eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
-            eventManager.Raise<DrawColumnEventArgs<World>>(new DrawColumnEventArgs<World>(0));
+            // ProvenceManager.Instance.AddWorld(new World());
+            // eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
+            // eventManager.Raise<DrawColumnEventArgs<World>>(new DrawColumnEventArgs<World>(0));
         }
 
         protected void RemoveWorld(ListItemInputCommit e){
@@ -410,7 +447,7 @@ namespace ProvenceECS.Mainframe{
 
         protected void SetAsActiveWorld(MouseClickEvent e){
             if(e.button != 0) return;
-            ProvenceManager.Instance.activeWorld = chosenKey;
+            //ProvenceManager.Instance.activeWorld = chosenKey;
             root.Q<ListItemText>("world-editor-set-active-button").style.display = DisplayStyle.None;
             root.Q<ListItemText>("world-editor-active-display").style.display = DisplayStyle.Flex;
             eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
@@ -459,7 +496,7 @@ namespace ProvenceECS.Mainframe{
         protected void AddPackageButtonPressed(MouseClickEvent e){
             if(e.button != 0) return;
             HashSet<string> set = new HashSet<string>();
-            foreach(string key in ProvenceManager.SystemPackageManager.Keys){
+            foreach(string key in ProvenceManager.Collections<SystemPackage>().Keys){
                 if(!chosenKey.systemManager.systemPackages.Contains(key))
                     set.Add(key);
             }

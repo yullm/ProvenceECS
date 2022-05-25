@@ -1,21 +1,22 @@
-﻿#key-list{
-    flex: 0.4;
+﻿TableWrapper{
+    background-color: #262626
+}
+
+#key-list{
+    flex: 0.35;
 }
 
 .key-list-name-input{
     display: none;
 }
 
-#search-bar{
+#new-entry-item{
     border-top-width: 1px;
     border-bottom-width: 0px;
 }
 
 #entry-editor{
     border-width: 0px;
-}
-
-#entry-editor-title, #entry-editor-menu{
     display: none;
 }
 
@@ -24,15 +25,35 @@
     border-top-width: 1px;
 }
 
+#entry-editor-tag-row{
+    border-bottom-width: 0px;
+    border-top-width: 1px;
+}
+
+.entry-editor-tag{
+    margin: 2px;
+    padding: 7px;
+    -unity-text-align: middle-center;
+    border-width: 1px;
+    border-color: #1a1a1a;
+    border-radius: 5px;
+    cursor: Link;
+    min-width: 50px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#entry-editor-tag-context-menu{
+    width: 220px;
+}
+
+.entry-editor-tag.selected{
+    background-color: #444;
+}
+
 .menu-button{
     border-color: #1a1a1a;
     border-right-width: 1px;
-}
-
-#entry-editor-menu-presets-button ListItemImage{
-    margin-top: 1px;
-    margin-left: 5px;
-    margin-right: 5px;
 }
 
 #entry-editor-component-context-menu{
@@ -49,5 +70,5 @@
     border-left-width: 1px;
     border-right-width: 0px;
     display: none;
-    flex: 0.8;
+    flex: 0.45;
 }

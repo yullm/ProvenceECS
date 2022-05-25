@@ -9,6 +9,15 @@ using Newtonsoft.Json.Linq;
 
 namespace ProvenceECS.Mainframe{
 
+    public class HierarchySelectorUIDirectory : UIDirectory{
+        public HierarchySelectorUIDirectory(){
+            this.uxmlPath = provenceEditorRoot + @"/Core/HierarchySelector/HierarchySelector.uxml";
+            this.ussPaths = new string[]{
+                provenceEditorRoot + @"/Core/HierarchySelector/HierarchySelector.uss"
+            };
+        }
+    }
+
     public class HierarchySelector : MainframeSelectorWindow<int[]>{
 
         private GameObject parent;
@@ -21,7 +30,7 @@ namespace ProvenceECS.Mainframe{
 
         protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("Hierarchy Selector");
-            this.uiKey = "hierarchy-selector";
+            this.uiDirectory = new HierarchySelectorUIDirectory();
         }
 
         protected override void RegisterEventListeners(){

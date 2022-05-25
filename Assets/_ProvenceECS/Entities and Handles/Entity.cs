@@ -58,14 +58,15 @@ namespace ProvenceECS{
             else return id.CompareTo((string)obj);
         }
 
-        public static explicit operator Entity(string value){
+        public static implicit operator Entity(string value){
             Entity entity = new Entity(value);
             return entity;
         }
 
-        public static explicit operator string(Entity entity){
+        public static implicit operator string(Entity entity){
             return entity.id;
         }
+
     }
 
     public class EntityHandle{
@@ -90,6 +91,10 @@ namespace ProvenceECS{
             return world.AddComponent<T>(this.entity, component);
         }
 
+        public void AddComponentSet(HashSet<ProvenceComponent> set){
+            world.AddComponentSet(this.entity, set);
+        }
+
         public ComponentHandle<T> GetOrCreateComponent<T>() where T : ProvenceComponent, new(){
             return world.GetOrCreateComponent<T>(this.entity);
         }
@@ -108,22 +113,6 @@ namespace ProvenceECS{
 
         public void RemoveComponent<T>(T component) where T : ProvenceComponent{
             world.RemoveComponent<T>(this.entity);
-        }
-
-        public GameObject AddGameObject(){
-            return world.AddGameObject(this.entity);
-        }
-
-        public GameObject GetGameObject(){
-            return world.GetGameObject(this.entity);
-        }
-
-        public GameObject SetGameObject(GameObject gameObject){
-            return world.SetGameObject(this.entity, gameObject);
-        }
-
-        public void RemoveGameObject(){
-            world.RemoveGameObject(this.entity);
         }
 
         public EntityHandle Duplicate(){

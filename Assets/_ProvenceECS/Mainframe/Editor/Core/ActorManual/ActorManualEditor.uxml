@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns="ProvenceECS.Mainframe"
+    xsi:noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd"
+>
+    <Wrapper>
+        <MenuBar>
+            <ListItem class="spacer">
+                <Div class="list-item-filler"/>
+                <ListItemImage class="icon" src="Assets/Icons/book-dead.png"/>
+                <ListItemText class="list-item-title third-alternate" text="Actor Manual"/>
+                <Div class="list-item-filler"/>
+            </ListItem>
+        </MenuBar>
+        <TableWrapper>
+            <PageColumn name="key-list">
+                <ListItem class="alternate spacer">
+                    <Div class="list-item-indent alternate"/>
+                    <ListItemImage class="icon" src="Assets/Icons/book-open.png"/>
+                    <ListItemText class="list-item-title alternate" text="Entries:"/>
+                </ListItem>
+                <ListItem name="search-bar" class="alternate spacer">
+                    <ListItemTextInput name="key-list-search-input" />
+                    <ListItemImage class="icon selectable hoverable" src="Assets/Icons/search.png"/>
+                    <ListItemImage name="key-list-search-clear" class="icon selectable hoverable" src="Assets/Icons/times.png"/>
+                </ListItem>
+                <ColumnScroller name="key-list-scroller" />                
+                <ListItem name="new-entry-item" class="alternate spacer">
+                    <ListItemTextInput name="new-entry-key-input" />
+                    <ListItemImage name="new-entry-add-button" class="selectable hoverable" src="Assets/Icons/plus.png"/>
+                    <ListItemImage name="new-entry-key-input-clear" class="icon selectable hoverable" src="Assets/Icons/times.png"/>
+                </ListItem>
+            </PageColumn>
+            <PageColumn name="entry-editor">
+                <ListItem name="entry-editor-title" class="spacer">
+                    <ListItemImage class="icon"/>
+                    <Div class="list-item-filler"/>
+                    <ListItemImage class="icon" src="Assets/Icons/bookmark.png"/>
+                    <ListItemText name="entry-editor-title-display" class="list-item-title third-alternate" />
+                    <Div class="list-item-filler"/>
+                </ListItem>
+                <ListItemSearchBar name="entry-editor-search-bar"/>
+                <ColumnScroller name="entry-editor-scroller"/>
+                <ListItem name="entry-editor-tag-row" class="spacer">
+                    <ListItemImage name="entry-editor-tag-button" class="icon selectable hoverable" src="Assets/Icons/tags.png" tooltip="Edit Tags"/>
+                    <ColumnScroller name="entry-editor-tag-scroller" class="alternate"/>
+                </ListItem>
+                <ListItem name="entry-editor-menu" class="spacer">
+                    <Div name="entry-editor-menu-add-component-button" class="selectable hoverable alternate menu-button">
+                        <ListItemImage class="selectable hoverable" src="Assets/Icons/plus.png"/>
+                        <ListItemText class="list-item-text-display second-alternate" text="Component"/>
+                    </Div>
+                </ListItem>
+            </PageColumn>
+            <PageColumn name="model-viewer"/>
+        </TableWrapper>
+        <Div>
+            <DropDownMenu name="key-list-context-menu">
+                <ListItem name="key-list-context-menu-edit-button" class="selectable hoverable">
+                    <ListItemText class="list-item-text-display" text="Edit Name"/>
+                </ListItem>
+                <ListItem name="key-list-context-menu-remove-button" class="selectable hoverable">
+                    <ListItemText class="list-item-text-display" text="Remove Entry"/>
+                </ListItem>
+            </DropDownMenu>
+            <DropDownMenu name="entry-editor-component-context-menu">
+                <ListItem name="entry-editor-component-remove-button" class="selectable hoverable">
+                    <ListItemImage class="icon" src="Assets/Icons/trash-alt.png"/>
+                    <ListItemText class="list-item-text-display" text="Remove Component"/>
+                </ListItem>
+            </DropDownMenu>
+            <DropDownMenu name="entry-editor-tag-context-menu">
+                <ListItem name="entry-editor-tag-remove-button" class="selectable hoverable">
+                    <ListItemImage class="icon" src="Assets/Icons/trash-alt.png"/>
+                    <ListItemText class="list-item-text-display" text="Remove Tag"/>
+                </ListItem>
+                <ListItem name="entry-editor-tag-remove-all-button" class="selectable hoverable">
+                    <ListItemImage class="icon" src="Assets/Icons/times.png"/>
+                    <ListItemText class="list-item-text-display" text="Remove with Components"/>
+                </ListItem>
+            </DropDownMenu>
+        </Div>
+    </Wrapper>
+</engine:UXML>

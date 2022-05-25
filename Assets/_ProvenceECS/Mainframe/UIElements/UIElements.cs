@@ -154,6 +154,10 @@ namespace ProvenceECS.Mainframe{
             });
         }
 
+        public ColumnScroller(bool alternate) : this(){
+            if(alternate) this.AddToClassList("alternate");
+        }
+
     }
 
     public class DropDownMenu : VisualElement{
@@ -209,6 +213,7 @@ namespace ProvenceECS.Mainframe{
     public class img : VisualElement{
 
         public Texture image;
+        public EventManager<MainframeUIArgs> eventManager;
 
         public new class UxmlFactory : UxmlFactory<img, UxmlTraits> {}
 
@@ -223,17 +228,67 @@ namespace ProvenceECS.Mainframe{
 
             public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc){
                 base.Init(ve, bag, cc);
-                ((img)ve).SetImage(ProvenceManager.AssetManager.LoadAsset<Texture>(textAttribute.GetValueFromBag(bag, cc)));
+                ((img)ve).SetImage(Resources.Load<Texture>(textAttribute.GetValueFromBag(bag, cc)));
             }
         }
 
-        public img(){}
+        public img(){
+            this.eventManager = new EventManager<MainframeUIArgs>();
+            this.RegisterCallback<MouseUpEvent>(e =>{
+                this.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+            });
+        }
 
-        public void SetImage(Texture texture){
+        public img(string resource):this(){
+            SetImage(Resources.Load<Texture>(resource));
+        }
+
+        public img SetImage(Texture texture){
             this.image = texture;
             this.style.backgroundImage = (StyleBackground)image;
+            return this;
         }
 
     }
+
+    public class ProvenceText : TextElement{
+
+        public EventManager<MainframeUIArgs> eventManager;
+
+        public new class UxmlFactory : UxmlFactory<ProvenceText, UxmlTraits> {}
+
+        public new class UxmlTraits : VisualElement.UxmlTraits{
+            UxmlStringAttributeDescription textAttribute = new UxmlStringAttributeDescription { name = "text" };
+            
+            public override IEnumerable<UxmlChildElementDescription> uxmlChildElementsDescription{
+                get{
+                    yield return new UxmlChildElementDescription(typeof(VisualElement));
+                }
+            }
+
+            public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc){
+                base.Init(ve, bag, cc);
+                ((ProvenceText)ve).text = textAttribute.GetValueFromBag(bag, cc);
+            }
+        }
+
+        public ProvenceText() : base(){
+            this.eventManager = new EventManager<MainframeUIArgs>();
+            this.RegisterCallback<MouseUpEvent>(e =>{
+                this.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+            });
+        }
+
+        public ProvenceText(string text) : base(){
+            this.text = text;
+            this.eventManager = new EventManager<MainframeUIArgs>();
+            this.RegisterCallback<MouseUpEvent>(e =>{
+                this.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+            });
+        }
+
+    }
+
+    
 
 }

@@ -9,12 +9,21 @@ using UnityEngine.UIElements;
 
 namespace ProvenceECS.Mainframe{
 
-    public class SystemPackageManagerEditor : ProvenceCollectionEditorBase<SystemPackageManager, SystemPackage>{
+    public class SystemPackageManagerUIDirectory : UIDirectory{
+        public SystemPackageManagerUIDirectory(){
+            this.uxmlPath = provenceEditorRoot + @"/Core/SystemPackageManager/SystemPackageManagerEditor.uxml";
+            this.ussPaths = new string[]{
+                provenceEditorRoot + @"/Core/SystemPackageManager/SystemPackageManagerEditor.uss"
+            };
+        }
+    }
+
+    public class SystemPackageManagerEditor : ProvenceCollectionEditor<SystemPackage>{
         
         protected Texture delIcon;
 
         protected override void SetEditorSettings(){
-            this.uiKey = "system-package-manager";
+            this.uiDirectory = new SystemPackageManagerUIDirectory();
             this.titleContent = new GUIContent("System Package Manager");
             this.delIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/times.png");
         }
@@ -23,19 +32,15 @@ namespace ProvenceECS.Mainframe{
             root.Q<Div>("entry-editor-menu-add-system-button").eventManager.AddListener<MouseClickEvent>(AddSystemButtonPressed);
         }
 
-        protected override bool DrawEntryEditor(){
-            if(base.DrawEntryEditor()){
+        protected override void DrawEntryEditor(){        
+            entryEditorScroller.Clear();    
+            DrawEntryTitle();
+            if(chosenKey != null){
                 DrawSystems();
             }
-            return true;
         }
 
         protected void DrawSystems(){
-            Div container;
-            ListItem titleItem = DrawShelf("Systems", out container);
-
-            ListItemSearchBar searchBar = new ListItemSearchBar(container);
-            container.Add(searchBar);
 
             bool alternate = false;
             foreach(System.Type systemType in collection[chosenKey].systems){
@@ -53,10 +58,9 @@ namespace ProvenceECS.Mainframe{
                     eventManager.Raise<DrawColumnEventArgs<string>>(new DrawColumnEventArgs<string>(1));
                 });                
 
-                container.Add(item);
+                entryEditorScroller.Add(item);
                 alternate = !alternate;
             }
-            entryEditorScroller.Add(titleItem,container);
         }
 
         protected void AddSystemButtonPressed(MouseClickEvent e){
@@ -72,7 +76,7 @@ namespace ProvenceECS.Mainframe{
         }
 
         protected override void LoadCollection(){
-            collection = ProvenceManager.SystemPackageManager;
+            collection = ProvenceManager.Collections<SystemPackage>();
         }
     }
 

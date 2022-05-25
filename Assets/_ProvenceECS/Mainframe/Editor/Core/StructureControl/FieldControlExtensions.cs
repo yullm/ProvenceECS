@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using UnityEngine;
+using Ransacked.Mainframe;
 
 namespace ProvenceECS.Mainframe{
 
-    public static class FieldControlExtensions{
+    public static partial class FieldControlExtensions{
 
         public static void DrawControl(this FieldControl<bool> control){
             EnumField input = control.AddBoolean(control.value);
@@ -14,6 +15,28 @@ namespace ProvenceECS.Mainframe{
                 if(e.input != input) return;
                 control.value = (BooleanEnum)input.value == BooleanEnum.TRUE ? true : false;
                 control.eventManager.Raise<FieldControlUpdated<bool>>(new FieldControlUpdated<bool>(control));
+            });
+        }
+
+        public static void DrawControl(this FieldControl<byte> control){
+            IntegerField input = control.AddIntField(control.value);
+            control.eventManager.AddListener<ListItemInputChange>(e =>{
+                if(e.input != input) return;
+                if(input.value < 0) input.value = 0;
+                if(input.value > byte.MaxValue) input.value = byte.MaxValue;
+                control.value = (byte)input.value;
+                control.eventManager.Raise<FieldControlUpdated<byte>>(new FieldControlUpdated<byte>(control));
+            });
+        }
+
+        public static void DrawControl(this FieldControl<ushort> control){
+            IntegerField input = control.AddIntField(control.value);
+            control.eventManager.AddListener<ListItemInputChange>(e =>{
+                if(e.input != input) return;
+                if(input.value < 0) input.value = 0;
+                if(input.value > ushort.MaxValue) input.value = ushort.MaxValue;
+                control.value = (ushort)input.value;
+                control.eventManager.Raise<FieldControlUpdated<ushort>>(new FieldControlUpdated<ushort>(control));
             });
         }
 

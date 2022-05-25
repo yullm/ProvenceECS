@@ -31,9 +31,18 @@
                 <ListItem class="alternate spacer">
                     <ListItemImage src="Assets/Icons/menuList.png"/>
                     <ListItemText class="list-item-title alternate" text="Editors:"/>
+                </ListItem>                
+                <ListItem name="actor-manual-button" class="selectable hoverable">
+                    <ListItemText class="list-item-title" text="Actor Manual"/>
                 </ListItem>
-                <ListItem name="asset-manager-button" class="alternate selectable hoverable">
-                    <ListItemText class="list-item-title" text="Asset Manager"/>
+                <ListItem name="model-bank-button" class="alternate selectable hoverable">
+                    <ListItemText class="list-item-title" text="Model Bank"/>
+                </ListItem>
+                <ListItem name="asset-manager-button" class="selectable hoverable">
+                    <ListItemText class="list-item-title" text="Create Asset Library"/>
+                </ListItem>
+                <ListItem name="packet-button" class="alternate selectable hoverable">
+                    <ListItemText class="list-item-title" text="Generate Packet List"/>
                 </ListItem>
                 <ListItem name="system-package-manager-button" class="selectable hoverable">
                     <ListItemText class="list-item-title" text="System Package Manager"/>

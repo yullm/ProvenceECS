@@ -7,11 +7,10 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace ProvenceECS.Mainframe{
-
     
     //Elements
 
-    public class ListItem : VisualElement{
+    public partial class ListItem : VisualElement{
 
         public EventManager<MainframeUIArgs> eventManager;
 
@@ -227,7 +226,8 @@ namespace ProvenceECS.Mainframe{
             el.eventManager.AddListener<MouseClickEvent>(e =>{
                 handle = world.LookUpEntity((Entity)el.text);
                 if(handle != null){
-                    GameObject go = handle.GetGameObject();
+                    ComponentHandle<UnityGameObject> objectHandle = handle.GetComponent<UnityGameObject>();
+                    GameObject go = objectHandle != null ? objectHandle.component.gameObject : null;
                     if(go != null) Selection.objects = new UnityEngine.Object[]{go};
                 }
             });
@@ -494,8 +494,33 @@ namespace ProvenceECS.Mainframe{
     public class ListItemSearchBar : ListItem{
 
         public VisualElement container;
+        public ListItemTextInput searchInput;
         protected Texture searchIcon;
         protected Texture delIcon;
+
+        public new class UxmlFactory : UxmlFactory<ListItemSearchBar, UxmlTraits> {}
+
+        public new class UxmlTraits : VisualElement.UxmlTraits{
+            UxmlStringAttributeDescription containerAttribute = new UxmlStringAttributeDescription { name = "container" };
+            
+            public override IEnumerable<UxmlChildElementDescription> uxmlChildElementsDescription{
+                get{
+                    yield return null;
+                }
+            }
+
+            public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc){
+                base.Init(ve, bag, cc);
+                ((ListItemSearchBar)ve).container = ve.Q<VisualElement>(containerAttribute.GetValueFromBag(bag,cc));
+            }
+        }
+
+        public ListItemSearchBar(){
+            this.container = null;
+            this.searchIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/search.png");
+            this.delIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/times.png");
+            InitializeSearchBar();
+        }
 
         public ListItemSearchBar(VisualElement container){
             this.container = container;
@@ -506,12 +531,13 @@ namespace ProvenceECS.Mainframe{
 
         protected void InitializeSearchBar(){
             this.AddToClassList("spacer","alternate");
-            ListItemTextInput searchInput = this.AddTextField();
+            this.searchInput = this.AddTextField();
             this.AddImage(searchIcon).AddToClassList("icon","selectable","hoverable");
             ListItemImage searchClearButton = this.AddImage(delIcon);
             searchClearButton.AddToClassList("icon","selectable","hoverable");
 
             searchInput.eventManager.AddListener<ListItemInputChange>(e =>{
+                string[] queries = searchInput.value.Replace(" ","").Split('/');
                 container.Query("","search-list-item").ForEach(item => {
                     item.style.display = DisplayStyle.Flex;
                 });
@@ -519,7 +545,7 @@ namespace ProvenceECS.Mainframe{
                 if(!searchInput.value.Equals("")){
                     container.Query("","search-list-item").ForEach(item => {
                         string itemKey = ((string)item.userData);
-                        if(itemKey == null || !itemKey.ToLower().Contains(searchInput.value.ToLower()))
+                        if(itemKey == null || !ValueContainsQueries(itemKey, queries))
                             item.style.display = DisplayStyle.None;
                     });
                 }
@@ -530,6 +556,14 @@ namespace ProvenceECS.Mainframe{
             searchClearButton.eventManager.AddListener<MouseClickEvent>(e =>{
                 if(e.button == 0) searchInput.eventManager.Raise<ListItemInputCancel>(new ListItemInputCancel(searchInput));
             });
+        }
+
+        protected bool ValueContainsQueries(string value, string[] queries){
+            foreach(string query in queries){
+                if(query.Length == 0) return false;
+                if(value.ToLower().Contains(query.ToLower())) return true;
+            }
+            return false;
         }
 
     }
@@ -617,7 +651,7 @@ namespace ProvenceECS.Mainframe{
                 });
             });
 
-            this.Add(label,objectDisplay, button);
+            this.Add(label, objectDisplay, button);
         }
     }
 

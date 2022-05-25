@@ -70,9 +70,22 @@ namespace ProvenceECS.Mainframe{
         }
     }
 
+    public class UIDirectory{
+        public static readonly string provenceEditorRoot = @"Assets/_ProvenceECS/Mainframe/Editor";
+        public string uxmlPath;
+        public string[] ussPaths;
+
+        public UIDirectory(){
+            this.uxmlPath = "";
+            this.ussPaths = new string[0];
+        }
+    }
+
     public abstract class MainframeTableWindow<T> : EditorWindow{
 
-        protected string uiKey;
+        public static readonly string baseUss = @"Assets/_ProvenceECS/Mainframe/Editor/Core/_Base/MainframeTable.uss";
+
+        protected UIDirectory uiDirectory;
         
         protected VisualElement root;
         protected T chosenKey;
@@ -85,6 +98,8 @@ namespace ProvenceECS.Mainframe{
                 playModeState = state;
                 EditorStateChange(state);
             };
+
+            uiDirectory = new UIDirectory();
         }
 
         /// <summary>
@@ -94,19 +109,19 @@ namespace ProvenceECS.Mainframe{
 
         public virtual void OnEnable(){
             SetEditorSettings();
-            LoadTree(ProvenceECS.Mainframe.UIDirectories.GetPath(uiKey,"uxml"), ProvenceECS.Mainframe.UIDirectories.GetPath(uiKey,"uss"));
+            LoadTree();
         }
 
-        protected void LoadTree(string xmlPath, params string[] ussPaths){
+        protected virtual void LoadTree(){
             root = rootVisualElement;
 
-            VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(xmlPath);
+            VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiDirectory.uxmlPath);
             VisualElement tree = visualTree.CloneTree();
             root.Add(tree);
             
-            root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(UIDirectories.GetPath("base","uss")));
-            for(int i = 0; i < ussPaths.Length; i++){
-                StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(ussPaths[i]);
+            root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(baseUss));
+            for(int i = 0; i < uiDirectory.ussPaths.Length; i++){
+                StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(uiDirectory.ussPaths[i]);
                 root.styleSheets.Add(styleSheet);
             }
             

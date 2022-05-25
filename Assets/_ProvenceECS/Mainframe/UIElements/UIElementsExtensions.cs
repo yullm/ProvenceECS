@@ -11,9 +11,16 @@ public static class UIElementsExtensions{
         }
     }
 
-    public static void AddToClassList(this VisualElement ve, params string[] classes){
+    public static T AddToClassList<T>(this T ve, params string[] classes) where T : VisualElement{
         for(int i = 0; i < classes.Length; i++){
             ve.AddToClassList(classes[i]);
+        }
+        return ve;
+    }
+
+    public static void RemoveFromClassList(this VisualElement ve, params string[] classes){
+        for(int i = 0; i < classes.Length; i++){
+            ve.RemoveFromClassList(classes[i]);
         }
     }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace ProvenceECS{
-
     public class Actor : ProvenceComponent{
         public float width;
         public float height;

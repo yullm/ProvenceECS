@@ -7,15 +7,25 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 namespace ProvenceECS.Mainframe{
+
+    public class AssetManagerUIDirectory : UIDirectory{
+        public AssetManagerUIDirectory(){
+            this.uxmlPath = provenceEditorRoot + @"/Core/AssetManager/AssetManagerEditor.uxml";
+            this.ussPaths = new string[]{
+                provenceEditorRoot + @"/Core/AssetManager/AssetManagerEditor.uss"
+            };
+        }
+    }
+
     //build parser
-    public class AssetManagerEditor : MainframeTableWindow<string>{
+   /*  public class AssetManagerEditor : MainframeTableWindow<string>{
 
         protected ColumnScroller pairListScroller;
         protected Texture delButtonIcon;
 
         protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("Provence Asset Manager");
-            this.uiKey = "asset-manager";
+            this.uiDirectory = new AssetManagerUIDirectory();
         }
 
         protected override void InitializeWindow(){
@@ -23,6 +33,7 @@ namespace ProvenceECS.Mainframe{
             delButtonIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/times.png");
             pairListScroller = root.Q<ColumnScroller>("pair-list-scroller");
             eventManager.Raise<DrawColumnEventArgs<string>>(new DrawColumnEventArgs<string>(0));
+            ProvenceManager.AssetManager.CreateAssetLibrary();
         }
 
         protected override void RegisterEventListeners(){
@@ -113,6 +124,6 @@ namespace ProvenceECS.Mainframe{
 
         protected void SaveManager(SceneSavedEvent args){
             ProvenceManager.AssetManager.Save();
-        }
-    }
+        } 
+    }*/
 }

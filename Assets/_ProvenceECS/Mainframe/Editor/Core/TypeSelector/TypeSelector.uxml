@@ -8,11 +8,19 @@
     <VisualElement class="wrapper">
         <VisualElement class="page-column">
             <VisualElement class="list-item alternate">
-                <TextElement class="list-item-label second-alternate" text="Search:"/>
+                <TextElement class="list-item-label" text="Search:"/>
                 <TextField name="search-bar" class="list-item-input list-item-text-input"/>
                 <TextElement name="clear-search-button" class="list-item-button second-alternate" text="X"/>
             </VisualElement>
             <ScrollView name="type-list" class="column-scroller"/>
+            <VisualElement name="generic-list-item" class="list-item alternate">
+                <TextElement class="list-item-label" text="Generic Type:"/>
+                <TextField name="generic-input" class="list-item-input list-item-text-input"/>
+            </VisualElement>
+            <VisualElement name="assembly-list-item" class="list-item alternate">
+                <TextElement class="list-item-label" text="Assembly:"/>
+                <TextField name="assembly-input" class="list-item-input list-item-text-input"/>
+            </VisualElement>
         </VisualElement>
     </VisualElement>    
 </UXML>

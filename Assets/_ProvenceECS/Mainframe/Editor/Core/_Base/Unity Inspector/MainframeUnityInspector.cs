@@ -8,19 +8,25 @@ namespace ProvenceECS.Mainframe{
 
     public abstract class MainframeUnityInspector<T> : Editor where T : class{
         
+        public static readonly string inspectorUss = @"Assets/_ProvenceECS/Mainframe/Editor/Core/_Base/Unity Inspector/MainframeUnityInspector.uss";
+
         protected T selected;
         protected VisualElement root;
         protected EventManager<MainframeUIArgs> eventManager = new EventManager<MainframeUIArgs>();
+        protected UIDirectory uiDirectory;
 
-        protected VisualElement LoadTree(string xmlPath, params string[] ussPaths){
+        protected VisualElement LoadTree(){
+            //root = this.
             selected = target as T;
+            root = new VisualElement();
 
-            VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(xmlPath);
-            root = visualTree.CloneTree();
-            root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(UIDirectories.GetPath("base","uss")));
-            root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(UIDirectories.GetPath("base","inspector-uss")));
-            for(int i = 0; i < ussPaths.Length; i++){
-                StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(ussPaths[i]);
+            VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiDirectory.uxmlPath);
+            visualTree.CloneTree(root);
+    
+            root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(MainframeTableWindow<Entity>.baseUss));
+            root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(inspectorUss));
+            for(int i = 0; i < uiDirectory.ussPaths.Length; i++){
+                StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(uiDirectory.ussPaths[i]);
                 root.styleSheets.Add(styleSheet);
             }
 

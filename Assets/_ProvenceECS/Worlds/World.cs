@@ -21,9 +21,6 @@ namespace ProvenceECS{
         public ComponentManager componentManager;
         public EventManager<ProvenceEventArgs> eventManager;
         public SystemManager systemManager;
-        [JsonIgnore]
-        public SwitchManager switchManager;
-        public GameObjectManager gameObjectManager;
     
         public World(){
             this.id = System.Guid.NewGuid().ToString();
@@ -32,24 +29,31 @@ namespace ProvenceECS{
             this.componentManager = new ComponentManager(this);
             this.eventManager = new EventManager<ProvenceEventArgs>(this);
             this.systemManager = new SystemManager(this);
-            this.switchManager = new SwitchManager(this);
-            this.gameObjectManager = new GameObjectManager(this);
         }
 
-        public void Initialize(){
-            gameObjectManager.Initialize();            
+        public void Initialize(){          
             componentManager.Initialize();
             systemManager.Initialize();
             eventManager.Raise<WorldRegistrationComplete>(new WorldRegistrationComplete(this));
+        }
+
+        public void Destroy(){
+            systemManager.Destroy();
+            componentManager.Destroy();
+            entityManager.Destroy();
+            eventManager.ClearListeners();
         }
 
         public EntityHandle CreateEntity(string name = ""){
             return entityManager.CreateEntity(name);
         }
 
+        public EntityHandle AddEntity(Entity entity, string name = ""){
+            return entityManager.AddEntity(entity,name);
+        }
+
         public void RemoveEntity(Entity entity){
             componentManager.RemoveEntityEntries(entity);
-            gameObjectManager.RemoveGameObject(entity);
             entityManager.RemoveEntity(entity);
         }
 
@@ -63,8 +67,7 @@ namespace ProvenceECS{
 
         public EntityHandle DuplicateEntity(Entity entity){
             EntityHandle duplicateHandle = CreateEntity();
-            gameObjectManager.DuplicateGameObject(entity, duplicateHandle.entity);
-            componentManager.CopyComponentsToOtherEntity(entity, duplicateHandle.entity);
+            duplicateHandle.AddComponentSet(componentManager.GetAllComponents(entity).HandlesToComponents().Clone());
             return duplicateHandle;
         }
 
@@ -74,6 +77,10 @@ namespace ProvenceECS{
 
         public ComponentHandle<T> AddComponent<T>(Entity entity, T component) where T : ProvenceComponent{
             return componentManager.AddComponent<T>(entity,component);
+        }
+
+        public void AddComponentSet(Entity entity, HashSet<ProvenceComponent> set){
+            componentManager.AddComponentSet(entity, set);
         }
 
         public ComponentHandle<T> GetOrCreateComponent<T>(Entity entity) where T : ProvenceComponent, new(){
@@ -92,8 +99,16 @@ namespace ProvenceECS{
             componentManager.RemoveComponent<T>(entity);
         }
 
+        public void RemoveComponent<T>(Entity entity, T Component) where T : ProvenceComponent{
+            componentManager.RemoveComponent<T>(entity);
+        }
+
         public T AddSystem<T>() where T : ProvenceSystem, new(){
             return systemManager.AddSystem<T>();
+        }
+
+        public void AddSystem<T>(T system, bool overwrite = true) where T : ProvenceSystem{
+            systemManager.AddSystem(system, overwrite);
         }
 
         public T GetSystem<T>() where T : ProvenceSystem{
@@ -104,29 +119,35 @@ namespace ProvenceECS{
             return systemManager.GetOrAddSystem<T>();
         }
 
-        public void RemoveSystem<T>() where T : ProvenceSystem{
-            systemManager.RemoveSystem<T>();
+        public void RemoveSystem<T>(SystemDestructionType destructionType = SystemDestructionType.SYSTEM_REMOVAL) where T : ProvenceSystem{
+            systemManager.RemoveSystem<T>(destructionType);
         }
 
-        public GameObject AddGameObject(Entity entity){
-            return gameObjectManager.AddGameObject(entity);
+        public void RemoveSystem<T>(T system, SystemDestructionType destructionType = SystemDestructionType.SYSTEM_REMOVAL) where T : ProvenceSystem{
+            systemManager.RemoveSystem<T>(destructionType);
         }
 
-        public GameObject GetGameObject(Entity entity){
-            return gameObjectManager.GetGameObject(entity);
+        public void TransferSystem<T>(World toWorld) where T : ProvenceSystem, new(){
+            T system = GetSystem<T>();
+            if(system == null) return;
+            RemoveSystem<T>(SystemDestructionType.TRANSFER);
+            toWorld.AddSystem(system);
         }
 
-        public GameObject SetGameObject(Entity entity, GameObject gameObject){
-            return gameObjectManager.SetGameObject(entity,gameObject);
+        public void TransferSystem<T>(World toWorld, T system) where T : ProvenceSystem{
+            RemoveSystem(system,SystemDestructionType.TRANSFER);
+            toWorld.AddSystem(system);
         }
 
-        public void RemoveGameObject(Entity entity){
-            gameObjectManager.RemoveGameObject(entity);
+        public void AddEntityDictionary(Dictionary<Entity,HashSet<ProvenceComponent>> dict){
+            foreach(Entity entity in dict.Keys){
+                entityManager.AddEntity(entity);
+            }
+            foreach(KeyValuePair<Entity,HashSet<ProvenceComponent>> kvp in dict){
+                componentManager.AddComponentSet(kvp.Key,kvp.Value);
+            }
         }
 
-        public void Organize(){
-            componentManager.Organize();
-        }
     }
 
 }

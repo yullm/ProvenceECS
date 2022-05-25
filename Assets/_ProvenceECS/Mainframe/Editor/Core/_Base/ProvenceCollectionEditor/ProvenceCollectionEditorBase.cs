@@ -7,29 +7,58 @@ using ProvenceECS;
 using ProvenceECS.Mainframe;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using UnityEditor;
 
 namespace ProvenceECS.Mainframe{
 
-    public abstract class ProvenceCollectionEditorBase<T,U> : MainframeTableWindow<string>  where T : ProvenceCollection<U>, new() where U : ProvenceCollectionEntry, new (){
+    public abstract class ProvenceCollectionEditor<U> : MainframeTableWindow<string> where U : ProvenceCollectionEntry, new (){
 
-        #region CollectionEditor variables
-        protected T collection = new T();
+        #region ManualEditor variables
+        protected ProvenceCollection<U> collection = new ProvenceCollection<U>();
+        public static readonly string collectionUss = @"Assets/_ProvenceECS/Mainframe/Editor/Core/_Base/ProvenceCollectionEditor/ProvenceCollectionEditorBase.uss";
         
         protected ColumnScroller keyListScroller;
         protected ColumnScroller entryEditorScroller;
+        protected ColumnScroller tagListScroller;
         protected Texture keyIcon;
         protected Texture selectedKeyIcon;
         protected DropDownMenu keyListContextMenu;
+        protected DropDownMenu entryEditorComponentContextMenu;
+        protected DropDownMenu entryEditorTagContextMenu;
         protected UnityEditor.Editor modelViewerEditor;
         protected GameObject previewModel;
         #endregion
         
-        #region CollectionEditor windowMethods
+        #region ManualEditor windowMethods
         public override void OnEnable(){
             LoadCollection();
             SetEditorSettings();
-            LoadTree(UIDirectories.GetPath(uiKey,"uxml"), UIDirectories.GetPath("base","uss"), UIDirectories.GetPath("collection-editor","uss"), UIDirectories.GetPath(uiKey,"uss"));
+            LoadTree();
             modelViewerEditor = null;
+        }
+
+        public void OnDisable(){
+            DestroyImmediate(modelViewerEditor);
+        }
+
+        protected override void LoadTree(){
+            root = rootVisualElement;
+
+            VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiDirectory.uxmlPath);
+            VisualElement tree = visualTree.CloneTree();
+            root.Add(tree);
+            
+            root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(baseUss));
+            root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(collectionUss));
+            for(int i = 0; i < uiDirectory.ussPaths.Length; i++){
+                StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(uiDirectory.ussPaths[i]);
+                root.styleSheets.Add(styleSheet);
+            }
+            
+            RegisterSceneEvents();
+            RegisterEventListeners();
+            InitializeWindow();
+            eventManager.Raise<PageLoadComplete>(new PageLoadComplete());
         }
 
         protected override void RegisterEventListeners(){
@@ -44,7 +73,12 @@ namespace ProvenceECS.Mainframe{
             if(root == null) return;
             keyListScroller = root.Q<ColumnScroller>("key-list-scroller");
             entryEditorScroller = root.Q<ColumnScroller>("entry-editor-scroller");
+            root.Q<ListItemSearchBar>("entry-editor-search-bar").container = entryEditorScroller;
+            tagListScroller = root.Q<ColumnScroller>("entry-editor-tag-scroller");
+
             keyListContextMenu = root.Q<DropDownMenu>("key-list-context-menu");
+            entryEditorComponentContextMenu = root.Q<DropDownMenu>("entry-editor-component-context-menu");
+            entryEditorTagContextMenu = root.Q<DropDownMenu>("entry-editor-tag-context-menu");
             keyIcon = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/bookmark-open.png");
             selectedKeyIcon = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/bookmark.png");
             eventManager.Raise<DrawColumnEventArgs<string>>(new DrawColumnEventArgs<string>(0));
@@ -67,7 +101,7 @@ namespace ProvenceECS.Mainframe{
         } 
         #endregion
 
-        #region CollectionEditor keyListMethods
+        #region ManualEditor keyListMethods
         protected virtual void RegisterKeyListEvents(){
             ListItemTextInput keyInput = root.Q<ListItemTextInput>("new-entry-key-input");
             keyInput.eventManager.AddListener<ListItemInputCommit>(e => {
@@ -184,8 +218,8 @@ namespace ProvenceECS.Mainframe{
                         U entry = collection[itemKey];
                         if(entry.name.ToLower().Contains(searchString.ToLower())) match = true;
                         if(match == false){
-                            foreach(string tag in entry.tags){
-                                if(tag.ToLower().Contains(searchString.ToLower())) match = true;
+                            foreach(Type tag in entry.tags){
+                                if(tag.Name.ToLower().Contains(searchString.ToLower())) match = true;
                             }
                             if(match == false) item.style.display = DisplayStyle.None;
                         }
@@ -196,27 +230,206 @@ namespace ProvenceECS.Mainframe{
 
         #endregion
 
-        #region CollectionEditor entryEditorMethods
+        #region Manual entryEditorMethods
 
-        protected virtual void RegisterEntryEditorEvents(){}
+        protected virtual void RegisterEntryEditorEvents(){
+            root.Q<Div>("entry-editor-menu-add-component-button").eventManager.AddListener<MouseClickEvent>(AddComponentButtonClicked);
+            root.Q<ListItemImage>("entry-editor-tag-button").eventManager.AddListener<MouseClickEvent>(AddTagButtonClicked);
+        }
 
-        protected virtual bool DrawEntryEditor(){
+        protected virtual void AddComponentButtonClicked(MouseClickEvent e){
+            if(e.button != 0) return;
+            if(collection.ContainsKey(chosenKey)){
+                List<Type> existingTypes = collection[chosenKey].components.Keys.ToList();
+                TypeSelector.TypeSelectorParameters searchParameters = new TypeSelector.TypeSelectorParameters(typeof(ProvenceComponent), false, existingTypes, typeof(Entity));
+                TypeSelector.Open(searchParameters, args =>{
+                    Helpers.InvokeGenericMethod<ProvenceCollectionEditor<U>>(this,"AddComponentToEntry", args.value);
+                });
+            }
+        }
+
+        protected virtual void AddTagButtonClicked(MouseClickEvent e){
+            if(e.button != 0) return;
+            if(collection.ContainsKey(chosenKey)){
+                List<Type> existingTypes = collection[chosenKey].tags.Select(t => t.GetType()).ToList();
+                TypeSelector.TypeSelectorParameters searchParameters = new TypeSelector.TypeSelectorParameters(typeof(MainframeTag), false, existingTypes);
+                TypeSelector.Open(searchParameters, args =>{
+                    AddTagToEntry(args.value);
+                });
+            }
+        }
+
+        protected virtual void DrawEntryEditor(){
             entryEditorScroller.Clear();
+            DrawEntryTitle();
+            DrawComponentList();
+            DrawTagList();
+            VerifyTagComponents();
+            DrawModelViewer();
+        }
+
+        protected virtual void DrawEntryTitle(){
             if(chosenKey != null){
-                root.Q<ListItem>("entry-editor-title").style.display = DisplayStyle.Flex;
-                root.Q<ListItem>("entry-editor-menu").style.display = DisplayStyle.Flex;
+                root.Q<PageColumn>("entry-editor").style.display = DisplayStyle.Flex;
                 root.Q<ListItemText>("entry-editor-title-display").text = chosenKey;
-                return true;
             }else{
-                root.Q<ListItem>("entry-editor-title").style.display = DisplayStyle.None; 
-                root.Q<ListItem>("entry-editor-menu").style.display = DisplayStyle.None;
-                return false;
+                root.Q<PageColumn>("entry-editor").style.display = DisplayStyle.None; 
+            }
+        }
+
+        protected virtual void DrawComponentList(){
+            if(chosenKey != null){
+                foreach(ProvenceComponent component in collection[chosenKey].components.Values){
+                    DrawComponent(component, entryEditorScroller);
+                }
+            }
+        }
+
+        protected virtual void DrawComponent(ProvenceComponent component, VisualElement parent, bool removeable = true, bool hide = false){
+            Div container = new Div();
+            container.AddToClassList("search-list-item");
+            container.userData = component.GetType().Name;
+            foreach(Type tag in collection[chosenKey].tags){
+                if(((MainframeTag)Activator.CreateInstance(tag)).requiredComponents.Contains(component.GetType()))
+                    container.userData += tag.Name;
+            }
+            ListItem titleItem = new ListItem(false,true);
+            ListItemText title = titleItem.AddTitle(System.Text.RegularExpressions.Regex.Replace(component.GetType().Name, @"((?<=\p{Ll})\p{Lu})|((?!\A)\p{Lu}(?>\p{Ll}))", " $0"));
+            titleItem.name = component.GetType().Name.ToLower() + "-control-title";
+            titleItem.AddToClassList("structure-control-title","spacer");
+
+            Div structContainer = (Div)Helpers.InvokeGenericMethod<ProvenceCollectionEditor<U>>(this,"DrawComponentControl",component.GetType(),component);
+            
+            titleItem.eventManager.AddListener<MouseClickEvent>(e =>{
+                switch(e.button){
+                    case 0:
+                        if(title.ClassListContains("second-alternate")) title.RemoveFromClassList("second-alternate");
+                        else title.AddToClassList("second-alternate");
+                        structContainer.Toggle();
+                        break;
+                    case 1:
+                        if(removeable){
+                            entryEditorComponentContextMenu.Show(root,e,true);
+
+                            ListItem removeButton = entryEditorComponentContextMenu.Q<ListItem>("entry-editor-component-remove-button");
+                            removeButton.eventManager.ClearListeners();
+                            removeButton.eventManager.AddListener<MouseClickEvent>(ev => {
+                                Helpers.InvokeGenericMethod<ProvenceCollectionEditor<U>>(this, "RemoveComponentFromEntry", component.GetType());
+                                entryEditorComponentContextMenu.Toggle();
+                            });
+                        }
+                        break;
+                }
+            });
+            
+            if(hide) titleItem.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(titleItem,0,Vector2.zero));
+            
+            container.Add(titleItem,structContainer);
+            parent.Add(container);
+        }
+
+        protected virtual Div DrawComponentControl<V>(V component) where V : ProvenceComponent{
+            Div container = new Div();
+            container.name = typeof(V).Name.ToLower() + "-control-container";
+
+            StructureControl<V> control = new StructureControl<V>(ref component,null,false,null,null,0,typeof(DontDisplayInManual));
+            control.eventManager.AddListener<StructureControlUpdated<V>>(e =>{
+                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
+            });
+
+            container.Add(control);
+            return container;
+        }
+
+        protected virtual void DrawTagList(){
+            tagListScroller.Clear();
+            if(chosenKey != null){
+                foreach(System.Type tag in collection[chosenKey].tags){
+                    ListItemText tagElement = new ListItemText(tag.Name);
+                    tagElement.userData = tag;
+                    tagElement.AddToClassList("entry-editor-tag");
+
+                    tagElement.eventManager.AddListener<MouseClickEvent>(e =>{
+                        switch(e.button){
+                            case 0:
+                                ListItemSearchBar compSearchBar = root.Q<ListItemSearchBar>("entry-editor-search-bar");
+                                compSearchBar.searchInput.value = compSearchBar.searchInput.value.Replace(" ","");
+                                if(tagElement.ClassListContains("selected")){
+                                    tagElement.RemoveFromClassList("selected");
+                                    compSearchBar.searchInput.value = compSearchBar.searchInput.text.ToLower().Replace(tag.Name.ToLower() + "/","");
+                                }else{
+                                    tagElement.AddToClassList("selected");
+                                    if(compSearchBar.searchInput.value == ""){ 
+                                        compSearchBar.searchInput.value = tag.Name.ToLower() + "/";
+                                    }else{
+                                        if(compSearchBar.searchInput.value[compSearchBar.searchInput.value.Length -1] != '/')
+                                            compSearchBar.searchInput.value += "/";
+                                        compSearchBar.searchInput.value += tag.Name.ToLower() + "/";
+                                    }
+                                }
+                                break;
+                            case 1:
+                                entryEditorTagContextMenu.Show(root,e,true);
+                                ListItem removeButton = entryEditorTagContextMenu.Q<ListItem>("entry-editor-tag-remove-button");
+                                removeButton.eventManager.ClearListeners();
+                                removeButton.eventManager.AddListener<MouseClickEvent>(ev =>{
+                                    RemoveTagFromEntry((dynamic)tagElement.userData);
+                                    entryEditorTagContextMenu.Toggle();
+                                });
+                                ListItem removeAllButton = entryEditorTagContextMenu.Q<ListItem>("entry-editor-tag-remove-all-button");
+                                removeAllButton.eventManager.ClearListeners();
+                                removeAllButton.eventManager.AddListener<MouseClickEvent>(ev =>{
+                                    RemoveTagCompleteFromEntry((dynamic)tagElement.userData);
+                                    entryEditorTagContextMenu.Toggle();
+                                });
+                                break;
+                        }
+                    });
+
+                    tagListScroller.Add(tagElement);
+                }
+            }
+        }
+
+        protected virtual void VerifyTagComponents(){
+            if(chosenKey != null){
+                foreach(Type tag in collection[chosenKey].tags){
+                    foreach(System.Type requiredType in ((MainframeTag)Activator.CreateInstance(tag)).requiredComponents){
+                        if(!collection[chosenKey].components.ContainsKey(requiredType)){
+                            Helpers.InvokeGenericMethod(this,"AddComponentToEntry", requiredType);
+                        }
+                    }
+                }
+            }
+        }
+
+        protected virtual void DrawModelViewer(){
+            PageColumn modelViewer = root.Q<PageColumn>("model-viewer");
+            DestroyImmediate(modelViewerEditor);
+            modelViewer.Clear();
+            if(chosenKey != null && modelViewer != null){
+                if(collection.ContainsKey(chosenKey) && collection[chosenKey].components.ContainsKey(typeof(Model))){
+                    Model modelComponent = (Model)collection[chosenKey].components[typeof(Model)];
+                    if(modelComponent.manualKey.Equals("")){
+                        modelViewer.style.display = DisplayStyle.None;
+                        return;
+                    }
+                    previewModel = ProvenceManager.ModelBank.LoadModel(modelComponent.manualKey);
+                    if(previewModel == null) return;
+                    modelViewer.style.display = DisplayStyle.Flex;                    
+                    IMGUIContainer modelViewerWrapper = new IMGUIContainer();
+                    modelViewerWrapper.AddToClassList("model-preview-wrapper");
+                    modelViewer.Add(modelViewerWrapper);
+                    modelViewerWrapper.onGUIHandler = () =>{
+                        DrawObjectPreview(modelViewerWrapper, ref modelViewerEditor, previewModel);
+                    };
+                } else modelViewer.style.display = DisplayStyle.None;
             }
         }
 
         #endregion       
 
-        #region  CollectionEditor manualMethods
+        #region  ManualEditor manualMethods
         protected virtual void AddManualEntry(string name){
             if(!collection.ContainsKey(name)){
                 collection[name] = new U();
@@ -248,6 +461,57 @@ namespace ProvenceECS.Mainframe{
             }
         }
         
+        protected virtual void AddComponentToEntry<V>() where V : ProvenceComponent, new(){
+            if(collection.ContainsKey(chosenKey) && !collection[chosenKey].components.ContainsKey(typeof(V))){
+                V component = new V();
+                collection[chosenKey].components[typeof(V)] = component;
+                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
+                eventManager.Raise<DrawColumnEventArgs<string>>(new DrawColumnEventArgs<string>(1));
+            }
+        }
+
+        protected virtual void RemoveComponentFromEntry<V>() where V : ProvenceComponent{
+            if(collection.ContainsKey(chosenKey) && collection[chosenKey].components.ContainsKey(typeof(V))){
+                foreach(Type tag in collection[chosenKey].tags){
+                    foreach(System.Type requiredType in ((MainframeTag)Activator.CreateInstance(tag)).requiredComponents) 
+                        if(typeof(V) == requiredType) return;
+                }
+                collection[chosenKey].components.Remove(typeof(V));
+                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
+                eventManager.Raise<DrawColumnEventArgs<string>>(new DrawColumnEventArgs<string>(1));
+            }
+        }
+
+        protected virtual void AddTagToEntry(Type tag){
+            if(chosenKey != null){
+                collection[chosenKey].tags.Add(tag);
+                foreach(System.Type requiredType in ((MainframeTag)Activator.CreateInstance(tag)).requiredComponents){
+                    Helpers.InvokeGenericMethod(this, "AddComponentToEntry", requiredType);                    
+                }
+                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
+                eventManager.Raise<DrawColumnEventArgs<string>>(new DrawColumnEventArgs<string>(1));
+            }
+        }
+
+        protected virtual void RemoveTagFromEntry(Type tag){
+            if(chosenKey != null && tag != null){
+                collection[chosenKey].tags.Remove(tag);
+                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
+                eventManager.Raise<DrawColumnEventArgs<string>>(new DrawColumnEventArgs<string>(1));
+            }
+        }
+
+        protected virtual void RemoveTagCompleteFromEntry(Type tag){
+            if(chosenKey != null && tag != null){
+                collection[chosenKey].tags.Remove(tag);
+                foreach(System.Type requiredType in ((MainframeTag)Activator.CreateInstance(tag)).requiredComponents){
+                    Helpers.InvokeGenericMethod(this, "RemoveComponentFromEntry", requiredType);
+                }
+                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
+                eventManager.Raise<DrawColumnEventArgs<string>>(new DrawColumnEventArgs<string>(1));
+            }
+        }
+
         protected abstract void LoadCollection();
 
         protected void SaveManual(SceneSavedEvent args){

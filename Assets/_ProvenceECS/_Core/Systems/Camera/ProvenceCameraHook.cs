@@ -16,7 +16,8 @@ namespace ProvenceECS{
 
         void OnRenderImage(RenderTexture source, RenderTexture destination){
             if(world != null && entity != null){
-                ImageEffectArgs args = world.eventManager.RaiseStack<ImageEffectArgs>(new ImageEffectArgs(entity,source,destination), entity);
+                ImageEffectArgs args = new ImageEffectArgs(entity,source,destination);
+                world.eventManager.Raise<ImageEffectArgs>(args);
                 Graphics.Blit(args.source, args.destination);
             }
         }

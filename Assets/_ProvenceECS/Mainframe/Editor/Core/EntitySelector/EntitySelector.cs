@@ -6,6 +6,15 @@ using UnityEngine.UIElements;
 
 namespace ProvenceECS.Mainframe{
 
+    public class EntitySelectorUIDirectory : UIDirectory{
+        public EntitySelectorUIDirectory(){
+            this.uxmlPath = provenceEditorRoot + @"/Core/EntitySelector/EntitySelector.uxml";
+            this.ussPaths = new string[]{
+                provenceEditorRoot + @"/Core/EntitySelector/EntitySelector.uss"
+            };
+        }
+    }
+
     public class EntitySelector : MainframeSelectorWindow<Entity>{
 
         protected World chosenWorld;
@@ -20,7 +29,7 @@ namespace ProvenceECS.Mainframe{
 
         protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("Entity Selector");
-            this.uiKey = "entity-selector";
+            this.uiDirectory = new EntitySelectorUIDirectory();
         }
 
         protected override void RegisterEventListeners(){

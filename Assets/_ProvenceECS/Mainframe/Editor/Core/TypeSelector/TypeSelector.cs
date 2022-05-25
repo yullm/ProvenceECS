@@ -7,6 +7,15 @@ using System.Linq;
 using System.Collections.Generic;
 
 namespace ProvenceECS.Mainframe{
+
+    public class TypeSelectorUIDirectory : UIDirectory{
+        public TypeSelectorUIDirectory(){
+            this.uxmlPath = provenceEditorRoot + @"/Core/TypeSelector/TypeSelector.uxml";
+            this.ussPaths = new string[]{
+                provenceEditorRoot + @"/Core/TypeSelector/TypeSelector.uss"
+            };
+        }
+    }
     
     public class TypeSelector : MainframeSelectorWindow<Type>{
 
@@ -20,12 +29,17 @@ namespace ProvenceECS.Mainframe{
                 this.baseType = baseType;
                 this.showBase = showBase;
                 this.existingTypes = existingTypes;
+                if(this.existingTypes == null) this.existingTypes = new List<Type>();
                 this.additionalAssemblies = additionalAssemblies;
             }
         }
 
         private TypeSelectorParameters parameters;
         private string searchString = "";
+
+        public static TypeSelector Open(){
+            return GetWindow<TypeSelector>();
+        }
 
         public static void Open(TypeSelectorParameters args, ProvenceDelegate<MainframeKeySelection<Type>> callback){
             TypeSelector.Close<TypeSelector>();
@@ -35,7 +49,7 @@ namespace ProvenceECS.Mainframe{
 
         protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("Type Selector");
-            this.uiKey = "type-selector";
+            this.uiDirectory = new TypeSelectorUIDirectory();
         }
 
         protected override void RegisterEventListeners(){
@@ -97,7 +111,22 @@ namespace ProvenceECS.Mainframe{
                 button.eventManager.AddListener<MouseClickEvent>(e =>{
                     if(e.button != 0) return;
                     if(item.ClassListContains("selected")){
-                        ReturnSelection();
+                        if(chosenKey.IsGenericType){
+                            try{
+                                string typeString = root.Q<TextField>("generic-input").text;
+                                string asseblyString = root.Q<TextField>("assembly-input").text;
+                                if(asseblyString.Equals("")) asseblyString = chosenKey.Assembly.ToString();
+                                Type genericType = Type.GetType(typeString + "," + asseblyString);
+                                if(genericType != null){
+                                    chosenKey = chosenKey.MakeGenericType(genericType);
+                                    ReturnSelection();
+                                }
+                            }catch(Exception ex){
+                                Debug.Log("invalid type or constraint");
+                                Debug.LogWarning(ex);
+                            }
+                        }
+                        else ReturnSelection();
                     }else{
                         scroller.Query<ListItem>(null,"selected").ForEach(current =>{
                             current.RemoveFromClassList("selected");

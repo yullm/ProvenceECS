@@ -1,3 +1,8 @@
 .page-column{
     border-width:0px;
 }
+
+#generic-list-item, #assembly-list-item{
+    border-bottom-width: 0px;
+    border-top-width: 1px
+}

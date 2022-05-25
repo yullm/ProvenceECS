@@ -7,6 +7,66 @@ using UnityEngine;
 
 namespace ProvenceECS{
 
+    public class CameraConverter : JsonConverter{
+        public struct SerializedCamera{
+            public string objectName;
+
+            public SerializedCamera(Camera camera){
+                this.objectName = camera.gameObject.name;
+            }
+        }
+
+        public override bool CanConvert(Type objectType){
+            return (objectType == typeof(Camera));
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){
+            SerializedCamera sC = JsonConvert.DeserializeObject<SerializedCamera>(JToken.Load(reader).ToString());
+            GameObject go = GameObject.Find(sC.objectName);
+            if(go != null){
+                Camera camera = go.GetComponent<Camera>();
+                return camera;
+            }
+            return null;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer){
+            SerializedCamera sq = new SerializedCamera((Camera)value);
+            JToken.FromObject(JsonConvert.SerializeObject(sq)).WriteTo(writer);
+        }
+    }
+
+    public class QuaternionConverter : JsonConverter{
+        public struct SerializedQuaternion{
+            public float x;
+            public float y;
+            public float z;
+            public float w;
+
+            public SerializedQuaternion(float x, float y, float z, float w){
+                this.x = x;
+                this.y = y;
+                this.z = z;
+                this.w = w;
+            }
+        }
+
+        public override bool CanConvert(Type objectType){
+            return (objectType == typeof(Quaternion));
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){
+            SerializedQuaternion sq = JsonConvert.DeserializeObject<SerializedQuaternion>(JToken.Load(reader).ToString());
+            return new Quaternion(sq.x,sq.y,sq.z,sq.w);
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer){
+            SerializedQuaternion sq = new SerializedQuaternion(((Quaternion)value).x,((Quaternion)value).y,((Quaternion)value).z,((Quaternion)value).w);
+            JToken.FromObject(JsonConvert.SerializeObject(sq)).WriteTo(writer);
+        }
+
+    }
+
     public class Vector4Converter : JsonConverter{
 
         public struct SerializedVector4{
@@ -24,7 +84,7 @@ namespace ProvenceECS{
         }
 
         public override bool CanConvert(Type objectType){
-            return (objectType == typeof(Vector3));
+            return (objectType == typeof(Vector4));
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){
@@ -40,7 +100,7 @@ namespace ProvenceECS{
 
     public class Vector3Converter : JsonConverter{
 
-        public struct SerializedVector3{
+        protected struct SerializedVector3{
             public float x;
             public float y;
             public float z;
@@ -64,6 +124,38 @@ namespace ProvenceECS{
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer){
             SerializedVector3 sv = new SerializedVector3(((Vector3)value).x,((Vector3)value).y,((Vector3)value).z);
             JToken.FromObject(JsonConvert.SerializeObject(sv)).WriteTo(writer);
+        }
+    }
+
+    public class NullableVector3Converter : JsonConverter{
+
+        protected class SerializedVector3{
+            public float x;
+            public float y;
+            public float z;
+
+            public SerializedVector3(float x, float y, float z){
+                this.x = x;
+                this.y = y;
+                this.z = z;
+            }
+        }
+
+        public override bool CanConvert(Type objectType){
+            return (objectType == typeof(Vector3?));
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){
+            SerializedVector3 sv = JsonConvert.DeserializeObject<SerializedVector3>(JToken.Load(reader).ToString());
+            if(sv == null) return null;
+            return new Vector3(sv.x,sv.y,sv.z);
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer){
+            if(value != null){
+                SerializedVector3 sv = new SerializedVector3(((Vector3)value).x,((Vector3)value).y,((Vector3)value).z);
+                JToken.FromObject(JsonConvert.SerializeObject(sv)).WriteTo(writer);
+            }else writer.WriteNull();
         }
     }
 
@@ -126,18 +218,34 @@ namespace ProvenceECS{
     }
 
     public class GameObjectConverter : JsonConverter{
+
+        public struct SerializedGameObject{
+            public string objectName;
+
+            public SerializedGameObject(GameObject go){
+                this.objectName = go.name;
+            }
+        }
+
         public override bool CanConvert(Type objectType){
             return (objectType == typeof(GameObject));
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){
-            GameObject value = null;
-            if(reader.Value != null) value = Resources.Load<GameObject>(reader.Value.ToString());
-            return value;
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){            
+            var token = JToken.Load(reader);
+            if(token.Value<string>() == null) return null;
+            SerializedGameObject sGO = JsonConvert.DeserializeObject<SerializedGameObject>(JToken.Load(reader).ToString());
+            return GameObject.Find(sGO.objectName);
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer){
-            //writer.WriteValue(UnityEditor.AssetDatabase.GetAssetPath((GameObject)value));
+            if(value != null){
+                SerializedGameObject sGO = new SerializedGameObject((GameObject)value);
+                JToken.FromObject(JsonConvert.SerializeObject(sGO)).WriteTo(writer);
+            }
+            else{
+                writer.WriteNull();
+            }
         }
     }
 

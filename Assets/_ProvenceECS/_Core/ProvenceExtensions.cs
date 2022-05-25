@@ -1,10 +1,75 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Lidgren.Network;
+using Newtonsoft.Json;
+using Ransacked.Networking;
 using UnityEditor;
 using UnityEngine;
 
 namespace ProvenceECS{
     
     public static class ProvenceExtensions{
+
+        public static void Raise<T>(this T pEvent, World world) where T : ProvenceEventArgs{
+            world.eventManager.Raise(pEvent);
+        }
+
+        public static void Broadcast<T>(this T pEvent, World world, NetDeliveryMethod deliveryMethod, BroadcastType broadcastType) where T : ProvenceEventArgs{
+            new BroadcastPacket(pEvent, deliveryMethod, broadcastType).Raise(world);
+        }
+
+        public static void SendToHost<T>(this T pEvent, World world, NetDeliveryMethod deliveryMethod = NetDeliveryMethod.UnreliableSequenced) where T : ProvenceEventArgs{
+            new NetworkClientSendMessage(pEvent,deliveryMethod).Raise(world);
+        }
+
+        public static string SerializeObject<T>(this T obj){
+            return JsonConvert.SerializeObject(obj, Formatting.None, Helpers.baseSerializerSettings);
+        }
+
+        public static T DeserializeObject<T>(this string data){
+            return JsonConvert.DeserializeObject<T>(data,Helpers.baseSerializerSettings);
+        }
+
+        public static System.Object DeserializeObject(this string data){
+            return JsonConvert.DeserializeObject(data,Helpers.baseSerializerSettings);
+        }
+
+        public static string NetSerializeObject<T>(this T obj){
+            return JsonConvert.SerializeObject(obj, Formatting.None, Helpers.netSerializerSettings);
+        }
+
+        public static T NetDeserializeObject<T>(this string data){
+            return JsonConvert.DeserializeObject<T>(data,Helpers.netSerializerSettings);
+        }
+
+        public static string LowCostSerializeObject<T>(this T obj){
+            return JsonConvert.SerializeObject(obj, Formatting.None, Helpers.lowCostSerializerSettings);
+        }
+
+        public static T LowCostDeserializeObject<T>(this string data){
+            return JsonConvert.DeserializeObject<T>(data,Helpers.lowCostSerializerSettings);
+        }
+
+        public static System.Object NetDeserializeObject(this string data){
+            return JsonConvert.DeserializeObject(data,Helpers.netSerializerSettings);
+        }
+
+        public static Dictionary<Entity,ComponentHandle<BASE>> ToBaseDict<BASE,T>(this Dictionary<Entity,ComponentHandle<T>> dict) where T : BASE where BASE : ProvenceComponent{
+            Dictionary<Entity,ComponentHandle<BASE>> newDict = new Dictionary<Entity, ComponentHandle<BASE>>();
+            foreach(ComponentHandle<T> handle in dict.Values){
+                newDict[handle.entity] = new ComponentHandle<BASE>(handle.entity,handle.component,handle.world);
+            }
+            return newDict;
+        }
+
+        public static HashSet<Entity> CacheIntersection(IEnumerable<Entity> mainCache, params IEnumerable<Entity>[] caches){
+            HashSet<Entity> intersection = new HashSet<Entity>(mainCache);
+            foreach(IEnumerable<Entity> cache in caches){
+                intersection = new HashSet<Entity>(intersection.Intersect(cache));
+            }
+            return intersection;
+        }
         
         /* public static Dictionary<Entity,ComponentHandle<T>> ToDictionary(this List<ComponentHandle<T>> list){
             Dictionary<Entity,ComponentHandle<ProvenceComponent>> dict = new Dictionary<Entity, ComponentHandle<ProvenceComponent>>();
@@ -13,6 +78,98 @@ namespace ProvenceECS{
             }
             return dict;
         } */
+
+        public static HashSet<ProvenceComponent> HandlesToComponents(this HashSet<ComponentHandle<ProvenceComponent>> inSet){
+            HashSet<ProvenceComponent> outSet = new HashSet<ProvenceComponent>();
+            foreach(ComponentHandle<ProvenceComponent> handle in inSet)
+                outSet.Add(handle.component);
+            return outSet;
+        }
+
+        public static Dictionary<Entity, HashSet<ProvenceComponent>> Clone(this Dictionary<Entity, HashSet<ProvenceComponent>> dict){
+            Dictionary<Entity, Entity> entityCloneCache = new Dictionary<Entity, Entity>();
+            Dictionary<ProvenceComponent, ProvenceComponent> componentCloneCache = new Dictionary<ProvenceComponent, ProvenceComponent>();
+            Dictionary<Entity, HashSet<ProvenceComponent>> ecCloneCache = new Dictionary<Entity, HashSet<ProvenceComponent>>();
+
+            foreach(KeyValuePair<Entity,HashSet<ProvenceComponent>> kvp in dict){
+                Entity newEntity = new Entity();
+                entityCloneCache[kvp.Key] = new Entity();
+                ecCloneCache[newEntity] = new HashSet<ProvenceComponent>();
+                foreach(dynamic component in kvp.Value){
+                    ProvenceComponent newComponent = component.Clone();
+                    componentCloneCache[component] = newComponent;
+                    ecCloneCache[newEntity].Add(newComponent);
+                }
+            }
+
+            foreach(HashSet<ProvenceComponent> set in ecCloneCache.Values){
+                foreach(ProvenceComponent component in set){
+                    FieldInfo[] fields = component.GetType().GetFields();
+                    foreach(FieldInfo field in fields){
+                        object fieldValue = field.GetValue(component);
+
+                        if(fieldValue is Entity entity){
+                            if(entityCloneCache.ContainsKey(entity))
+                                field.SetValue(component, entityCloneCache[entity]);                        
+                            continue;
+                        }
+
+                        if(fieldValue is ProvenceComponent fieldComponent){
+                            if(componentCloneCache.ContainsKey(fieldComponent))
+                                field.SetValue(component, componentCloneCache[fieldComponent]);
+                        }
+                    }
+                }
+            }
+            
+            return ecCloneCache;
+        }
+
+        public static HashSet<ProvenceComponent> Clone(this HashSet<ProvenceComponent> set){
+            Dictionary<ProvenceComponent, ProvenceComponent> componentCloneCache = new Dictionary<ProvenceComponent, ProvenceComponent>();
+            foreach(dynamic component in set){
+                ProvenceComponent newComponent = component.Clone();
+                componentCloneCache[component] = newComponent;
+            }
+
+            foreach(ProvenceComponent component in componentCloneCache.Values){
+                FieldInfo[] fields = component.GetType().GetFields();
+                foreach (FieldInfo field in fields){
+                    object fieldValue = field.GetValue(component);
+
+                    if(fieldValue is ProvenceComponent fieldComponent){
+                        if(componentCloneCache.ContainsKey(fieldComponent))
+                            field.SetValue(component, componentCloneCache[fieldComponent]);
+                        else{
+                            field.SetValue(component, fieldComponent.Clone());
+                        }
+                        continue;
+                    }
+
+                    // if(fieldValue is System.Collections.IEnumerable collection){
+                    //     System.Type[] genericTypes = collection.GetType().GenericTypeArguments;
+                    //     if(genericTypes.Length == 1 && collection.GetType().GenericTypeArguments[0].IsSubclassOf(typeof(ProvenceComponent))){
+
+                    //     }
+                    //     /* System.Type[] genericTypes = collection.GetType().GenericTypeArguments;
+                    //     for(int i = 0; i < genericTypes.Length; i++){
+                    //         if(genericTypes[i] == typeof(ProvenceComponent) || genericTypes[i].IsSubclassOf(typeof(ProvenceComponent))){ 
+                    //             if(collection is System.Collections.IDictionary dict){
+
+                    //             }else{
+                    //                 if(i == 0){
+                                        
+                    //                 }
+                    //             }
+                    //         }
+                    //     }  */
+                    // }                               
+
+                }
+            }
+
+            return new HashSet<ProvenceComponent>(componentCloneCache.Values);
+        }
 
         public static void Clear(this GameObject go){
             for(int i = go.transform.childCount - 1; i >= 0; i--){
@@ -54,14 +211,14 @@ namespace ProvenceECS{
         }
 
         public static List<T> Remove<T>(this List<T> list, IEnumerable<T> items){
-            foreach(T item in items){
+            foreach(T item in items.ToSet()){
                 list.Remove(item);
             }
             return list;
         }
 
         public static IEnumerable<T> Remove<T>(this HashSet<T> set, IEnumerable<T> items){
-            foreach(T item in items){
+            foreach(T item in items.ToSet()){
                 set.Remove(item);
             }
             return set;
@@ -72,6 +229,18 @@ namespace ProvenceECS{
             list[indexA] = list[indexB];
             list[indexB] = temp;
             return list;
+        }
+
+        public static HashSet<T> ToSet<T>(this IEnumerable<T> set){
+            return new HashSet<T>(set);
+        }
+
+        public static void Log<T>(this IEnumerable<T> set){
+            string setString = "";
+            foreach(T item in set){
+                setString += item.ToString() + ", ";
+            }
+            Debug.Log(setString);
         }
 
         public static bool SetEquals<T>(this List<T> list1, List<T> list2){

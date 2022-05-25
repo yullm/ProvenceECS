@@ -64,6 +64,12 @@ TableWrapper{
     flex: 1;
 }
 
+.column-scroller.alternate #unity-content-container{
+    flex-direction: row;
+    height: 100%;
+    align-items: center;
+}
+
 .drop-down-menu{
     position: absolute;
     width: 150px;
@@ -129,7 +135,7 @@ Div.selectable ListItemImage,
     cursor: Link;
 }
 
-.list-item-filler{
+.filler,.list-item-filler{
     height:29px;
     flex:1;
 }
@@ -411,9 +417,7 @@ KeySelectorElement.alternate, HierarchySelectorElement.alternate{
     border-right-width: 0px;
 }
 
-.soundbank-input{
-    flex: 0.7;
-}
+
 
 /*creation prompt*/
 

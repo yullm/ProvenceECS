@@ -1,0 +1,69 @@
+.wrapper{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+a, a:visited{
+    text-decoration: none;
+    color: #ddd;
+}
+
+strong{
+    font-weight: 700;
+}
+
+.filler{
+    flex: 1;
+}
+
+.page{
+    display: flex;
+    justify-content: center;
+}
+
+.page-margin{
+    display: flex;
+    flex-direction: column;
+    align-items: center;    
+    width: 60px;
+}
+
+.page-column{
+    display: flex;
+    flex-direction: column;
+    flex : 1;
+    overflow: hidden;
+}
+
+.column-scroller{        
+    flex: 1;
+    overflow-y: scroll;
+}
+
+.provence-button{
+    color: #ddd;
+    cursor: pointer;
+}
+
+.provence-button:hover{
+    color: #fff;
+}
+
+.provence-row{
+    display: flex;
+    height: 30px;
+    align-items: center;
+    overflow: hidden;
+}
+
+@media(max-width: 800px){
+    .page-margin{
+        width: 20px;
+    }
+}

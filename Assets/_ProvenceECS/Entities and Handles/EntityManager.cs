@@ -9,20 +9,31 @@ namespace ProvenceECS{
     public class EntityManager{   
         public World world;
         [JsonProperty]
-        protected List<Entity> entities;
+        protected HashSet<Entity> entities;
 
         public EntityManager(World world){
             this.world = world;
-            this.entities = new List<Entity>();
+            this.entities = new HashSet<Entity>();
+        }
+
+        public void Destroy(){
+            entities.Clear();
         }
 
         public EntityHandle CreateEntity(string name = ""){
-            Entity entity;
-            EntityHandle entityHandle = new EntityHandle(world);
-            entity = new Entity();
+            Entity entity = new Entity();
             entities.Add(entity);
-            entityHandle.entity = entity;
+            EntityHandle entityHandle = new EntityHandle(entity, world);
             entityHandle.AddComponent<Name>(new Name(!name.Equals("") ? name : entity.ToString()));            
+            return entityHandle;
+        }
+
+        public EntityHandle AddEntity(Entity entity, string name = ""){
+            EntityHandle entityHandle = new EntityHandle(entity, world);
+            if(!entities.Contains(entity)){
+                entities.Add(entity);
+                entityHandle.AddComponent<Name>(new Name(!name.Equals("") ? name : entity.ToString()));   
+            }
             return entityHandle;
         }
 

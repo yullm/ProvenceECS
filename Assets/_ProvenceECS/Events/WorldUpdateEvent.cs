@@ -60,4 +60,13 @@ namespace ProvenceECS{
         }
     }
 
+    public class WorldSafetyDestroy : ProvenceEventArgs{
+        public World world;
+        public float time;
+        public WorldSafetyDestroy(World world, float time){
+            this.world = world;
+            this.time = time;
+        }
+    }
+
 }

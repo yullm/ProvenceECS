@@ -1,12 +1,36 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using Newtonsoft.Json;
 using System.Reflection;
 using System.IO;
+using UnityEngine.SceneManagement;
+using System.Linq;
 
 namespace ProvenceECS{
+
+    public class TickRateTimer{
+
+        protected  float goal;
+        protected float timer;
+        protected System.Action action;
+
+        public TickRateTimer(byte rate, System.Action action){
+            this.goal = 1 / rate;
+            this.timer = 0;
+            this.action = action;
+        }
+
+        public void Tick(float deltaTime){
+            this.timer += deltaTime;
+            if(timer >= goal){
+                action.Invoke();
+                timer -= goal;
+            }
+        }
+    }
 
     public enum BooleanEnum {FALSE,TRUE};
 
@@ -17,6 +41,28 @@ namespace ProvenceECS{
                 return new JsonSerializerSettings{
                     TypeNameHandling = TypeNameHandling.All,
                     PreserveReferencesHandling = PreserveReferencesHandling.All,
+                    ContractResolver = new ProvenceContractResolver()
+                };
+            }
+        }
+
+        public static JsonSerializerSettings netSerializerSettings{
+            get{
+                return new JsonSerializerSettings{
+                    TypeNameHandling = TypeNameHandling.Objects,
+                    PreserveReferencesHandling = PreserveReferencesHandling.None,
+                    ObjectCreationHandling = ObjectCreationHandling.Replace,
+                    ContractResolver = new ProvenceContractResolver()
+                };
+            }
+        }
+
+        public static JsonSerializerSettings lowCostSerializerSettings{
+            get{
+                return new JsonSerializerSettings{
+                    TypeNameHandling = TypeNameHandling.None,
+                    PreserveReferencesHandling = PreserveReferencesHandling.None,
+                    ObjectCreationHandling = ObjectCreationHandling.Replace,
                     ContractResolver = new ProvenceContractResolver()
                 };
             }
@@ -62,6 +108,16 @@ namespace ProvenceECS{
                 MethodInfo method = typeof(T).GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
                 MethodInfo reference = method.MakeGenericMethod(genericType);
                 return reference.Invoke(invokingObject, args); 
+            }catch(Exception e){
+                throw e;
+            }
+        }
+
+        public static object InvokeStaticGenericMethod<T>( string methodName, Type genericType, params object[] args){
+            try{
+                MethodInfo method = typeof(T).GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+                MethodInfo reference = method.MakeGenericMethod(genericType);
+                return reference.Invoke(null, args); 
             }catch(Exception e){
                 throw e;
             }
@@ -134,6 +190,22 @@ namespace ProvenceECS{
             return new T();
         }
 
+        public static string GetFileContents(string path){
+            try{
+                if(File.Exists(path)){
+                    string contents = "";
+                    using(StreamReader sr = new StreamReader(path)){
+                        contents = sr.ReadToEnd();
+                        sr.Close();
+                    }
+                    return contents;
+                }
+            }catch(System.Exception e){
+                Debug.LogWarning(e);
+            }
+            return null;
+        }
+
         public static void DeleteFile(string path){
             if(File.Exists(path))
                 File.Delete(path);
@@ -171,6 +243,69 @@ namespace ProvenceECS{
         public static async void Delay(Action action, int delay = 0){
             await System.Threading.Tasks.Task.Delay(delay);
             action.Invoke();
+        }
+
+        public static byte RandomByte(bool includeZero = false){
+            System.Random random = new System.Random();
+            byte[] bytes = new byte[1];
+            do{
+                new System.Random().NextBytes(bytes);
+            }while(includeZero == true || bytes[0] != 0);
+            return bytes[0];
+        }
+
+        public static byte RandomByte(Byte[] exclusions, bool includeZero = false){
+            System.Random random = new System.Random();
+            byte[] bytes = new byte[1];
+            do{
+                new System.Random().NextBytes(bytes);
+            }while(exclusions.Contains(bytes[0]) && (includeZero == true || bytes[0] != 0));
+            return bytes[0];
+        }
+
+    }
+
+    public class UnityHelpers{
+
+        public static bool IsCurrentScene(string name){
+            Scene currentScene = SceneManager.GetActiveScene();
+            return currentScene.name == name;
+        }
+
+        public static bool SceneExists(string name){
+            if(string.IsNullOrEmpty(name))
+            return false;
+
+            for(int i = 0; i < SceneManager.sceneCountInBuildSettings; i++){
+                string scenePath = SceneUtility.GetScenePathByBuildIndex(i);
+                int lastSlash = scenePath.LastIndexOf("/");
+                string sceneName = scenePath.Substring(lastSlash + 1, scenePath.LastIndexOf(".") - lastSlash - 1);
+
+                if(string.Compare(name, sceneName, true) == 0)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static async void LoadSceneAsync(string sceneName, Action callback = null){
+            AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            while(!op.isDone){
+                await Task.Delay(1);
+            }    
+            if(callback != null) callback.Invoke();        
+        }
+
+        public static async void UnloadSceneAsync(string sceneName, Action callback = null){
+            AsyncOperation op = SceneManager.UnloadSceneAsync(sceneName);
+            while(!op.isDone){
+                await Task.Delay(1);
+            }    
+            if(callback != null) callback.Invoke();   
+        }
+
+        public static string GetSceneName(){
+            return SceneManager.GetActiveScene().name;
         }
 
     }

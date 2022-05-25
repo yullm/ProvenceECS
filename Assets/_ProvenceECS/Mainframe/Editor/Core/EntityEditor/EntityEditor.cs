@@ -7,6 +7,15 @@ using UnityEngine.SceneManagement;
 
 namespace ProvenceECS.Mainframe{
 
+    public class EntityEditorUIDirectory : UIDirectory{
+        public EntityEditorUIDirectory(){
+            this.uxmlPath = provenceEditorRoot + @"/Core/EntityEditor/EntityEditor.uxml";
+            this.ussPaths = new string[]{
+                provenceEditorRoot + @"/Core/EntityEditor/EntityEditor.uss"
+            };
+        }
+    }
+
     public class EntityEditor : MainframeTableWindow<EntityHandle>{
 
         protected string windowID;
@@ -43,7 +52,7 @@ namespace ProvenceECS.Mainframe{
 
         protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("Provence Asset Manager");
-            this.uiKey = "entity-editor";
+            this.uiDirectory = new EntityEditorUIDirectory();
         }
 
         protected override void RegisterEventListeners(){
@@ -89,7 +98,7 @@ namespace ProvenceECS.Mainframe{
             editorScroller = root.Q<ColumnScroller>("editor-scroller");
         }
 
-        protected override void BeforeAssemblyReload(){
+        /* protected override void BeforeAssemblyReload(){
             string dir = TableDirectory.GetSubKey("temp-editors",TableDirectoryKey.DIRECTORY);
             if(chosenKey != null) Helpers.SerializeAndSaveToFile<Entity>(chosenKey.entity,dir,windowID,".meglo");
 
@@ -108,7 +117,7 @@ namespace ProvenceECS.Mainframe{
                     Helpers.DeleteFolderContents(dir);
                 },100);
             }
-        }
+        } */
 
         //Data Methods
 
@@ -117,7 +126,8 @@ namespace ProvenceECS.Mainframe{
             chosenKey = args.key;
 
             chosenKeyNameHandle = chosenKey.GetOrCreateComponent<Name>();
-            chosenGameObject = chosenKey.GetGameObject();
+            ComponentHandle<UnityGameObject> objectHandle = chosenKey.GetComponent<UnityGameObject>();
+            chosenGameObject = objectHandle != null ? objectHandle.component.gameObject : null;
             eventManager.Raise<DrawColumnEventArgs<ProvenceComponent>>(new DrawColumnEventArgs<ProvenceComponent>(0));
             eventManager.Raise<DrawColumnEventArgs<ProvenceComponent>>(new DrawColumnEventArgs<ProvenceComponent>(2));
         }
@@ -150,7 +160,7 @@ namespace ProvenceECS.Mainframe{
 
         protected void AddGameObject(MouseClickEvent e){
             if(e.button != 0 || chosenGameObject != null || chosenKey == null) return;
-            chosenGameObject = chosenKey.AddGameObject();
+            chosenGameObject = chosenKey.GetOrCreateComponent<UnityGameObject>().component.gameObject;
             Selection.objects = new Object[]{chosenGameObject};
             eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
             eventManager.Raise<DrawColumnEventArgs<ProvenceComponent>>(new DrawColumnEventArgs<ProvenceComponent>(2));
@@ -158,7 +168,7 @@ namespace ProvenceECS.Mainframe{
 
         protected void RemoveGameObject(MouseClickEvent e){
             if(e.button != 0 || chosenGameObject == null || chosenKey == null) return;
-            chosenKey.RemoveGameObject();
+            chosenKey.RemoveComponent<UnityGameObject>();
             chosenGameObject = null;
             eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
             eventManager.Raise<DrawColumnEventArgs<ProvenceComponent>>(new DrawColumnEventArgs<ProvenceComponent>(2));

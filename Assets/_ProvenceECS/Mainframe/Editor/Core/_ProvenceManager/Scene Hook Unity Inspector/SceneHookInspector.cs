@@ -4,11 +4,22 @@ using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 
 namespace ProvenceECS.Mainframe{
+
+    public class SceneHookUIDirectory : UIDirectory{
+        public SceneHookUIDirectory(){
+            this.uxmlPath = provenceEditorRoot + @"/Core/_ProvenceManager/Scene Hook Unity Inspector/SceneHookInspector.uxml";
+            this.ussPaths = new string[]{
+                provenceEditorRoot + @"/Core/_ProvenceManager/Scene Hook Unity Inspector/SceneHookInspector.uss"
+            };
+        }
+    }
+
     [CustomEditor(typeof(ProvenceSceneHook))]
     public class ProvenceSceneHookInspector : MainframeUnityInspector<ProvenceSceneHook>{
 
         public override VisualElement CreateInspectorGUI(){
-            return LoadTree(UIDirectories.GetPath("world-manager-unity-inspector","uxml"), UIDirectories.GetPath("world-manager-unity-inspector","uss"));
+            uiDirectory = new SceneHookUIDirectory();
+            return LoadTree();
         }
 
         protected override void RegisterEventListeners(){

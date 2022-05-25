@@ -5,6 +5,15 @@ using UnityEngine.UIElements;
 
 namespace ProvenceECS.Mainframe{
 
+    public class KeySelectorUIDirectory : UIDirectory{
+        public KeySelectorUIDirectory(){
+            this.uxmlPath = provenceEditorRoot + @"/Core/KeySelector/KeySelector.uxml";
+            this.ussPaths = new string[]{
+                provenceEditorRoot + @"/Core/KeySelector/KeySelector.uss"
+            };
+        }
+    }
+
     public class KeySelector : MainframeSelectorWindow<string>{
 
         protected HashSet<string> set;
@@ -17,12 +26,12 @@ namespace ProvenceECS.Mainframe{
 
         public override void OnEnable(){
             SetEditorSettings();
-            LoadTree(UIDirectories.GetPath(uiKey,"uxml"), UIDirectories.GetPath(uiKey,"uss"));
+            LoadTree();
         }
 
         protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("Key Selector");
-            this.uiKey = "key-selector";
+            this.uiDirectory = new KeySelectorUIDirectory();
         }
 
         protected override void RegisterEventListeners(){
@@ -100,4 +109,9 @@ namespace ProvenceECS.Mainframe{
             }
         }
     }
+
+    public partial class ListItem : VisualElement{
+        
+    }
+
 }

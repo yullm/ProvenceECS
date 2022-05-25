@@ -22,10 +22,12 @@ namespace ProvenceECS.Mainframe{
         }
     }
 
-    public class StructureControl<T> : VisualElement{
+    public partial class StructureControl<T> : VisualElement{
 
         public List<Type> specifiedFields = new List<Type>(){
             typeof(bool),
+            typeof(byte),
+            typeof(ushort),
             typeof(int),
             typeof(float),
             typeof(string),
@@ -33,7 +35,8 @@ namespace ProvenceECS.Mainframe{
             typeof(Vector2),
             typeof(Vector3),
             typeof(Vector4),
-            typeof(GameObject)
+            typeof(GameObject),
+            typeof(Entity)
         };
 
         protected int depth;
@@ -60,19 +63,10 @@ namespace ProvenceECS.Mainframe{
 
         private void InitControl(){
             this.AddToClassList("structure-control");
-            if((typeof(T).IsDefined(typeof(CustomStructureControl),false))){
-                try{
-                    Helpers.InvokeExtensionMethod(this,"CreateControl",typeof(StructureControlExtensions));
-                }catch(Exception e){
-                    Debug.Log(e);
-                    CreateDefaultControl();
-                }
-            }
-            else
-                CreateDefaultControl();
+            CreateControl((dynamic)this);
         }
 
-        protected void CreateDefaultControl(){
+        /* protected void CreateDefaultControl(){
             bool alternate = startAlt;
             FieldInfo[] fields = structure.GetType().GetFields();
             for(int i = 0; i < fields.Length; i++){
@@ -95,12 +89,36 @@ namespace ProvenceECS.Mainframe{
                     Debug.LogWarning(e);
                 }
             }
+        } */
+
+        protected static void CreateControl<U>(StructureControl<U> control){
+            bool alternate = control.startAlt;
+            FieldInfo[] fields = control.structure.GetType().GetFields();
+            for(int i = 0; i < fields.Length; i++){
+                try{
+                    Type fieldType = fields[i].FieldType;
+                    bool hide = false;
+                    foreach(Type attributeType in control.attributeHideList){
+                        if(fields[i].IsDefined(attributeType,false) || fieldType.IsDefined(attributeType,false)){
+                            hide = true;
+                            break;
+                        }
+                    }
+                    if(hide) continue;
+                    if(control.specifiedFields.Contains(fieldType) || fieldType.IsDefined(typeof(CustomFieldControl), false) || fieldType.IsEnum)
+                        Helpers.InvokeGenericMethod(control,"CreateFieldControl", fieldType, fields[i], alternate);
+                    else
+                        Helpers.InvokeGenericMethod(control,"CreateNestedStructureControl", fieldType, fields[i]);
+                    alternate = !alternate;
+                }catch(Exception e){
+                    Debug.LogWarning(e);
+                }
+            }
         }
 
-        protected void CreateFieldControl<U>(FieldInfo info, bool alternate = false){
-            
+        protected void CreateFieldControl<U>(FieldInfo info, bool alternate = false){            
             FieldControl<U> el = new FieldControl<U>((U)info.GetValue(structure), this.name + "--" + info.Name, info.Name, alternate, world);
-            el.eventManager.AddListener<FieldControlUpdated<U>>(e =>{
+            el.eventManager.AddListener<FieldControlUpdated<U>>(e => {
                 info.SetValue(structure, el.value);
                 eventManager.Raise<StructureControlUpdated<T>>(new StructureControlUpdated<T>(this));
             });
@@ -113,7 +131,7 @@ namespace ProvenceECS.Mainframe{
                 Debug.LogWarning("Nested too deep");
                 return;
             }
-            string title = System.Text.RegularExpressions.Regex.Replace(typeof(U).Name, @"((?<=\p{Ll})\p{Lu})|((?!\A)\p{Lu}(?>\p{Ll}))", " $0");
+            string title = System.Text.RegularExpressions.Regex.Replace(info.Name, @"((?<=\p{Ll})\p{Lu})|((?!\A)\p{Lu}(?>\p{Ll}))", " $0");
             ListItem titleItem = new ListItem();
             titleItem.AddTitle(title);
             titleItem.name = this.name + "--" + typeof(U).Name.ToLower() + "-control-title";

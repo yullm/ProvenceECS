@@ -1,0 +1,16 @@
+provence-canvas{
+    background-image: url(../images/bg.png);
+    background-size: 126px;
+    display: flex;
+    flex: 1;
+    position: relative;
+}
+
+provence-node{
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background-color: #666;
+    border-radius: 5px;
+    border: 4px solid #333;
+}

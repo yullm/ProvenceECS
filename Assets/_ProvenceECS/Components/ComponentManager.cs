@@ -38,10 +38,15 @@ namespace ProvenceECS{
 
         public void Initialize(){
             initialCopy = new Dictionary<Type, Dictionary<Entity, ProvenceComponent>>(componentDictionary);
-            world.eventManager.AddListener<WorldRegistrationComplete>(AddInitial,1);
+            world.eventManager.AddListener<WakeSystemEvent>(AddInitial,-1);
         }
 
-        protected void AddInitial(WorldRegistrationComplete args){
+        public void Destroy(){
+            componentDictionary.Clear();
+            initialCopy.Clear();
+        }
+
+        protected void AddInitial(WakeSystemEvent args){
             foreach(Dictionary<Entity,ProvenceComponent> dict in new List<Dictionary<Entity,ProvenceComponent>>(initialCopy.Values)){
                 foreach(KeyValuePair<Entity,ProvenceComponent> kvp in dict){
                     AddInitialComponent(kvp.Key,(dynamic) kvp.Value);
@@ -50,13 +55,13 @@ namespace ProvenceECS{
         }
 
         protected void AddInitialComponent<T>(Entity entity, T component) where T : ProvenceComponent{
-            world.eventManager.Raise<CacheIntegrityChange<T>>(new CacheIntegrityChange<T>(world));
             world.eventManager.Raise<ComponentAdded<T>>(new ComponentAdded<T>(new ComponentHandle<T>(entity,component,world)));
+            world.eventManager.Raise<CacheUpdate<T>>(new CacheUpdate<T>(world, GetAllComponentsAsDictionary<T>()));
         }
 
         public ComponentHandle<T> AddComponent<T>(Entity entity) where T : ProvenceComponent, new(){
-            if(!componentDictionary.ContainsKey(typeof(T)))
-                componentDictionary[typeof(T)] = new Dictionary<Entity,ProvenceComponent>();
+            /* if(!componentDictionary.ContainsKey(typeof(T)))
+                componentDictionary[typeof(T)] = new Dictionary<Entity,ProvenceComponent>(); */
             T component = new T();
             return AddComponent<T>(entity,component);
         }
@@ -64,13 +69,21 @@ namespace ProvenceECS{
         public ComponentHandle<T> AddComponent<T>(Entity entity, T component) where T : ProvenceComponent{
             if(component == null || entity == null) return null;
             Type componentType = component.GetType();            
-            if(!componentDictionary.ContainsKey(componentType))
+            if(!componentDictionary.ContainsKey(componentType)){
                 componentDictionary[componentType] = new Dictionary<Entity,ProvenceComponent>();
+                world.systemManager.AddRequiredSystems(component.requiredSystems);
+            }
             componentDictionary[componentType][entity] = component as T;
             ComponentHandle<T> handle = new ComponentHandle<T>(entity, component, world);
-            world.eventManager.Raise<CacheIntegrityChange<T>>(new CacheIntegrityChange<T>(world));
             world.eventManager.Raise<ComponentAdded<T>>(new ComponentAdded<T>(handle));
+            world.eventManager.Raise<CacheUpdate<T>>(new CacheUpdate<T>(world, GetAllComponentsAsDictionary<T>()));
             return handle;
+        }
+
+        public void AddComponentSet(Entity entity, HashSet<ProvenceComponent> set){
+            foreach(dynamic component in set.OrderBy(c => c.sortingIndex)){
+                AddComponent(entity, component);
+            }
         }
 
         public void RemoveComponent<T>(Entity entity) where T : ProvenceComponent{
@@ -81,8 +94,8 @@ namespace ProvenceECS{
                         ComponentHandle<T> handle = new ComponentHandle<T>(entity,componentDictionary[typeof(T)][entity] as T,world);
                         componentDictionary[typeof(T)].Remove(entity);
                         if(componentDictionary[typeof(T)].Count == 0) componentDictionary.Remove(typeof(T));
-                        world.eventManager.Raise<CacheIntegrityChange<T>>(new CacheIntegrityChange<T>(world));
                         world.eventManager.Raise<ComponentRemoved<T>>(new ComponentRemoved<T>(handle));
+                        world.eventManager.Raise<CacheUpdate<T>>(new CacheUpdate<T>(world, GetAllComponentsAsDictionary<T>()));
                     }
                 }
             }catch(System.Exception e){
@@ -169,10 +182,10 @@ namespace ProvenceECS{
             return dict;
         }
 
-        public HashSet<ComponentHandle<T>> GetAllComponentsByInheritance<T>() where T : ProvenceComponent{
+        public HashSet<ComponentHandle<T>> GetAllComponentsByBase<T>() where T : ProvenceComponent{
             HashSet<ComponentHandle<T>> children = new HashSet<ComponentHandle<T>>();
             foreach(Type keyType in componentDictionary.Keys){
-                if(keyType.IsSubclassOf(typeof(T))){
+                if(keyType.IsAssignableFrom(typeof(T))){
                     foreach(KeyValuePair<Entity,ProvenceComponent> kvp in componentDictionary[typeof(T)]){
                         ComponentHandle<T> componentHandle = new ComponentHandle<T>(kvp.Key, kvp.Value as T, world);
                         children.Add(componentHandle);
@@ -180,18 +193,6 @@ namespace ProvenceECS{
                 }
             }
             return children;
-        }
-
-        public HashSet<ComponentHandle<ProvenceComponent>> CopyComponentsToOtherEntity(Entity original, Entity copy){
-            HashSet<ComponentHandle<ProvenceComponent>> copies = new HashSet<ComponentHandle<ProvenceComponent>>();
-            foreach(dynamic componentHandle in GetAllComponents(original)){
-                copies.Add(new ComponentHandle<ProvenceComponent>(copy,(ProvenceComponent)AddComponent(copy,componentHandle.component.Clone()).component,world));
-            }
-            return copies;
-        }
-
-        public void Organize(){
-            componentDictionary = componentDictionary.OrderBy(d => d.Key.Name).ToDictionary(d => d.Key, d => d.Value);
         }
         
     }

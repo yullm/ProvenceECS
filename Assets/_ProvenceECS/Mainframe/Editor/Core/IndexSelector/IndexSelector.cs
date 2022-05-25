@@ -5,6 +5,15 @@ using UnityEngine.UIElements;
 
 namespace ProvenceECS.Mainframe{
 
+    public class IndexSelectorUIDirectory : UIDirectory{
+        public IndexSelectorUIDirectory(){
+            this.uxmlPath = provenceEditorRoot + @"/Core/IndexSelector/IndexSelector.uxml";
+            this.ussPaths = new string[]{
+                provenceEditorRoot + @"/Core/IndexSelector/IndexSelector.uxml"
+            };
+        }
+    }
+
     public class IndexSelector : MainframeSelectorWindow<int>{
 
         protected int highestIndex;
@@ -16,7 +25,7 @@ namespace ProvenceECS.Mainframe{
 
         protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("Index Selector");
-            this.uiKey = "index-selector";
+            this.uiDirectory = new IndexSelectorUIDirectory();
         }
 
         protected override void RegisterEventListeners(){

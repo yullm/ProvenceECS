@@ -8,6 +8,15 @@ using UnityEngine.UIElements;
 
 namespace ProvenceECS.Mainframe{
 
+    public class SystemEditorUIDirectory : UIDirectory{
+        public SystemEditorUIDirectory(){
+            this.uxmlPath = provenceEditorRoot + @"/Core/SystemEditor/SystemEditor.uxml";
+            this.ussPaths = new string[]{
+                provenceEditorRoot + @"/Core/SystemEditor/SystemEditor.uss"
+            };
+        }
+    }
+
     public class SystemEditor : MainframeTableWindow<ProvenceSystem>{
 
         public static void Show<T>(ProvenceSystem system) where T : ProvenceSystem{
@@ -18,7 +27,7 @@ namespace ProvenceECS.Mainframe{
 
         protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("System Editor");
-            this.uiKey = "system-editor";
+            this.uiDirectory = new SystemEditorUIDirectory();
         }
 
         protected override void RegisterEventListeners(){

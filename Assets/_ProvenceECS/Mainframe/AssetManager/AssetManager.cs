@@ -1,10 +1,29 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using ProvenceECS.Mainframe.IO;
 using UnityEngine;
 
 namespace ProvenceECS.Mainframe{
 
-    public class AssetData{
+    //add custom serializer for loading when saved.
+    public class ProvenceAsset<T> where T : UnityEngine.Object{
+
+        public string resourcePath;
+        [Newtonsoft.Json.JsonIgnore] public T asset;
+
+        public ProvenceAsset(){
+            this.resourcePath = "";
+            this.asset = null;
+        }
+
+        public ProvenceAsset(string resourcePath){
+            this.resourcePath = resourcePath;
+            asset = Resources.Load<T>(resourcePath);
+        }
+    }
+
+    public class AssetData : ProvenceCollectionEntry{
         public string address;
         public string resourcePath;
 
@@ -19,9 +38,8 @@ namespace ProvenceECS.Mainframe{
         }
     }
 
-    public class AssetManager{
-
-        [Newtonsoft.Json.JsonIgnore] public bool cacheIsSafe;        
+    public class AssetManager : ProvenceCollection<AssetData>{
+       
         public Dictionary<string,AssetData> addressCache; //nickname,Resource path : not actual file path
         protected Dictionary<string,Object> assetCache;
 
@@ -47,28 +65,23 @@ namespace ProvenceECS.Mainframe{
             addressCache[key].resourcePath = resourcePath;
         }
 
-        public static AssetManager Load(){
+        public override void Save(){
+            this.Sort();
+            this.cacheIsSafe = false;
+            Helpers.SerializeAndSaveToFile(this.addressCache, dataPath + "AssetManager/" , "AssetManager", ".meglo");
+
+            ConstantCreator constantCreator = new ConstantCreator(TypeName() + "Keys", nameSpace, this.Keys.ToArray());
+            constantCreator.Save(keyPath, "AssetManagerKeys.cs");
+        }
+
+        public override void Backup(){
+            Helpers.BackUpFile(dataPath + "AssetManager/" , "AssetManager", ".meglo",5);
+        }
+
+        public new static AssetManager Load(){
             AssetManager assetManager = new AssetManager();
-            assetManager.addressCache = Helpers.LoadFromSerializedFile<Dictionary<string,AssetData>>(Mainframe.TableDirectory.GetPath("asset-manager"));
+            assetManager.addressCache = Helpers.LoadFromSerializedFile<Dictionary<string,AssetData>>(dataPath + "AssetManager/AssetManager.meglo");
             return assetManager;
-        }
-
-        public void Backup(){
-            Helpers.BackUpFile(
-                TableDirectory.GetSubKey("asset-manager",TableDirectoryKey.DIRECTORY),
-                TableDirectory.GetSubKey("asset-manager",TableDirectoryKey.FILE),
-                TableDirectory.GetSubKey("asset-manager",TableDirectoryKey.EXTENSION),
-            5);
-        }
-
-        public void Save(){
-            addressCache.Sort();
-            cacheIsSafe = false;
-            Helpers.SerializeAndSaveToFile(addressCache,
-                TableDirectory.GetSubKey("asset-manager",TableDirectoryKey.DIRECTORY), 
-                TableDirectory.GetSubKey("asset-manager",TableDirectoryKey.FILE),
-                TableDirectory.GetSubKey("asset-manager",TableDirectoryKey.EXTENSION)
-            );
         }
 
         public T LoadAsset<T>(string address) where T : Object{
@@ -98,6 +111,21 @@ namespace ProvenceECS.Mainframe{
                 }
             }
             return "";
+        }
+
+        public static void CreateAssetLibrary(){
+            HashSet<string> keys = new HashSet<string>();
+            foreach(Object resource in Resources.LoadAll("")){
+                string name = resource.name;
+                if(name.Contains('.')) continue;
+                if(resource is Shader shader){
+                    int dirIndex = name.LastIndexOf('/') + 1;
+                    if(dirIndex > -1) name = name.Substring(dirIndex, name.Length - dirIndex);                    
+                }
+                keys.Add(name);
+            }
+            ConstantCreator constantCreator = new ConstantCreator(TypeName() + "Keys", nameSpace, keys.ToArray());
+            constantCreator.Save(keyPath, "AssetManagerKeys.cs");
         }
     }
 
