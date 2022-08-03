@@ -1,0 +1,3 @@
+* Set API compatability to Higher Version (Probably Framework)
+* Copy ProvenceECS, Provence Mainframe, Icons and Lidgren Folders
+* Clear Mainframe Classes of variables
