@@ -10,11 +10,14 @@ namespace ProvenceECS{
 
     public class ProvenceContractResolver : DefaultContractResolver{
 
+    
+
         protected override JsonContract CreateContract(Type objectType){
             JsonContract contract = base.CreateContract(objectType);
 
             if(objectType == typeof(Entity)) contract.Converter = new EntityConverter();            
             if(objectType == typeof(Quaternion)) contract.Converter = new QuaternionConverter();
+            if(objectType == typeof(Quaternion?)) contract.Converter = new NullableQuaternionConverter();
             if(objectType == typeof(Vector4)) contract.Converter = new Vector4Converter();
             if(objectType == typeof(Vector3)) contract.Converter = new Vector3Converter();
             if(objectType == typeof(Vector3?)) contract.Converter = new NullableVector3Converter();

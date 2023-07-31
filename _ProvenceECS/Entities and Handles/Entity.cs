@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using Newtonsoft.Json;
 using UnityEngine;
+using ProvenceECS.Mainframe;
+using System.Linq;
 
 namespace ProvenceECS{
     
@@ -116,7 +118,8 @@ namespace ProvenceECS{
         }
 
         public EntityHandle Duplicate(){
-            return world.DuplicateEntity(this.entity);
+            Entity duplication = world.DuplicateEntities(this.entity).First();
+            return world.LookUpEntity(duplication);
         }
 
         public void Destroy(){

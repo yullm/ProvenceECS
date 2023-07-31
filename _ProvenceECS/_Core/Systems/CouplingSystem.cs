@@ -4,23 +4,22 @@ using UnityEngine;
 
 namespace ProvenceECS{
 
-    public class Parent : ProvenceComponent{
-        public HashSet<Entity> children;
-
-        public Parent(){
-            this.children = new HashSet<Entity>();
-        }
-    }
 
     public class Child : ProvenceComponent{
         public Entity parent;
+        public Vector3? parentLastPos;
+        public Quaternion? parentLastRot;
 
         public Child(){
             this.parent = null;
+            this.parentLastPos = null;
+            this.parentLastRot = null;
         }
 
         public Child(Entity parent){
             this.parent = parent;
+            this.parentLastPos = null;
+            this.parentLastRot = null;
         }
     }
 
@@ -35,52 +34,85 @@ namespace ProvenceECS{
     }
 
     public class CouplingSystem : ProvenceSystem{
+
+        protected ComponentCache<UnityGameObject> ugoCache = new ComponentCache<UnityGameObject>();
+        protected ComponentCache<Child> childrenCache = new ComponentCache<Child>();
         
         protected override void RegisterEventListeners(){
-            world.eventManager.AddListener<ComponentRemoved<Parent>>(ParentRemoved);
-            world.eventManager.AddListener<ComponentRemoved<Child>>(ChildRemoved);
-            world.eventManager.AddListener<ComponentAdded<Child>>(ChildAdded);
+            /* world.eventManager.AddListener<ComponentRemoved<Parent>>(ParentRemoved);
+            world.eventManager.AddListener<ComponentRemoved<Child>>(ChildRemoved); */
+            //world.eventManager.AddListener<ComponentAdded<Child>>(ChildAdded);
+            world.eventManager.AddListener<WorldUpdateEvent>(Update);
+            world.eventManager.AddListener<EditorPersistanceUpdateEvent>(Update);
+
+            ugoCache.StandardRegistration(world);
+            childrenCache.StandardRegistration(world);
         }
 
         protected override void DeregisterEventListeners(){
-            world.eventManager.RemoveListener<ComponentRemoved<Parent>>(ParentRemoved);
-            world.eventManager.RemoveListener<ComponentRemoved<Child>>(ChildRemoved);
-            world.eventManager.RemoveListener<ComponentAdded<Child>>(ChildAdded);
+            /* world.eventManager.RemoveListener<ComponentRemoved<Parent>>(ParentRemoved);
+            world.eventManager.RemoveListener<ComponentRemoved<Child>>(ChildRemoved); */
+            //world.eventManager.RemoveListener<ComponentAdded<Child>>(ChildAdded); 
+            world.eventManager.RemoveListener<WorldUpdateEvent>(Update);
+            world.eventManager.RemoveListener<EditorPersistanceUpdateEvent>(Update);
+            
+            ugoCache.StandardDeregistration(world);
+            childrenCache.StandardDeregistration(world);
         }
 
-        protected void ParentRemoved(ComponentRemoved<Parent> args){
-            foreach(Entity child in args.handle.component.children){
-                world.RemoveEntity(child);
+        public override void Awaken(WakeSystemEvent args){
+            foreach(Entity entity in childrenCache.Keys){
+                InitializeParent(entity);
             }
         }
 
-        protected void RemoveChild(RemoveChild args){
-            ComponentHandle<Parent> parentHandle = world.GetComponent<Parent>(args.parent);
-            if(parentHandle != null && parentHandle.component.children.Contains(args.child)){
-                parentHandle.component.children.Remove(args.child);
-                world.RemoveEntity(args.child);
-            }
+        protected void Update(WorldUpdateEvent args){
+            OffsetChildren();
         }
 
-        protected void ChildAdded(ComponentAdded<Child> args){
-            if(args.handle.component.parent != null){
-                EntityHandle parentEntityHandle = world.LookUpEntity(args.handle.component.parent);
-                if(parentEntityHandle != null){
-                    ComponentHandle<Parent> parentHandle = parentEntityHandle.GetOrCreateComponent<Parent>();
-                    parentHandle.component.children.Add(args.handle.entity);
-                    GameObject parentObj = parentEntityHandle.GetOrCreateComponent<UnityGameObject>().component.gameObject;
-                    GameObject childObj = world.GetOrCreateComponent<UnityGameObject>(args.handle.entity).component.gameObject;
-                    childObj.transform.parent = parentObj.transform;
+        protected void Update(EditorPersistanceUpdateEvent args){
+            OffsetChildren();
+        }
+
+        protected void OffsetChildren(){
+            foreach(ComponentHandle<Child> childHandle in childrenCache.Values){
+                if(childHandle.component.parent == null) continue;
+                if(ugoCache.ContainsKey(childHandle.component.parent) && ugoCache.ContainsKey(childHandle.entity)){
+                    Child component = childHandle.component;
+                    GameObject parentObject = ugoCache[component.parent].component.gameObject;
+                    GameObject childObject = ugoCache[childHandle.entity].component.gameObject;
+
+                    if(parentObject == null || childObject == null) continue;
+
+                    if(component.parentLastPos == null || component.parentLastRot == null)
+                        InitializeParent(childHandle.entity);
+
+                    Quaternion rotChange = parentObject.transform.rotation * Quaternion.Inverse((Quaternion)component.parentLastRot);
+                    childObject.transform.rotation = rotChange * childObject.transform.rotation;
+                    
+                    childObject.transform.position = rotChange * (childObject.transform.position - (Vector3)component.parentLastPos) + (Vector3)component.parentLastPos;
+
+                    childObject.transform.position += parentObject.transform.position - (Vector3)component.parentLastPos;
+                    
+                    component.parentLastPos = parentObject.transform.position;
+                    component.parentLastRot = parentObject.transform.rotation;
                 }
             }
         }
 
-        protected void ChildRemoved(ComponentRemoved<Child> args){
-            ComponentHandle<Parent> parentHandle = world.GetComponent<Parent>(args.handle.component.parent);
-            if(parentHandle != null) parentHandle.component.children.Remove(args.handle.entity);
-            ComponentHandle<UnityGameObject> objectHandle = world.GetComponent<UnityGameObject>(args.handle.entity);
-            if(objectHandle != null && objectHandle.component.gameObject != null) 
-                objectHandle.component.gameObject.transform.parent = null;
+        protected void InitializeParent(Entity entity){            
+            //set inital last positions;
+            ComponentHandle<Child> childHandle = childrenCache[entity];
+            if(childHandle.component.parent != null && ugoCache.ContainsKey(childHandle.component.parent)){
+                GameObject parentObject = ugoCache[childHandle.component.parent].component.gameObject;
+                childHandle.component.parentLastPos = parentObject.transform.position;
+                childHandle.component.parentLastRot = parentObject.transform.rotation;
+            }
+        }
+
+        protected void ChildAdded(ComponentAdded<Child> args){
+            /* childrenCache[args.handle.entity] = args.handle;
+            InitializeParent(args.handle.entity); */
         }
 
     }

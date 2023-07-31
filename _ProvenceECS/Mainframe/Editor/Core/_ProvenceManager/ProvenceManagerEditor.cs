@@ -32,12 +32,26 @@ namespace ProvenceECS.Mainframe{
         protected float backupTimer = 0f;
         protected float backupTarget = 50f;
 
+        public HashSet<Entity> currentlySelectedEntities;
+        protected bool bubbleSelection = true;
+        protected bool reselectRequired = false;
+
+        public ProvenceManagerEditor(){
+            currentlySelectedEntities = new HashSet<Entity>();
+        }
+
+#region Window Methods
+
         [MenuItem("ProvenceECS/Manager &`")]
         public static void ShowWindow(){
             ProvenceManagerEditor window = GetWindow<ProvenceManagerEditor>();
         }
 
         public void OnInspectorUpdate(){
+            if(reselectRequired && chosenKey != null){
+                reselectRequired = false;
+                new EditorSelectEntities(chosenKey, currentlySelectedEntities).Raise(chosenKey);
+            }
             if(persistanceTimer < persistanceRate) persistanceTimer += Time.fixedDeltaTime;
             else{
                 persistanceTimer = 0f;
@@ -75,6 +89,7 @@ namespace ProvenceECS.Mainframe{
                     return;
                 }
                 ProvenceManager.Load(hook.id);
+                SetMainWorldToScene();
             }
             base.OnEnable();
         }
@@ -84,7 +99,15 @@ namespace ProvenceECS.Mainframe{
             ProvenceSceneHook sceneHook = managerObj.AddComponent<ProvenceSceneHook>();
             sceneHook.id = System.Guid.NewGuid().ToString();
             Debug.Log("New Provence Manager Created");
+            eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
             OnEnable();
+        }
+
+        protected void SetMainWorldToScene(){
+            if(ProvenceManager.Instance.worlds.Count == 1){
+                ProvenceManager.Instance.worlds.ElementAt(0).Value.worldName = SceneManager.GetActiveScene().name;
+                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
+            }
         }
 
         protected override void EditorStateChange(PlayModeStateChange args){
@@ -214,9 +237,14 @@ namespace ProvenceECS.Mainframe{
         }
 
         protected override void SelectKey(SelectKey<World> args){
+            currentlySelectedEntities.Clear();
+            Selection.objects = new Object[0];
             chosenKey = args.key;
-            if(chosenKey != null)
+            if(chosenKey != null){
                 eventManager.Raise<DrawColumnEventArgs<World>>(new DrawColumnEventArgs<World>(1));
+                chosenKey.eventManager.Clear<EditorSelectEntities>();
+                chosenKey.eventManager.AddListener<EditorSelectEntities>(SelectEntities);
+            }
         }
 
         protected void DrawWorldList(){
@@ -274,63 +302,6 @@ namespace ProvenceECS.Mainframe{
             DrawEntityList();
             DrawSystemList();
             
-        }
-
-        protected void DrawEntityList(){
-            ColumnScroller scroller = root.Q<ColumnScroller>("world-editor-entity-scroller");
-            scroller.Clear();
-            bool alternate = false;
-            DropDownMenu contextMenu = root.Q<DropDownMenu>("entity-list-context-menu");
-            foreach(EntityHandle entityHandle in chosenKey.LookUpAllEntities()){
-
-                ListItem item = new ListItem(alternate,true,true);
-                item.AddIndent();
-                item.AddImage(entityIcon).AddToClassList("icon");
-
-                ComponentHandle<Name> nameHandle = entityHandle.GetComponent<Name>();
-                if(nameHandle != null) item.AddTextDisplay(nameHandle.component.name);
-                else item.AddTextDisplay(entityHandle.entity.ToString());
-
-                item.eventManager.AddListener<MouseClickEvent>(e => {
-                    switch(e.button){
-                        case 0:
-                            ComponentHandle<UnityGameObject> objectHandle = entityHandle.GetComponent<UnityGameObject>();
-                            GameObject entityGO = objectHandle != null ? objectHandle.component.gameObject : null;
-                            if(entityGO != null){
-                                Selection.objects = new Object[]{entityGO};
-                            }
-                            if(item.ClassListContains("selected")){
-                                EntityEditor.Show(entityHandle);
-                            }else{
-                                ListItem selected = scroller.Q<ListItem>(null,"selected");
-                                if(selected != null) selected.RemoveFromClassList("selected");
-                                item.AddToClassList("selected");
-                            }
-                            break;
-                        case 1:
-                            contextMenu.Show(root,e,true);
-                            ListItemText duplicateButton = root.Q<ListItemText>("entity-list-context-menu-duplicate-button");
-                            duplicateButton.eventManager.ClearListeners();
-                            duplicateButton.eventManager.AddListener<MouseClickEvent>(ev =>{
-                                if(ev.button != 0) return;
-                                DuplicateEntity(entityHandle);
-                                contextMenu.style.display = DisplayStyle.None;
-                            });
-
-                            ListItemText removeButton = root.Q<ListItemText>("entity-list-context-menu-remove-button");
-                            removeButton.eventManager.ClearListeners();
-                            removeButton.eventManager.AddListener<MouseClickEvent>(ev => {
-                                if(ev.button != 0) return;
-                                RemoveEntity(entityHandle);
-                                contextMenu.style.display = DisplayStyle.None;
-                            });
-                            break;
-                    }
-                });
-
-                scroller.Add(item);
-                alternate = !alternate;
-            }
         }
 
         protected void DrawSystemList(){
@@ -413,7 +384,145 @@ namespace ProvenceECS.Mainframe{
             root.Q<PageColumn>("world-editor").style.display = DisplayStyle.None;
         }
 
-        //World Table Methods
+
+#endregion
+
+#region Entity Methods
+
+        void OnSelectionChange(){
+            if(chosenKey != null){
+                HashSet<Object> oldSelection = new HashSet<Object>(Selection.objects);
+                HashSet<Object> newSelection = new HashSet<Object>();
+                currentlySelectedEntities.Clear();
+                foreach(Object obj in Selection.objects){
+                    Object objToAddToSelection = obj;
+                    EntityHandle entityHandle = chosenKey.LookUpEntity(obj.name);                    
+                    if(entityHandle == null && bubbleSelection){
+                        if(obj is GameObject go){
+                            GameObject currentGo = go;
+                            while(entityHandle == null){
+                                if(currentGo.transform.parent == null) break;
+                                currentGo = currentGo.transform.parent.gameObject;
+                                entityHandle = chosenKey.LookUpEntity(currentGo.name);
+                                if(entityHandle != null) objToAddToSelection = currentGo;
+                            }
+                        }
+                    }
+                    if(entityHandle != null) currentlySelectedEntities.Add(entityHandle.entity);
+                    newSelection.Add(objToAddToSelection);
+                }
+                if(oldSelection.SetEquals(newSelection)){
+                    DrawEntityList();
+                }else{
+                    reselectRequired = true;                    
+                }
+            }
+        }
+
+        protected void SelectEntities(EditorSelectEntities args){
+            HashSet<GameObject> objectsToSelect = new HashSet<GameObject>();
+            foreach(Entity entity in args.entities){
+                ComponentHandle<UnityGameObject> ugoHandle = args.world.GetComponent<UnityGameObject>(entity);
+                if(ugoHandle != null){
+                    objectsToSelect.Add(ugoHandle.component.gameObject);
+                }
+            }
+            Selection.objects = objectsToSelect.ToArray();
+        }
+
+        protected void DrawEntityList(){
+            ColumnScroller scroller = root.Q<ColumnScroller>("world-editor-entity-scroller");
+            scroller.Clear();
+            bool alternate = false;
+            DropDownMenu contextMenu = root.Q<DropDownMenu>("entity-list-context-menu");
+            foreach(EntityHandle entityHandle in chosenKey.LookUpAllEntities()){
+
+                ListItem item = new ListItem(alternate,true,true);
+                item.AddIndent();
+                item.AddImage(entityIcon).AddToClassList("icon");
+
+                ComponentHandle<Name> nameHandle = entityHandle.GetComponent<Name>();
+                if(nameHandle != null) item.AddTextDisplay(nameHandle.component.name);
+                else item.AddTextDisplay(entityHandle.entity.ToString());
+
+                if(currentlySelectedEntities.Contains(entityHandle.entity)){
+                    item.AddToClassList("selected");
+                }
+
+                item.eventManager.AddListener<MouseClickEvent>(e => {
+                    switch(e.button){
+                        case 0:
+                            ComponentHandle<UnityGameObject> objectHandle = entityHandle.GetComponent<UnityGameObject>();
+                            GameObject entityGO = objectHandle != null ? objectHandle.component.gameObject : null;
+                            if(item.ClassListContains("selected")){
+                                if(entityGO != null){
+                                    HashSet<Object> newSelection = new HashSet<Object>(Selection.objects);
+                                    newSelection.Remove(entityGO); 
+                                    Selection.objects = newSelection.ToArray();
+                                }
+                            }else{
+                                if(entityGO != null){
+                                    if(e.unityEvent.shiftKey){
+                                        HashSet<Object> newSelection = new HashSet<Object>(Selection.objects);
+                                        newSelection.Add(entityGO); 
+                                        Selection.objects = newSelection.ToArray();
+                                    }
+                                    else Selection.objects = new Object[]{entityGO};
+                                }
+                            }
+                            break;
+                        case 1:
+                            contextMenu.Show(root,e,true);
+
+                            ListItemText openButton = root.Q<ListItemText>("entity-list-context-menu-open-button");
+                            openButton.eventManager.ClearListeners();
+                            openButton.eventManager.AddListener<MouseClickEvent>(ev =>{
+                                if(ev.button != 0) return;
+                                EntityEditor.Show(entityHandle);
+                                contextMenu.style.display = DisplayStyle.None;
+                            });
+
+                            ListItemText duplicateButton = root.Q<ListItemText>("entity-list-context-menu-duplicate-button");
+                            duplicateButton.eventManager.ClearListeners();
+                            duplicateButton.eventManager.AddListener<MouseClickEvent>(ev =>{
+                                if(ev.button != 0) return;
+                                DuplicateEntity(entityHandle);
+                                contextMenu.style.display = DisplayStyle.None;
+                            });
+
+                            ListItemText removeButton = root.Q<ListItemText>("entity-list-context-menu-remove-button");
+                            removeButton.eventManager.ClearListeners();
+                            removeButton.eventManager.AddListener<MouseClickEvent>(ev => {
+                                if(ev.button != 0) return;
+                                RemoveEntity(entityHandle);
+                                contextMenu.style.display = DisplayStyle.None;
+                            });
+                            break;
+                    }
+                });
+
+                scroller.Add(item);
+                alternate = !alternate;
+            }
+        }
+
+        public void DuplicateSelectedEntities(){
+            if(chosenKey != null){
+                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
+                chosenKey.DuplicateEntities(currentlySelectedEntities.ToArray());
+            }
+        }
+
+        public void DeleteSelectedEntities(){
+            if(chosenKey != null){
+                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
+                chosenKey.RemoveEntities(currentlySelectedEntities.ToArray());
+            }
+        }
+
+#endregion
+
+#region World Table Methods
 
         protected void AddWorld(MouseClickEvent e){
             if(e.button != 0) return;
@@ -442,8 +551,9 @@ namespace ProvenceECS.Mainframe{
             }
         }
 
+#endregion
 
-        //World Editor Methods
+#region World Editor Methods
 
         protected void SetAsActiveWorld(MouseClickEvent e){
             if(e.button != 0) return;
@@ -513,6 +623,8 @@ namespace ProvenceECS.Mainframe{
         protected void OpenSystemEditor<T>() where T : ProvenceSystem{
             if(chosenKey != null) SystemEditor.Show<T>(chosenKey.GetSystem<T>());
         }
+
+#endregion
 
         //Manager Methods
 

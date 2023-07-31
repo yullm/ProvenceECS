@@ -41,7 +41,7 @@ namespace ProvenceECS{
         }
 
         protected override void RegisterEventListeners(){
-            world.eventManager.AddListener<WakeSystemEvent>(LoadGameObjects,-2);
+            //world.eventManager.AddListener<WakeSystemEvent>(LoadGameObjects,-2);
             world.eventManager.AddListener<WorldUpdateEvent>(Tick);
             world.eventManager.AddListener<ComponentAdded<UnityGameObject>>(ComponentAdded);
             world.eventManager.AddListener<ComponentRemoved<UnityGameObject>>(ComponentRemoved);
@@ -49,7 +49,7 @@ namespace ProvenceECS{
         }
 
         protected override void DeregisterEventListeners(){
-            world.eventManager.RemoveListener<WakeSystemEvent>(LoadGameObjects);
+            //world.eventManager.RemoveListener<WakeSystemEvent>(LoadGameObjects);
             world.eventManager.RemoveListener<WorldUpdateEvent>(Tick);
             world.eventManager.RemoveListener<ComponentAdded<UnityGameObject>>(ComponentAdded);
             world.eventManager.RemoveListener<ComponentRemoved<UnityGameObject>>(ComponentRemoved);
@@ -67,19 +67,6 @@ namespace ProvenceECS{
         }
 
         protected void ComponentAdded(ComponentAdded<UnityGameObject> args){
-            /* GameObject gameObject = args.handle.component.gameObject;
-            if(gameObject != null)
-                gameObject.name = args.handle.entity.ToString();
-            else
-                gameObject = GameObject.Find(args.handle.entity.ToString());
-            if(gameObject != null){        
-                args.handle.component.gameObject = gameObject;
-            }else{                
-                gameObject = new GameObject(args.handle.entity.ToString());
-                args.handle.component.gameObject = gameObject;
-            }            
-            gameObject.transform.position = args.handle.component.position;
-            gameObject.transform.rotation = args.handle.component.rotation; */
             GameObject gameObject = args.handle.component.gameObject;
             if(gameObject != null)
                 gameObject.name = args.handle.entity.ToString();

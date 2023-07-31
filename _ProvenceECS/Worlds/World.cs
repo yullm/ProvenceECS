@@ -65,12 +65,6 @@ namespace ProvenceECS{
             return entityManager.LookUpAllEntities();
         }
 
-        public EntityHandle DuplicateEntity(Entity entity){
-            EntityHandle duplicateHandle = CreateEntity();
-            duplicateHandle.AddComponentSet(componentManager.GetAllComponents(entity).HandlesToComponents().Clone());
-            return duplicateHandle;
-        }
-
         public ComponentHandle<T> AddComponent<T>(Entity entity) where T : ProvenceComponent, new(){
             return componentManager.AddComponent<T>(entity);
         }

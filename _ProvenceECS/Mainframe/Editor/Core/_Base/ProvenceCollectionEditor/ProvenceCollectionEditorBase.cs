@@ -322,7 +322,7 @@ namespace ProvenceECS.Mainframe{
                 }
             });
             
-            if(hide) titleItem.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(titleItem,0,Vector2.zero));
+            if(hide) titleItem.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(titleItem,0,Vector2.zero,null));
             
             container.Add(titleItem,structContainer);
             parent.Add(container);

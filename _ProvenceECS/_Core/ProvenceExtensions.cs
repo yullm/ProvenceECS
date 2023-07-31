@@ -161,8 +161,12 @@ namespace ProvenceECS{
         }
 
         public static void Clear(this GameObject go){
-            for(int i = go.transform.childCount - 1; i >= 0; i--){
-                Object.DestroyImmediate(go.transform.GetChild(i).gameObject);
+            try{
+                for(int i = go.transform.childCount - 1; i >= 0; i--){
+                    Object.DestroyImmediate(go.transform.GetChild(i).gameObject);
+                }
+            }catch(System.Exception e){
+                Debug.LogWarning(e);
             }
         }
 
@@ -248,6 +252,53 @@ namespace ProvenceECS{
             return value >= min && value <= max;
         }
 
+        public static HashSet<Entity> DuplicateEntities(this World world, params Entity[] entities){
+            //keep log of parent child relations and then check coupling components and replace, store GOs for ease
+            Dictionary<Entity,Entity> clonePairs = new Dictionary<Entity, Entity>();
+            HashSet<Entity> newEntities = new HashSet<Entity>();
+
+            foreach(Entity entity in entities){
+                ComponentHandle<Name> originalNameHandle = world.GetComponent<Name>(entity);
+                EntityHandle duplicateHandle = world.CreateEntity();
+                duplicateHandle.AddComponentSet(world.GetAllComponents(entity).HandlesToComponents().Clone());
+                duplicateHandle.AddComponent<Name>(new Name(originalNameHandle.component.name + " copy"));
+                newEntities.Add(duplicateHandle.entity);
+
+                ComponentHandle<UnityGameObject> originalGOHandle = world.GetComponent<UnityGameObject>(entity);
+                ComponentHandle<UnityGameObject> newGOHandle = world.GetComponent<UnityGameObject>(duplicateHandle.entity);
+                if(originalGOHandle != null && newGOHandle != null){
+                    if(originalGOHandle.component.gameObject != null && newGOHandle.component.gameObject != null){
+                        newGOHandle.component.gameObject.transform.position = originalGOHandle.component.gameObject.transform.position;
+                        newGOHandle.component.gameObject.transform.rotation = originalGOHandle.component.gameObject.transform.rotation;
+                    }
+                }
+                clonePairs[entity] = duplicateHandle.entity;
+            }
+
+            HashSet<Entity> entitiesToSelect = new HashSet<Entity>(newEntities);
+
+            foreach(Entity entity in newEntities){
+                ComponentHandle<Child> childHandle = world.GetComponent<Child>(entity);
+
+                if(childHandle != null){
+                    Entity curParent = childHandle.component.parent;
+                    if(clonePairs.ContainsKey(curParent)){
+                        childHandle.component.parent = clonePairs[curParent];
+                        entitiesToSelect.Remove(childHandle.entity);
+                    }
+                }
+            }
+
+            new EditorSelectEntities(world,entitiesToSelect).Raise(world);
+
+            return newEntities;
+        }
+
+        public static void RemoveEntities(this World world, params Entity[] entities){
+            foreach(Entity entity in entities){
+                world.RemoveEntity(entity);
+            }
+        }
     }
 
 }

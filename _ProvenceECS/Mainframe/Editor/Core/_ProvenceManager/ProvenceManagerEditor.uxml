@@ -85,6 +85,9 @@
         <Div name="drop-downs">
             <DropDownMenu name="entity-list-context-menu">
                 <ListItem>
+                    <ListItemText name="entity-list-context-menu-open-button" class="list-item-button third-alternate" text="Edit Entity"/>
+                </ListItem>
+                <ListItem>
                     <ListItemText name="entity-list-context-menu-duplicate-button" class="list-item-button third-alternate" text="Duplicate Entity"/>
                 </ListItem>
                 <ListItem>

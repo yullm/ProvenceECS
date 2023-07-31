@@ -127,39 +127,43 @@ namespace ProvenceECS.Mainframe{
         }
         
         public void LoadModel(ComponentHandle<Model> modelHandle){
-            if(this.ContainsKey(modelHandle.component.manualKey)){
-                ModelBankEntry entry = this[modelHandle.component.manualKey];
-                
-                GameObject entityObj = modelHandle.world.GetOrCreateComponent<UnityGameObject>(modelHandle.entity).component.gameObject;
-                entityObj.Clear();
-
-                GameObject asset = this.LoadModel(entry.name);
-                if(asset != null){
-                    modelHandle.component.root = Object.Instantiate(asset,entityObj.transform.position + entry.positionOffset, entityObj.transform.rotation, entityObj.transform);
-                    modelHandle.component.root.transform.Rotate(entry.rotationOffset);
-                    Vector3 localScale = modelHandle.component.root.transform.localScale;
-                    modelHandle.component.root.transform.localScale = Vector3.Scale(localScale,entry.scaleOffset);
-
-                    foreach(KeyValuePair<string, ModelAnchorData> kvp in entry.anchors){
-                        modelHandle.component.anchors[kvp.Key] = kvp.Value.hierarchy.ToArray();
-                        GameObject anchor = GetChildByHierarhcy(modelHandle.component.root, kvp.Value.hierarchy.ToArray());
-                        //if(anchor != null) modelHandle.component.anchors[kvp.Key] = anchor;
-                    }
-
-                    Animator animatorComponent = modelHandle.component.root.GetComponent<Animator>();
-                    if(animatorComponent != null){
-                        modelHandle.component.animatorComponent = animatorComponent;
-                        modelHandle.component.animationData = entry.animationData;
-
-                        AnimationEventReciever reciever = modelHandle.component.root.AddComponent<AnimationEventReciever>();
-                        reciever.entity = modelHandle.entity;
-                        reciever.world = modelHandle.world;
-                    }
-
-                    modelHandle.component.renderers = modelHandle.component.root.GetComponentsInChildren<Renderer>().ToSet();
+            try{
+                if(this.ContainsKey(modelHandle.component.manualKey)){
+                    ModelBankEntry entry = this[modelHandle.component.manualKey];
                     
-                }else Debug.LogWarning("Model Asset Missing, key: " + modelHandle.component.manualKey);
-            }else Debug.LogWarning("Model Entry Missing, key: " + modelHandle.component.manualKey);
+                    GameObject entityObj = modelHandle.world.GetOrCreateComponent<UnityGameObject>(modelHandle.entity).component.gameObject;
+                    entityObj.Clear();
+
+                    GameObject asset = this.LoadModel(entry.name);
+                    if(asset != null){
+                        modelHandle.component.root = Object.Instantiate(asset,entityObj.transform.position + entry.positionOffset, entityObj.transform.rotation, entityObj.transform);
+                        modelHandle.component.root.transform.Rotate(entry.rotationOffset);
+                        Vector3 localScale = modelHandle.component.root.transform.localScale;
+                        modelHandle.component.root.transform.localScale = Vector3.Scale(localScale,entry.scaleOffset);
+
+                        foreach(KeyValuePair<string, ModelAnchorData> kvp in entry.anchors){
+                            modelHandle.component.anchors[kvp.Key] = kvp.Value.hierarchy.ToArray();
+                            GameObject anchor = GetChildByHierarhcy(modelHandle.component.root, kvp.Value.hierarchy.ToArray());
+                            //if(anchor != null) modelHandle.component.anchors[kvp.Key] = anchor;
+                        }
+
+                        Animator animatorComponent = modelHandle.component.root.GetComponent<Animator>();
+                        if(animatorComponent != null){
+                            modelHandle.component.animatorComponent = animatorComponent;
+                            modelHandle.component.animationData = entry.animationData;
+
+                            AnimationEventReciever reciever = modelHandle.component.root.AddComponent<AnimationEventReciever>();
+                            reciever.entity = modelHandle.entity;
+                            reciever.world = modelHandle.world;
+                        }
+
+                        modelHandle.component.renderers = modelHandle.component.root.GetComponentsInChildren<Renderer>().ToSet();
+                        
+                    }else Debug.LogWarning("Model Asset Missing, key: " + modelHandle.component.manualKey);
+                }else Debug.LogWarning("Model Entry Missing, key: " + modelHandle.component.manualKey);
+            }catch(System.Exception e){
+                Debug.LogWarning(e);
+            }
         }
 
         public static GameObject GetChildByHierarhcy(GameObject root, int[] hierarchy){

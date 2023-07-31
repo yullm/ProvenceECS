@@ -13,10 +13,27 @@ namespace ProvenceECS.Mainframe{
         public VisualElement element;
         public int button;
         public Vector2 mousePosition;
-        public MouseClickEvent(VisualElement element, int button, Vector2 mousePosition){
+        public MouseUpEvent unityEvent;
+
+        public MouseClickEvent(){
+            this.element = null;
+            this.button = -1;
+            this.mousePosition = new Vector2(0,0);
+            this.unityEvent = null;
+        }
+               
+        public MouseClickEvent(VisualElement element, int button, Vector2 mousePosition, MouseUpEvent unityEvent){
             this.element = element;
             this.button = button;
             this.mousePosition = mousePosition;
+            this.unityEvent = unityEvent;
+        }
+
+        public MouseClickEvent(VisualElement element, MouseUpEvent unityEvent){
+            this.element = element;
+            this.button = unityEvent.button;
+            this.mousePosition = unityEvent.mousePosition;
+            this.unityEvent = unityEvent;
         }
     }
     
@@ -71,7 +88,7 @@ namespace ProvenceECS.Mainframe{
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.AddToClassList("wrapper");
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
 
@@ -86,7 +103,7 @@ namespace ProvenceECS.Mainframe{
         public Div(){
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
 
@@ -102,7 +119,7 @@ namespace ProvenceECS.Mainframe{
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.AddToClassList("menu-bar");
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
 
@@ -118,7 +135,7 @@ namespace ProvenceECS.Mainframe{
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.AddToClassList("table-wrapper");
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
 
@@ -134,7 +151,7 @@ namespace ProvenceECS.Mainframe{
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.AddToClassList("page-column");
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
 
@@ -150,7 +167,7 @@ namespace ProvenceECS.Mainframe{
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.AddToClassList("column-scroller");
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
 
@@ -170,7 +187,7 @@ namespace ProvenceECS.Mainframe{
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.AddToClassList("drop-down-menu");
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
             this.RegisterCallback<MouseLeaveEvent>(e => {
                 this.style.display = DisplayStyle.None;
@@ -235,7 +252,7 @@ namespace ProvenceECS.Mainframe{
         public img(){
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.RegisterCallback<MouseUpEvent>(e =>{
-                this.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                this.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
 
@@ -275,7 +292,7 @@ namespace ProvenceECS.Mainframe{
         public ProvenceText() : base(){
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.RegisterCallback<MouseUpEvent>(e =>{
-                this.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                this.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
 
@@ -283,7 +300,7 @@ namespace ProvenceECS.Mainframe{
             this.text = text;
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.RegisterCallback<MouseUpEvent>(e =>{
-                this.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                this.eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
 

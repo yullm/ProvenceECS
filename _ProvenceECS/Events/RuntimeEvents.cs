@@ -69,4 +69,20 @@ namespace ProvenceECS{
         }
     }
 
+    public class EditorSelectEntities : ProvenceEventArgs{
+
+        public World world;
+        public HashSet<Entity> entities;
+
+        public EditorSelectEntities(){
+            this.world = null;
+            this.entities = new HashSet<Entity>();
+        }
+
+        public EditorSelectEntities(World world, HashSet<Entity> entities){
+            this.world = world;
+            this.entities = entities;
+        }
+    }
+
 }

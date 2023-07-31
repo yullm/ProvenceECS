@@ -14,13 +14,13 @@ namespace ProvenceECS.Mainframe{
 
         public EventManager<MainframeUIArgs> eventManager;
 
-        public new class UxmlFactory : UxmlFactory<ListItem> {}
+        public new class UxmlFactory : UxmlFactory<ListItem> {} 
 
         public ListItem(){
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.AddToClassList("list-item");
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
       
@@ -31,7 +31,7 @@ namespace ProvenceECS.Mainframe{
             if(selectable) this.AddToClassList("selectable");
             if(hoverable) this.AddToClassList("hoverable");
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
 
@@ -309,7 +309,7 @@ namespace ProvenceECS.Mainframe{
         public ListItemText(){
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
             this.RegisterCallback<FocusOutEvent>(e => {
                 eventManager.Raise<LoseFocus>(new LoseFocus(this));
@@ -323,7 +323,7 @@ namespace ProvenceECS.Mainframe{
             ListItem.AddAlternates(this,alternate,secondAlternate,thirdAlternate);  
 
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
        
@@ -350,7 +350,7 @@ namespace ProvenceECS.Mainframe{
                 eventManager.Raise<ListItemInputChange>(new ListItemInputChange(this));
             });
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
             this.RegisterCallback<FocusOutEvent>(e => {
                 eventManager.Raise<LoseFocus>(new LoseFocus(this));
@@ -413,7 +413,7 @@ namespace ProvenceECS.Mainframe{
                 eventManager.Raise<ListItemInputChange>(new ListItemInputChange(this));
             });
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
             this.RegisterCallback<FocusOutEvent>(e => {
                 eventManager.Raise<LoseFocus>(new LoseFocus(this));
@@ -457,7 +457,7 @@ namespace ProvenceECS.Mainframe{
         public ListItemImage(){
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
         }
 
@@ -477,7 +477,7 @@ namespace ProvenceECS.Mainframe{
 
         protected void InitializeEvents(){
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e.button,e.mousePosition));
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
             });
             this.RegisterCallback<FocusOutEvent>(e => {
                 eventManager.Raise<LoseFocus>(new LoseFocus(this));

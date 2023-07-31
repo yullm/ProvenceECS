@@ -67,6 +67,40 @@ namespace ProvenceECS{
 
     }
 
+    public class NullableQuaternionConverter : JsonConverter{
+        public class NSerializedQuaternion{
+            public float x;
+            public float y;
+            public float z;
+            public float w;
+
+            public NSerializedQuaternion(float x, float y, float z, float w){
+                this.x = x;
+                this.y = y;
+                this.z = z;
+                this.w = w;
+            }
+        }
+
+        public override bool CanConvert(Type objectType){
+            return (objectType == typeof(Quaternion?));
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){
+            NSerializedQuaternion sq = JsonConvert.DeserializeObject<NSerializedQuaternion>(JToken.Load(reader).ToString());
+            if(sq == null) return null;
+            return new Quaternion(sq.x,sq.y,sq.z,sq.w);
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer){
+            if(value != null){
+                NSerializedQuaternion sq = new NSerializedQuaternion(((Quaternion)value).x,((Quaternion)value).y,((Quaternion)value).z,((Quaternion)value).w);
+                JToken.FromObject(JsonConvert.SerializeObject(sq)).WriteTo(writer);
+            }else writer.WriteNull();
+        }
+
+    }
+
     public class Vector4Converter : JsonConverter{
 
         public struct SerializedVector4{
@@ -129,12 +163,12 @@ namespace ProvenceECS{
 
     public class NullableVector3Converter : JsonConverter{
 
-        protected class SerializedVector3{
+        protected class NSerializedVector3{
             public float x;
             public float y;
             public float z;
 
-            public SerializedVector3(float x, float y, float z){
+            public NSerializedVector3(float x, float y, float z){
                 this.x = x;
                 this.y = y;
                 this.z = z;
@@ -146,14 +180,14 @@ namespace ProvenceECS{
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){
-            SerializedVector3 sv = JsonConvert.DeserializeObject<SerializedVector3>(JToken.Load(reader).ToString());
+            NSerializedVector3 sv = JsonConvert.DeserializeObject<NSerializedVector3>(JToken.Load(reader).ToString());
             if(sv == null) return null;
             return new Vector3(sv.x,sv.y,sv.z);
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer){
             if(value != null){
-                SerializedVector3 sv = new SerializedVector3(((Vector3)value).x,((Vector3)value).y,((Vector3)value).z);
+                NSerializedVector3 sv = new NSerializedVector3(((Vector3)value).x,((Vector3)value).y,((Vector3)value).z);
                 JToken.FromObject(JsonConvert.SerializeObject(sv)).WriteTo(writer);
             }else writer.WriteNull();
         }

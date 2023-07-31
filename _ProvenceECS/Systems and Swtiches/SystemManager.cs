@@ -128,7 +128,10 @@ namespace ProvenceECS{
         }
 
         protected virtual void SafetyDestroy(WorldSafetyDestroy args){}
-
+        
+        /// <summary>
+        /// Called after Events are registered
+        ///</summary>
         public virtual void Awaken(WakeSystemEvent args){}      
 
         protected abstract void RegisterEventListeners();
