@@ -1,10 +1,7 @@
-# Provence ECS
-
 ![banner](https://www.yull.ca/provenceECS/images/banner-01.png)
 
-
 ## Links:
-[Overview](https://www.yull.ca/provenceECS/)
+[Technical Write Up](https://www.yull.ca/provenceECS/)
 
 ## Overview: 
 
