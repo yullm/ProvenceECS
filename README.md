@@ -1,6 +1,6 @@
 # Provence ECS
 
-> banner image
+![banner](https://www.yull.ca/provenceECS/images/banner-01.png)
 
 
 ## Links:
@@ -8,7 +8,7 @@
 
 ## Overview: 
 
-**ProvenceECS** is a C# **entity component system** framework. Provence was created in, and initially designed for, the Unity game engine. Many steps have been taken to decouple Provence from Unity in-order to create a simple base ECS architecture for all needs.
+**Provence ECS** is a C# **entity component system** framework. Provence was created in, and initially designed for, the Unity game engine. Many steps have been taken to decouple Provence from Unity in-order to create a simple base ECS architecture for all needs.
 
 ## The Basics:
 
