@@ -125,10 +125,15 @@ namespace ProvenceECS.Mainframe{
                 root.styleSheets.Add(styleSheet);
             }
             
+            SetReferences();
             RegisterSceneEvents();
             RegisterEventListeners();
             InitializeWindow();
             eventManager.Raise<PageLoadComplete>(new PageLoadComplete());
+        }
+
+        protected virtual void SetReferences(){
+
         }
 
         protected void RegisterSceneEvents(){

@@ -1,21 +1,31 @@
+#bubble-selection{
+    position: absolute;
+    top: 5px;
+    max-width: 300px;
+    padding-right: 5px;
+    align-self: center;
+    background-color: #222;
+    cursor: Link;
+}
+
+#bubble-selection ListItemText{
+    cursor: Link;    
+    font-size: 14px;
+}
+
+#bubble-selection.selected{
+    background-color: #174153;
+}
+
+#bubble-selection:hover{
+    background-color: #1c4f65;
+}
+
 .menu-bar-icon{
     margin-left: 2px;
 }
 
-#add-world-button{
-    margin-top: -2px;
-}
-
-#world-table{
-    border-right-width: 0px;
-}
-
-#world-editor{
-    border-right-width: 0px;
-    display:none;
-}
-
-#world-table-scroller, #world-editor-entity-scroller, #world-editor-system-scroller{
+#world-editor-system-scroller{
     border-color: #1a1a1a;
     border-bottom-width: 1px;
 }

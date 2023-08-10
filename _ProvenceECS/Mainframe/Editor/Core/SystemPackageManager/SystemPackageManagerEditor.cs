@@ -22,6 +22,11 @@ namespace ProvenceECS.Mainframe{
         
         protected Texture delIcon;
 
+        [MenuItem("ProvenceECS/System Package Manager")]
+        public static void ShowWindow(){
+            SystemPackageManagerEditor window = GetWindow<SystemPackageManagerEditor>();
+        }
+
         protected override void SetEditorSettings(){
             this.uiDirectory = new SystemPackageManagerUIDirectory();
             this.titleContent = new GUIContent("System Package Manager");

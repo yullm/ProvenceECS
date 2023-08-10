@@ -28,5 +28,22 @@ public static class UIElementsExtensions{
         if(ve.style.display.value == DisplayStyle.Flex) ve.style.display = DisplayStyle.None;
         else ve.style.display = DisplayStyle.Flex;
     }
+
+    public static Rect AbsoluteRect(this VisualElement ve){
+        float x = ve.style.left.value.value;
+        float y = ve.style.top.value.value;
+
+        Rect rect = new Rect(x,y,ve.resolvedStyle.width,ve.resolvedStyle.height);
+        return rect;
+    }
+
+    public static Vector2 PositionToVector2(this VisualElement ve){
+        return new Vector2(ve.style.left.value.value,ve.style.top.value.value);
+    }
+
+    public static void SetPosition(this VisualElement ve, Vector2 position){
+        ve.style.left = position.x;
+        ve.style.top = position.y;
+    }
    
 }

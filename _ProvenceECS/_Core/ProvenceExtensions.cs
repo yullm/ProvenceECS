@@ -289,7 +289,7 @@ namespace ProvenceECS{
                 }
             }
 
-            new EditorSelectEntities(world,entitiesToSelect).Raise(world);
+            new EditorSelectEntities(world, entitiesToSelect).Raise(world);
 
             return newEntities;
         }

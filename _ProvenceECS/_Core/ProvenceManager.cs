@@ -145,7 +145,7 @@ namespace ProvenceECS{
                     if(world.id == managerID){
                         world.worldName = UnityHelpers.GetSceneName();
                     }
-                    Helpers.SerializeAndSaveToFile<World>(world, ProvenceCollection<AssetData>.dataPath + "/Worlds/", world.id, ".meglo");
+                    Helpers.SerializeAndSaveToFile(world, ProvenceCollection<AssetData>.dataPath + "/Worlds/", world.id, ".meglo");
                 }
             }        
         }

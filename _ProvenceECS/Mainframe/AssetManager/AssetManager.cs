@@ -112,7 +112,7 @@ namespace ProvenceECS.Mainframe{
             }
             return "";
         }
-
+        
         public static void CreateAssetLibrary(){
             HashSet<string> keys = new HashSet<string>();
             foreach(Object resource in Resources.LoadAll("")){

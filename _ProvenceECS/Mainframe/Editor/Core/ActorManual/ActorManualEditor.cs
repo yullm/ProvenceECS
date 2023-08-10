@@ -7,6 +7,7 @@ using ProvenceECS;
 using ProvenceECS.Mainframe;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using UnityEditor;
 
 namespace ProvenceECS.Mainframe{
 
@@ -22,6 +23,11 @@ namespace ProvenceECS.Mainframe{
     public partial class ActorManualEditor : ProvenceCollectionEditor<ActorManualEntry>{
             
         #region ActorManual windowMethods
+        
+        [MenuItem("ProvenceECS/Actor Manual")]
+        public static void ShowWindow(){
+            ActorManualEditor window = GetWindow<ActorManualEditor>();
+        }
  
         protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("Actor Manual");

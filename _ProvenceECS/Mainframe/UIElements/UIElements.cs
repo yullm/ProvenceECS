@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using System.Linq;
+using UnityEditor.SceneManagement;
 
 namespace ProvenceECS.Mainframe{
 
@@ -187,7 +189,7 @@ namespace ProvenceECS.Mainframe{
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.AddToClassList("drop-down-menu");
             this.RegisterCallback<MouseUpEvent>(e =>{
-                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
+                eventManager.Raise(new MouseClickEvent(this,e));
             });
             this.RegisterCallback<MouseLeaveEvent>(e => {
                 this.style.display = DisplayStyle.None;
@@ -222,6 +224,21 @@ namespace ProvenceECS.Mainframe{
                 }              
                 
             }
+            this.style.display = DisplayStyle.Flex;
+        }
+
+        public void Show(VisualElement root, Vector2 position){
+            root.Query<DropDownMenu>().ForEach(current =>{
+                current.style.display = DisplayStyle.None;
+            });
+
+            
+            this.style.bottom = StyleKeyword.Auto;
+            this.style.right = StyleKeyword.Auto;
+
+            this.style.top = position.y;
+            this.style.left = position.x;
+
             this.style.display = DisplayStyle.Flex;
         }
 
@@ -306,6 +323,158 @@ namespace ProvenceECS.Mainframe{
 
     }
 
-    
+    public class Node<T> : VisualElement{
+
+        public Vector2 lastRestingPosition;
+
+        public EventManager<MainframeUIArgs> eventManager;
+        public T key;
+        public ProvenceText label;
+        public Texture icon;
+
+        public new class UxmlFactory : UxmlFactory<Node<T>> {}
+
+        public Node(){
+            this.lastRestingPosition = new Vector2(0,0);
+            
+            this.eventManager = new EventManager<MainframeUIArgs>();
+            this.key = default(T);
+            this.icon = null;
+            InitializeElement();
+            RegisterEventListeners();
+        }
+
+        public Node(T key, Texture icon = null){
+            this.key = key;
+            this.icon = icon;
+
+            this.lastRestingPosition = new Vector2(0,0);
+            
+            this.eventManager = new EventManager<MainframeUIArgs>();
+            InitializeElement();
+            RegisterEventListeners();
+        }
+
+        public void InitializeElement(){                   
+            this.AddToClassList("node");
+
+            Div iconEl = new Div();
+            iconEl.style.backgroundImage = (StyleBackground)icon;
+            iconEl.AddToClassList("node-icon");
+
+            this.label = new ProvenceText("Untitled");
+            this.label.AddToClassList("node-label");
+
+            this.Add(iconEl,label);
+        }
+
+        public virtual void RegisterEventListeners(){
+            this.RegisterCallback<MouseUpEvent>(e =>{
+                eventManager.Raise<MouseClickEvent>(new MouseClickEvent(this,e));
+            });
+        }
+    }
+
+    public class RedrawNodeViewer: MainframeUIArgs{}
+
+    public class NodeViewer<T> : VisualElement{
+
+        protected Vector2 lastMousePosition;
+        protected Vector2 lastRestingPosition;
+        protected bool isDragging;
+        protected bool hasDraggedAnchor;
+
+        public EventManager<MainframeUIArgs> eventManager;
+
+        protected Div anchor;
+        protected ProvenceText coordDisplay;
+        protected ProvenceText resetButton;
+
+        public new class UxmlFactory : UxmlFactory<NodeViewer<T>> {}
+
+        public NodeViewer(){
+            this.lastMousePosition = new Vector2(0,0);
+            this.lastRestingPosition = new Vector2(0,0);
+            this.isDragging = false;
+            this.hasDraggedAnchor = false;
+            this.eventManager = new EventManager<MainframeUIArgs>();   
+            InitializeElement();
+            RegisterEventListeners();
+        }
+
+        protected virtual void InitializeElement(){
+            this.AddToClassList("node-viewer");
+            
+            anchor = new Div();
+            anchor.AddToClassList("node-viewer-anchor");
+
+            this.coordDisplay = new ProvenceText("[0,0]");
+            this.coordDisplay.AddToClassList("node-viewer-coord");
+
+            this.resetButton = new ProvenceText("[Reset]");
+            this.resetButton.AddToClassList("node-viewer-reset");
+
+            this.Add(anchor,coordDisplay,resetButton);
+        }
+
+        protected virtual void RegisterEventListeners(){
+            this.RegisterCallback<MouseDownEvent>(e =>{
+                if(e.button == 1) StartDragging(e);
+            });
+
+            this.RegisterCallback<MouseUpEvent>(e =>{
+                eventManager.Raise(new MouseClickEvent(this,e));
+                StopDragging(e.mousePosition);
+            });
+
+            this.RegisterCallback<MouseLeaveEvent>(e => {
+                StopDragging(e.mousePosition);
+                hasDraggedAnchor = true;
+            });
+
+            resetButton.RegisterCallback<MouseDownEvent>(e => {
+                if(e.button == 0) ResetDrag();
+            });
+        }
+
+        protected void StartDragging(MouseDownEvent e){
+            isDragging = true;
+            lastMousePosition = e.mousePosition;
+            this.RegisterCallback<MouseMoveEvent>(Drag);
+        }
+
+        protected void Drag(MouseMoveEvent e){
+            Vector2 offset = e.mousePosition - lastMousePosition;
+            if(offset.magnitude > 5) hasDraggedAnchor = true;
+            SetAnchorOffset(offset);
+        }
+
+        protected void StopDragging(Vector2 mousePosition){
+            if(isDragging){ 
+                lastRestingPosition += mousePosition - lastMousePosition;
+                if((mousePosition - lastMousePosition).magnitude > 5)
+                    EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            }
+            this.UnregisterCallback<MouseMoveEvent>(Drag);
+            isDragging = false;
+            hasDraggedAnchor = false;     
+        }
+
+        protected void SetAnchorOffset(Vector2 offsetPosition){
+            Vector2 offset = lastRestingPosition + offsetPosition;
+            anchor.style.left = offset.x;
+            anchor.style.top = offset.y;
+            coordDisplay.text = "[" + offset.x + "," + offset.y + "]";
+        }
+
+        protected void ResetDrag(){
+            lastMousePosition = new Vector2(0,0);
+            lastRestingPosition = new Vector2(0,0);
+            anchor.style.left = 0;
+            anchor.style.top = 0;
+            coordDisplay.text = "[0,0]";
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        }
+    }
 
 }

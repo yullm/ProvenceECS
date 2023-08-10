@@ -18,12 +18,18 @@ namespace ProvenceECS.Mainframe{
         }
     }
 
+    
     public class ModelBankEditor : ProvenceCollectionEditor<ModelBankEntry>{
 
         protected Texture addIcon;
         protected Texture searchIcon;
         protected Texture delIcon;
         protected Texture caretIcon;
+
+        [MenuItem("ProvenceECS/Model Bank")]
+        public static void ShowWindow(){
+            ModelBankEditor window = GetWindow<ModelBankEditor>();
+        }
 
         protected override void SetEditorSettings(){
             this.titleContent = new GUIContent("Model Bank");

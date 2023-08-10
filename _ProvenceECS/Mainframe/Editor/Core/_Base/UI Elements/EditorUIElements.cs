@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -630,11 +632,12 @@ namespace ProvenceECS.Mainframe{
         protected void InitializeElement(string labelText){
             label = new ListItemText(labelText);
             label.AddToClassList("list-item-label");
-            
-            objectDisplay = new ObjectField();
-            objectDisplay.allowSceneObjects = false;
-            objectDisplay.objectType = typeof(GameObject);
-            objectDisplay.value = objectValue;
+
+            objectDisplay = new ObjectField{
+                allowSceneObjects = false,
+                objectType = typeof(GameObject),
+                value = objectValue
+            };
             objectDisplay.AddToClassList("list-item-input","list-item-object-input","second-alternate");
 
             button = new ListItemImage(caretIcon);
@@ -643,7 +646,7 @@ namespace ProvenceECS.Mainframe{
             button.eventManager.AddListener<MouseClickEvent>(e =>{
                 if(e.button != 0) return;
                 HierarchySelector hierarchySelector = HierarchySelector.Open();
-                hierarchySelector.eventManager.Raise<SetSelectorParameters<GameObject>>(new SetSelectorParameters<GameObject>(root));
+                hierarchySelector.eventManager.Raise(new SetSelectorParameters<GameObject>(root));
                 hierarchySelector.eventManager.AddListener<MainframeKeySelection<int[]>>(ev =>{
                     this.value = ev.value;
                     this.objectDisplay.value = HierarchySelector.GetChildByHierarhcy(root, ev.value);
@@ -653,6 +656,406 @@ namespace ProvenceECS.Mainframe{
 
             this.Add(label, objectDisplay, button);
         }
+    }
+
+    public class EntityViewerSaveData{
+        public Vector2 anchorPosition;
+        public Dictionary<Entity,Vector2> entityNodePositions;
+        public bool bubbleSelection;
+
+        public EntityViewerSaveData(){
+            this.entityNodePositions = new Dictionary<Entity, Vector2>();
+            this.anchorPosition = new Vector2();
+            this.bubbleSelection = true;
+        }
+
+        public EntityViewerSaveData(Node<Entity>[] nodeCache):this(){
+            this.entityNodePositions = new Dictionary<Entity, Vector2>();
+            for(int i = 0; i < nodeCache.Length; i++){
+                entityNodePositions[nodeCache[i].key] = nodeCache[i].PositionToVector2();
+            }
+        }
+    }
+
+    public class EntityViewer : NodeViewer<Entity>{
+
+        protected World world;
+        protected Dictionary<Entity,Node<Entity>> nodeCache;
+        protected HashSet<Node<Entity>> draggingNodes;
+
+        protected Texture entityIcon;
+        
+        protected Div selectionSquare;
+        protected ProvenceText worldLabel;
+
+        protected DropDownMenu worldContextMenu;
+        protected ListItemText addEntityButton;
+        
+        protected DropDownMenu entityContextMenu;
+        protected ListItemText openButton;
+        protected ListItemText duplicateButton;
+        protected ListItemText deleteButton;
+
+        protected bool hasDraggedNodes;
+        protected Vector2 lastNodePosition;
+        protected Vector2 boxSelectionStartingPosition;
+
+        public new class UxmlFactory : UxmlFactory<EntityViewer> {}
+
+        public EntityViewer(){
+            this.world = null;
+            this.nodeCache = new Dictionary<Entity, Node<Entity>>();
+            this.draggingNodes = new HashSet<Node<Entity>>();
+            this.hasDraggedNodes = false;
+            this.lastMousePosition = new Vector2();
+            this.boxSelectionStartingPosition = new Vector2();
+        }
+
+        public EntityViewer(World world): base(){
+            this.world = world;
+        }
+
+        protected override void InitializeElement(){
+            entityIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/circle-notch.png");
+            base.InitializeElement();
+
+            worldLabel = new ProvenceText();
+            worldLabel.AddToClassList("entity-viewer-world-name");
+
+            selectionSquare = new Div();
+            selectionSquare.AddToClassList("entity-viewer-selector");
+            selectionSquare.style.display = DisplayStyle.None;
+            
+            this.Add(selectionSquare, worldLabel);
+
+            CreateWorldContextMenu();
+            CreateEntityContextMenu();
+        }
+
+        protected void CreateWorldContextMenu(){
+            worldContextMenu = new DropDownMenu();
+
+            ListItem entityItem = new ListItem();
+            addEntityButton = entityItem.AddButton("Add Entity",false,false,true);
+
+            worldContextMenu.Add(entityItem);
+            this.Add(worldContextMenu);
+        }
+
+        protected void CreateEntityContextMenu(){
+            entityContextMenu = new DropDownMenu();
+
+            ListItem openItem = new ListItem();
+            openButton = openItem.AddButton("Open",false,false,true);
+
+            ListItem dupItem = new ListItem();
+            duplicateButton = dupItem.AddButton("Duplicate Selection",false,false,true);
+
+            ListItem delItem = new ListItem();
+            deleteButton = delItem.AddButton("Delete Selection",false,false,true);
+
+            entityContextMenu.Add(openItem, dupItem, delItem);
+            this.Add(entityContextMenu);
+        }
+
+        protected override void RegisterEventListeners(){
+            this.RegisterCallback<MouseLeaveEvent>(e => {
+                StopDraggingNodes(e.mousePosition);
+                StopBoxSelection();
+            });
+            this.RegisterCallback<MouseDownEvent>(e => {
+                if(e.button == 0 && e.target == this) StartBoxSelection(e);
+            });
+            this.RegisterCallback<MouseUpEvent>(e =>{
+                if(e.button == 0){
+                    if(!e.shiftKey && e.target == this) Selection.objects = new UnityEngine.Object[0];
+                    BoxSelect(e);
+                    StopBoxSelection();  
+                }
+                if(e.button == 1){
+                    if(e.target == this && !hasDraggedAnchor){
+                        Vector2 positionOffset = e.mousePosition - new Vector2(75,65);
+                        worldContextMenu.Show(this, positionOffset);
+                        addEntityButton.eventManager.ClearListeners();
+                        addEntityButton.eventManager.AddListener<MouseClickEvent>(ev => {
+                            if(ev.button != 0) return;
+                            lastNodePosition = positionOffset - anchor.PositionToVector2();
+                            world.CreateEntity();
+                            worldContextMenu.style.display = DisplayStyle.None;
+                        });
+                    }
+                }
+            });            
+            base.RegisterEventListeners();
+        }
+
+        public void SetWorld(World world){
+            this.world = world;
+            VerifyEntities();
+            worldLabel.text = world.worldName;
+        }
+
+        public void LoadPositions(EntityViewerSaveData data){
+            lastRestingPosition = data.anchorPosition;
+            anchor.style.left = data.anchorPosition.x;
+            anchor.style.top = data.anchorPosition.y;
+            coordDisplay.text = "[" + data.anchorPosition.x + "," + data.anchorPosition.y + "]";
+
+            foreach(KeyValuePair<Entity,Vector2> kvp in data.entityNodePositions){
+                if(nodeCache.ContainsKey(kvp.Key)){
+                    Node<Entity> node = nodeCache[kvp.Key];
+                    node.style.left = kvp.Value.x;
+                    node.style.top = kvp.Value.y;
+                    node.lastRestingPosition = kvp.Value;
+                }
+            }
+        }
+
+        public void InspectorUpdate(InspectorUpdateEvent args){
+            ResolveOverlapping();
+            VerifyEntities();
+        }
+
+        protected void VerifyEntities(){
+            if(world != null){
+                HashSet<Entity> entities = world.LookUpAllEntities().Select(e => e.entity).ToSet();
+                foreach(Entity entity in entities){
+                    if(!nodeCache.ContainsKey(entity)){
+                        Node<Entity> newNode = new Node<Entity>(entity);
+                        nodeCache[entity] = newNode;
+
+                        ComponentHandle<Name> nameHandle = world.GetComponent<Name>(entity);
+                        newNode.label.text = nameHandle.component.name;                        
+
+                        anchor.Add(newNode); 
+
+                        newNode.style.left = lastNodePosition.x;
+                        newNode.style.top = lastNodePosition.y;
+                        newNode.lastRestingPosition = lastNodePosition;
+                        
+                        newNode.RegisterCallback<MouseDownEvent>(e =>{
+                            if(e.button == 0) {
+                                StartDraggingNodes(e, newNode);
+                            }
+                        });
+
+                        newNode.RegisterCallback<MouseUpEvent>(e =>{
+                            Rect rect = newNode.AbsoluteRect();
+                            lastNodePosition = new Vector2(rect.x, rect.y);
+
+                            newNode.eventManager.Raise(new MouseClickEvent(newNode,e));
+                            GameObject entityGO = world.GetComponent<UnityGameObject>(newNode.key)?.component.gameObject; 
+                            if(entityGO == null) entityGO = world.AddComponent<UnityGameObject>(newNode.key).component.gameObject;
+                            if(e.button == 0){
+                                if(entityGO != null){
+                                    if(hasDraggedNodes == true){
+                                        if(!newNode.ClassListContains("selected")){
+                                            HashSet<UnityEngine.Object> newSelection = new (Selection.objects){entityGO};
+                                            Selection.objects = newSelection.ToArray();
+                                        }
+                                    }else{
+                                        if(newNode.ClassListContains("selected")){
+                                            if(e.shiftKey){
+                                                HashSet<UnityEngine.Object> newSelection = new (Selection.objects);
+                                                newSelection.Remove(entityGO);
+                                                Selection.objects = newSelection.ToArray();
+                                            }else{
+                                                Selection.objects = new UnityEngine.Object[]{entityGO};
+                                            }
+                                        }else{
+                                            if(e.shiftKey){
+                                                HashSet<UnityEngine.Object> newSelection = new (Selection.objects){entityGO};
+                                                Selection.objects = newSelection.ToArray();
+                                            }
+                                            else Selection.objects = new UnityEngine.Object[]{entityGO};
+                                        }
+                                    }                                    
+                                }
+                            }
+                            if(e.button == 1){
+                               //select first
+                                if(!newNode.ClassListContains("selected") && entityGO != null){
+                                    if(e.shiftKey){
+                                        HashSet<UnityEngine.Object> newSelection = new (Selection.objects){entityGO};
+                                        Selection.objects = newSelection.ToArray();
+                                    }
+                                    else Selection.objects = new UnityEngine.Object[]{entityGO};
+                                }
+
+                                Vector2 position = newNode.PositionToVector2() + anchor.PositionToVector2();
+                                entityContextMenu.Show(this, position);
+
+                                openButton.eventManager.ClearListeners();
+                                openButton.eventManager.AddListener<MouseClickEvent>(ev => {
+                                    if(ev.button != 0) return;
+                                    EntityEditor.Show(world.LookUpEntity(newNode.key));
+                                    entityContextMenu.style.display = DisplayStyle.None;
+                                });
+
+                                duplicateButton.eventManager.ClearListeners();
+                                duplicateButton.eventManager.AddListener<MouseClickEvent>(ev => {
+                                    if(ev.button != 0) return;
+                                    ProvenceManagerShortcuts.DuplicateSelection();
+                                    entityContextMenu.style.display = DisplayStyle.None;
+                                });
+
+                                deleteButton.eventManager.ClearListeners();
+                                deleteButton.eventManager.AddListener<MouseClickEvent>(ev => {
+                                    if(ev.button != 0) return;
+                                    ProvenceManagerShortcuts.RemoveSelection();
+                                    entityContextMenu.style.display = DisplayStyle.None;
+                                });
+                            }
+
+                            if(hasDraggedNodes){ 
+                                EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                            }
+                            StopDraggingNodes(e.mousePosition);
+                        });
+                    }else{
+                        ComponentHandle<Name> nameHandle = world.GetComponent<Name>(entity);
+                        nodeCache[entity].label.text = nameHandle.component.name;
+                    }
+                }
+
+                foreach(Entity entity in nodeCache.Keys.ToSet()){
+                    if(!entities.Contains(entity)){
+                        anchor.Remove(nodeCache[entity]);
+                        nodeCache.Remove(entity);
+                    }
+                }
+            }
+        }
+
+        protected void ResolveOverlapping(){
+            foreach(Node<Entity> node in nodeCache.Values){
+                Node<Entity>[] otherNodes = nodeCache.Values.ToArray();
+                for(int i = 0; i < otherNodes.Length; i++){
+                    if(node != otherNodes[i]){
+                        if(draggingNodes.Contains(node) || draggingNodes.Contains(otherNodes[i])) continue;
+                        Rect nodeRect = node.AbsoluteRect();
+                        if(nodeRect.Overlaps(otherNodes[i].AbsoluteRect())){
+                            node.style.top = nodeRect.y + 30;
+                            nodeRect = node.AbsoluteRect();
+                            node.lastRestingPosition = new Vector2(nodeRect.x,nodeRect.y);
+                            i = 0;
+                        }
+                    }
+                }
+            }
+            
+        }
+
+        public void SelectEntities(ProvenceManagerEditorEntitySelection args){
+
+            foreach(Node<Entity> node in anchor.Query<Node<Entity>>(null,"selected").Build()){
+                node.RemoveFromClassList("selected");
+            }
+
+            foreach(Entity entity in args.entities){
+                if(nodeCache.ContainsKey(entity)) nodeCache[entity].AddToClassList("selected");
+            }        
+
+        }
+
+        protected void StartDraggingNodes(MouseDownEvent e, Node<Entity> startingNode){
+            draggingNodes = new HashSet<Node<Entity>>(){
+                startingNode,
+                anchor.Query<Node<Entity>>(null, "selected").Build()
+            };
+            lastMousePosition = e.mousePosition;
+            this.RegisterCallback<MouseMoveEvent>(DragNodes);
+        }
+
+        protected void DragNodes(MouseMoveEvent e){
+            Vector2 offsetPosition = e.mousePosition - lastMousePosition;
+            if(offsetPosition.magnitude > 5) hasDraggedNodes = true;
+            foreach(Node<Entity> node in draggingNodes){
+                Vector2 offset = node.lastRestingPosition + offsetPosition;
+                node.style.left = offset.x;
+                node.style.top = offset.y;
+            }
+        }
+
+        protected void StopDraggingNodes(Vector2 mousePosition){
+            if(draggingNodes.Count > 0){
+                foreach(Node<Entity> node in draggingNodes){
+                    node.lastRestingPosition += mousePosition - lastMousePosition;
+                }
+            }
+            this.UnregisterCallback<MouseMoveEvent>(DragNodes);
+            draggingNodes.Clear();
+            hasDraggedNodes = false;
+        }
+
+        protected void StartBoxSelection(MouseDownEvent e){
+            selectionSquare.SetPosition(e.localMousePosition);
+            boxSelectionStartingPosition = e.localMousePosition;
+            this.RegisterCallback<MouseMoveEvent>(BoxSelectionStep);
+        }
+
+        protected void BoxSelectionStep(MouseMoveEvent e){
+            Vector2 size = boxSelectionStartingPosition - e.localMousePosition;
+            size.x = Mathf.Abs(size.x);
+            size.y = Mathf.Abs(size.y);
+            
+            if(size.magnitude > 20) selectionSquare.style.display = DisplayStyle.Flex;
+            else selectionSquare.style.display = DisplayStyle.None;
+
+            if(boxSelectionStartingPosition.x < e.localMousePosition.x){
+                selectionSquare.style.left = boxSelectionStartingPosition.x;                
+            }else{
+                selectionSquare.style.left = boxSelectionStartingPosition.x - size.x;
+            }
+            selectionSquare.style.width = size.x;
+
+            if(boxSelectionStartingPosition.y < e.localMousePosition.y){
+                selectionSquare.style.top = boxSelectionStartingPosition.y;
+            }else{
+                selectionSquare.style.top = boxSelectionStartingPosition.y - size.y;
+            }
+            selectionSquare.style.height = size.y;
+        }
+
+        protected void StopBoxSelection(){
+            this.UnregisterCallback<MouseMoveEvent>(BoxSelectionStep);
+            selectionSquare.style.display = DisplayStyle.None;
+        }
+
+        protected bool CanBoxSelect(){
+            Rect rect = selectionSquare.AbsoluteRect();
+            if(rect.width >= 20) return true;
+            if(rect.height >= 20) return true;
+            return false;
+        }
+
+        protected void BoxSelect(MouseUpEvent e){
+            if(CanBoxSelect()){
+                HashSet<UnityEngine.Object> newSelection = new HashSet<UnityEngine.Object>();                
+                if(e.shiftKey) newSelection.Add(Selection.objects);
+
+                Rect boxRect = selectionSquare.AbsoluteRect();
+                Vector2 anchorPosition = anchor.PositionToVector2();
+                foreach(Node<Entity> node in nodeCache.Values){
+                    Rect nodeRect = node.AbsoluteRect();
+                    nodeRect.x += anchorPosition.x;
+                    nodeRect.y += anchorPosition.y;
+                    if(nodeRect.Overlaps(boxRect)){
+                        GameObject go = world.GetComponent<UnityGameObject>(node.key)?.component.gameObject;
+                        if(go != null) newSelection.Add(go);
+                    }
+                }
+
+                Selection.objects = newSelection.ToArray();
+            }
+        }
+
+        public EntityViewerSaveData GetSaveData(){
+            return new EntityViewerSaveData(nodeCache.Values.ToArray()){
+                anchorPosition = anchor.PositionToVector2()
+            };
+        }
+        
     }
 
 }
