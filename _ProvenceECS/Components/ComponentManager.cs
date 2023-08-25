@@ -194,6 +194,11 @@ namespace ProvenceECS{
             }
             return children;
         }
+
+        /* public Dictionary<Entity,ProvenceComponent> GetEntry<T>() where T : ProvenceComponent{
+            if(componentDictionary.ContainsKey(typeof(T))) return componentDictionary[typeof(T)];
+            return new Dictionary<Entity, ProvenceComponent>();
+        } */
         
     }
 }

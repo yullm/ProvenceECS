@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using ProvenceECS.Network;
+using System.Collections.Generic;
 
 namespace ProvenceECS{
     [ProvencePacket(666)]
@@ -18,11 +19,11 @@ namespace ProvenceECS{
     public class ComponentA : ProvenceComponent{
 
         public int number;
-        public ComponentB b;
+        //public ComponentB b;
 
         public ComponentA(){
             this.number = 5;
-            this.b = null;
+            //this.b = null;
         }
 
     }
@@ -47,6 +48,15 @@ namespace ProvenceECS{
         protected override void DeregisterEventListeners(){
             world.eventManager.RemoveListener<TestEvent<ProvenceComponent>>(TestEvent);
             world.eventManager.RemoveListener<TestEvent<ComponentA>>(TestEvent);
+        }
+
+        public override void Awaken(WakeSystemEvent args){
+            /* Dictionary<Entity,ProvenceComponent> cache = world.componentManager.GetEntry<ComponentA>();
+            Debug.Log(cache.Count);
+            EntityHandle handle = world.CreateEntity();
+            handle.AddComponent<ComponentA>();
+            Debug.Log(cache.Count); */
+
         }
 
         protected void TestEvent(TestEvent<ProvenceComponent> args){

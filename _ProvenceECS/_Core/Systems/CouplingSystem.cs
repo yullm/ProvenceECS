@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 
 namespace ProvenceECS{
@@ -9,6 +11,8 @@ namespace ProvenceECS{
         public Entity parent;
         public Vector3? parentLastPos;
         public Quaternion? parentLastRot;
+
+        public Vector3? lastPos;
 
         public Child(){
             this.parent = null;
@@ -60,11 +64,11 @@ namespace ProvenceECS{
             childrenCache.StandardDeregistration(world);
         }
 
-        public override void Awaken(WakeSystemEvent args){
+        /* public override void Awaken(WakeSystemEvent args){
             foreach(Entity entity in childrenCache.Keys){
                 InitializeParent(entity);
             }
-        }
+        } */
 
         protected void Update(WorldUpdateEvent args){
             OffsetChildren();
@@ -84,7 +88,7 @@ namespace ProvenceECS{
 
                     if(parentObject == null || childObject == null) continue;
 
-                    if(component.parentLastPos == null || component.parentLastRot == null)
+                    if(component.parentLastPos == null || component.parentLastRot == null || component.lastPos == null)
                         InitializeParent(childHandle.entity);
 
                     Quaternion rotChange = parentObject.transform.rotation * Quaternion.Inverse((Quaternion)component.parentLastRot);
@@ -92,10 +96,17 @@ namespace ProvenceECS{
                     
                     childObject.transform.position = rotChange * (childObject.transform.position - (Vector3)component.parentLastPos) + (Vector3)component.parentLastPos;
 
-                    childObject.transform.position += parentObject.transform.position - (Vector3)component.parentLastPos;
+                    #if UNITY_EDITOR
+                    //if selection contains parent
+                    if(Selection.objects.ToSet().Contains(parentObject.gameObject))
+                    childObject.transform.position += parentObject.transform.position - (Vector3)component.parentLastPos - (childObject.transform.position - (Vector3)component.lastPos);
+                    else
+                    #endif
+                    childObject.transform.position += parentObject.transform.position - (Vector3)component.parentLastPos /* - (childObject.transform.position - (Vector3)component.lastPos) */;
                     
                     component.parentLastPos = parentObject.transform.position;
                     component.parentLastRot = parentObject.transform.rotation;
+                    component.lastPos = childObject.transform.position;
                 }
             }
         }
@@ -107,6 +118,7 @@ namespace ProvenceECS{
                 GameObject parentObject = ugoCache[childHandle.component.parent].component.gameObject;
                 childHandle.component.parentLastPos = parentObject.transform.position;
                 childHandle.component.parentLastRot = parentObject.transform.rotation;
+                childHandle.component.lastPos = ugoCache[childHandle.entity].component.gameObject.transform.position;
             }
         }
 
