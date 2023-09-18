@@ -24,7 +24,7 @@ namespace ProvenceECS.Mainframe{
             
         #region ActorManual windowMethods
         
-        [MenuItem("ProvenceECS/Actor Manual")]
+        [MenuItem("ProvenceECS/Actor Manual &1")]
         public static void ShowWindow(){
             ActorManualEditor window = GetWindow<ActorManualEditor>();
         }

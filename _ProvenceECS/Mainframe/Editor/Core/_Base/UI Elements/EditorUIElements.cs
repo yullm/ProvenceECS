@@ -119,6 +119,9 @@ namespace ProvenceECS.Mainframe{
         public ListItemIntInput AddIntField(int value = 0, bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
             ListItemIntInput el = new ListItemIntInput();
             el.value = value;
+            el.RegisterValueChangedCallback(e =>{
+                eventManager.Raise<ListItemInputChange>(new ListItemInputChange(el));
+            });
             this.Add(el);
             return el;
         }

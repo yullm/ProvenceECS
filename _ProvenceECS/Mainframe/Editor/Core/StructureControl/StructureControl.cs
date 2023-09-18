@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -27,7 +28,9 @@ namespace ProvenceECS.Mainframe{
         public List<Type> specifiedFields = new List<Type>(){
             typeof(bool),
             typeof(byte),
+            typeof(sbyte),
             typeof(ushort),
+            typeof(short),
             typeof(int),
             typeof(float),
             typeof(string),
@@ -92,23 +95,27 @@ namespace ProvenceECS.Mainframe{
         } */
 
         protected static void CreateControl<U>(StructureControl<U> control){
-            bool alternate = control.startAlt;
-            FieldInfo[] fields = control.structure.GetType().GetFields();
+            control.DrawDefaultControl();
+        }
+
+        protected void DrawDefaultControl(){
+            bool alternate = this.startAlt;
+            FieldInfo[] fields = this.structure.GetType().GetFields();
             for(int i = 0; i < fields.Length; i++){
                 try{
                     Type fieldType = fields[i].FieldType;
                     bool hide = false;
-                    foreach(Type attributeType in control.attributeHideList){
+                    foreach(Type attributeType in this.attributeHideList){
                         if(fields[i].IsDefined(attributeType,false) || fieldType.IsDefined(attributeType,false)){
                             hide = true;
                             break;
                         }
                     }
                     if(hide) continue;
-                    if(control.specifiedFields.Contains(fieldType) || fieldType.IsDefined(typeof(CustomFieldControl), false) || fieldType.IsEnum)
-                        Helpers.InvokeGenericMethod(control,"CreateFieldControl", fieldType, fields[i], alternate);
+                    if(this.specifiedFields.Contains(fieldType) || fieldType.IsDefined(typeof(CustomFieldControl), false) || fieldType.IsEnum)
+                        Helpers.InvokeGenericMethod(this,"CreateFieldControl", fieldType, fields[i], alternate);
                     else
-                        Helpers.InvokeGenericMethod(control,"CreateNestedStructureControl", fieldType, fields[i]);
+                        Helpers.InvokeGenericMethod(this,"CreateNestedStructureControl", fieldType, fields[i]);
                     alternate = !alternate;
                 }catch(Exception e){
                     Debug.LogWarning(e);

@@ -57,7 +57,7 @@ namespace ProvenceECS.Mainframe{
             addBar.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/plus.png"));
             addBar.eventManager.AddListener<MouseClickEvent>(e => {
                 if(e.button != 0) return;
-                control.structure.Add(default(V));
+                control.structure.Add(default);
                 control.eventManager.Raise(new StructureControlUpdated<List<V>>(control));
                 DrawListControls(control, container);
             });

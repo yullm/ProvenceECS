@@ -15,6 +15,7 @@ namespace ProvenceECS{
         protected override JsonContract CreateContract(Type objectType){
             JsonContract contract = base.CreateContract(objectType);
 
+            //if(objectType == typeof(sbyte)) contract.Converter = new SByteConverter(); 
             if(objectType == typeof(Entity)) contract.Converter = new EntityConverter();            
             if(objectType == typeof(Quaternion)) contract.Converter = new QuaternionConverter();
             if(objectType == typeof(Quaternion?)) contract.Converter = new NullableQuaternionConverter();

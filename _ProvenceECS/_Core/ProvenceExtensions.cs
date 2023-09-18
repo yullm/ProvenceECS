@@ -236,6 +236,10 @@ namespace ProvenceECS{
             Debug.Log(setString);
         }
 
+        public static Dictionary<V,T> Reverse<T,V>(this Dictionary<T,V> dict){
+            return dict.ToDictionary(x => x.Value, x=> x.Key);
+        }
+
         public static bool SetEquals<T>(this List<T> list1, List<T> list2){
             return new HashSet<T>(list1).SetEquals(list2);
         }

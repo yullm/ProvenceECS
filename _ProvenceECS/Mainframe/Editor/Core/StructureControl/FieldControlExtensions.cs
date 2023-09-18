@@ -28,6 +28,17 @@ namespace ProvenceECS.Mainframe{
             });
         }
 
+        public static void DrawControl(this FieldControl<sbyte> control){
+            IntegerField input = control.AddIntField(control.value);
+            control.eventManager.AddListener<ListItemInputChange>(e =>{
+                if(e.input != input) return;
+                if(input.value > byte.MaxValue) input.value = byte.MaxValue;
+                if(input.value < byte.MinValue) input.value = byte.MinValue;
+                control.value = (sbyte)input.value;
+                control.eventManager.Raise(new FieldControlUpdated<sbyte>(control));
+            });
+        }
+
         public static void DrawControl(this FieldControl<ushort> control){
             IntegerField input = control.AddIntField(control.value);
             control.eventManager.AddListener<ListItemInputChange>(e =>{
@@ -36,6 +47,17 @@ namespace ProvenceECS.Mainframe{
                 if(input.value > ushort.MaxValue) input.value = ushort.MaxValue;
                 control.value = (ushort)input.value;
                 control.eventManager.Raise<FieldControlUpdated<ushort>>(new FieldControlUpdated<ushort>(control));
+            });
+        }
+
+        public static void DrawControl(this FieldControl<short> control){
+            IntegerField input = control.AddIntField(control.value);
+            control.eventManager.AddListener<ListItemInputChange>(e =>{
+                if(e.input != input) return;
+                if(input.value < short.MinValue) input.value = short.MinValue;
+                if(input.value > short.MaxValue) input.value = short.MaxValue;
+                control.value = (short)input.value;
+                control.eventManager.Raise(new FieldControlUpdated<short>(control));
             });
         }
 

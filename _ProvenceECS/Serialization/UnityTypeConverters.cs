@@ -220,6 +220,31 @@ namespace ProvenceECS{
         }
     }
 
+    public class SByteConverter : JsonConverter{
+
+        public struct SerializedSbyte{
+            public int val;
+
+            public SerializedSbyte(sbyte val){
+                this.val = (int)val;
+            }
+        }
+
+        public override bool CanConvert(Type objectType){
+            return (objectType == typeof(sbyte));
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){
+            SerializedSbyte sv = JsonConvert.DeserializeObject<SerializedSbyte>(JToken.Load(reader).ToString());
+            return (sbyte)sv.val;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer){
+            SerializedSbyte sv = new SerializedSbyte((sbyte)value);
+            JToken.FromObject(JsonConvert.SerializeObject(sv)).WriteTo(writer);
+        }
+    }
+
     public class ColorConverter : JsonConverter{
 
         public struct SerializedColor{
