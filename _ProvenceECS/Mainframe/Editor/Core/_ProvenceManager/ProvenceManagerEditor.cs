@@ -50,6 +50,7 @@ namespace ProvenceECS.Mainframe{
 
         protected EntityViewer entityViewer;
         protected ListItem bubbleSelectionButton;
+        
 
         public ProvenceManagerEditor(){
             currentlySelectedEntities = new HashSet<Entity>();

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System.Linq;
 using UnityEditor.SceneManagement;
+using System;
 
 namespace ProvenceECS.Mainframe{
 
@@ -452,8 +453,11 @@ namespace ProvenceECS.Mainframe{
         protected void StopDragging(Vector2 mousePosition){
             if(isDragging){ 
                 lastRestingPosition += mousePosition - lastMousePosition;
-                if((mousePosition - lastMousePosition).magnitude > 5)
-                    EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                if((mousePosition - lastMousePosition).magnitude > 5){
+                    if(!Application.isPlaying)
+                        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                    
+                }
             }
             this.UnregisterCallback<MouseMoveEvent>(Drag);
             isDragging = false;

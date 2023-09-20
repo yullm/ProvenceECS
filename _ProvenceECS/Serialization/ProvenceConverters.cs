@@ -16,11 +16,14 @@ namespace ProvenceECS{
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){
+            var token = JToken.Load(reader);
+            if(token.Value<string>() == null) return null;
             return new Entity(JToken.Load(reader).ToString());
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer){
-            JToken.FromObject(value.ToString()).WriteTo(writer);
+            if(value == null) writer.WriteNull();
+            else JToken.FromObject(value.ToString()).WriteTo(writer);
         }
     }
 

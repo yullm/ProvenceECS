@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditor.UIElements;
@@ -733,6 +734,8 @@ namespace ProvenceECS.Mainframe{
 
             CreateWorldContextMenu();
             CreateEntityContextMenu();
+
+            //anchor.style.scale = new StyleScale(new Scale(new(0.5f,0.5f,0.5f)));
         }
 
         protected void CreateWorldContextMenu(){
@@ -910,7 +913,7 @@ namespace ProvenceECS.Mainframe{
                                 });
                             }
 
-                            if(hasDraggedNodes){ 
+                            if(hasDraggedNodes && !Application.isPlaying){
                                 EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
                             }
                             StopDraggingNodes(e.mousePosition);
@@ -984,6 +987,8 @@ namespace ProvenceECS.Mainframe{
             if(draggingNodes.Count > 0){
                 foreach(Node<Entity> node in draggingNodes){
                     node.lastRestingPosition += mousePosition - lastMousePosition;
+                    /* Debug.Log(node.AbsoluteRect().x + anchor.PositionToVector2().x);
+                    Debug.Log(node.AbsoluteRect().x + anchor.PositionToVector2().x * (1 + (1 -  anchor.style.scale.value.value.x))); */
                 }
             }
             this.UnregisterCallback<MouseMoveEvent>(DragNodes);
@@ -1036,9 +1041,15 @@ namespace ProvenceECS.Mainframe{
             if(CanBoxSelect()){
                 HashSet<UnityEngine.Object> newSelection = new HashSet<UnityEngine.Object>();                
                 if(e.shiftKey) newSelection.Add(Selection.objects);
-
+                //Debug.Log(selectionSquare.style.left);
+                /* selectionSquare.style.left = selectionSquare.style.left.value.value * (1 + (1 - anchor.style.scale.value.value.x));
+                selectionSquare.style.top = selectionSquare.style.top.value.value * (1 + (1 -  anchor.style.scale.value.value.x));
+                selectionSquare.style.width = selectionSquare.style.width.value.value * (1 + (1 -  anchor.style.scale.value.value.x));
+                selectionSquare.style.height = selectionSquare.style.height.value.value * (1 + (1 -  anchor.style.scale.value.value.x)); */
                 Rect boxRect = selectionSquare.AbsoluteRect();
-                Vector2 anchorPosition = anchor.PositionToVector2();
+                
+                Vector2 anchorPosition = anchor.PositionToVector2();                
+                //Debug.Log(selectionSquare.style.left.value.value);
                 foreach(Node<Entity> node in nodeCache.Values){
                     Rect nodeRect = node.AbsoluteRect();
                     nodeRect.x += anchorPosition.x;
