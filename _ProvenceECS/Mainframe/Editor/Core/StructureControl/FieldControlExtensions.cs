@@ -12,7 +12,7 @@ namespace ProvenceECS.Mainframe{
             EnumField input = control.AddBoolean(control.value);
             control.eventManager.AddListener<ListItemInputChange>(e =>{
                 if(e.input != input) return;
-                control.value = (BooleanEnum)input.value == BooleanEnum.TRUE ? true : false;
+                control.value = (BooleanEnum)input.value == BooleanEnum.TRUE;
                 control.eventManager.Raise<FieldControlUpdated<bool>>(new FieldControlUpdated<bool>(control));
             });
         }
@@ -32,8 +32,8 @@ namespace ProvenceECS.Mainframe{
             IntegerField input = control.AddIntField(control.value);
             control.eventManager.AddListener<ListItemInputChange>(e =>{
                 if(e.input != input) return;
-                if(input.value > byte.MaxValue) input.value = byte.MaxValue;
-                if(input.value < byte.MinValue) input.value = byte.MinValue;
+                if(input.value > sbyte.MaxValue) input.value = sbyte.MaxValue;
+                if(input.value < sbyte.MinValue) input.value = sbyte.MinValue;
                 control.value = (sbyte)input.value;
                 control.eventManager.Raise(new FieldControlUpdated<sbyte>(control));
             });

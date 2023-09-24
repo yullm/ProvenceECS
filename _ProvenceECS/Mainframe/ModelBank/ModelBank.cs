@@ -14,6 +14,9 @@ namespace ProvenceECS.Mainframe{
         [JsonIgnore] [DontDisplayInEditor] public string currentState;
         [JsonIgnore] [DontDisplayInEditor] public Dictionary<string, ModelAnimationData> animationData;
         [JsonIgnore] [DontDisplayInEditor] public HashSet<Renderer> renderers;
+        [JsonIgnore] [DontDisplayInEditor] public Vector3 positionOffset;
+        [JsonIgnore] [DontDisplayInEditor]public Vector3 rotationOffset;
+        [JsonIgnore] [DontDisplayInEditor]public Vector3 scaleOffset;
 
         public Model(){
             this.manualKey = "";
@@ -23,6 +26,9 @@ namespace ProvenceECS.Mainframe{
             this.currentState = "";
             this.animationData = new Dictionary<string, ModelAnimationData>();
             this.renderers = new HashSet<Renderer>();
+            this.positionOffset = new Vector3();
+            this.rotationOffset = new Vector3();
+            this.scaleOffset = Vector3.one;
         }
 
         public Model(string key) : this(){
@@ -140,6 +146,10 @@ namespace ProvenceECS.Mainframe{
                         modelHandle.component.root.transform.Rotate(entry.rotationOffset);
                         Vector3 localScale = modelHandle.component.root.transform.localScale;
                         modelHandle.component.root.transform.localScale = Vector3.Scale(localScale,entry.scaleOffset);
+
+                        modelHandle.component.positionOffset = entry.positionOffset;
+                        modelHandle.component.rotationOffset = entry.rotationOffset;
+                        modelHandle.component.scaleOffset = entry.scaleOffset;
 
                         foreach(KeyValuePair<string, ModelAnchorData> kvp in entry.anchors){
                             modelHandle.component.anchors[kvp.Key] = kvp.Value.hierarchy.ToArray();

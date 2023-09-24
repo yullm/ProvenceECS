@@ -304,10 +304,10 @@ namespace ProvenceECS{
             }
         }
 
-        public static Vector3 Snap(this Vector3 vector3, float gridSize = 1.0f){
+        public static Vector3 Snap(this Vector3 vector3, bool floorY = false, float gridSize = 1.0f){
             return new Vector3(
                 Mathf.Round(vector3.x / gridSize) * gridSize,
-                Mathf.Round(vector3.y / gridSize) * gridSize,
+                floorY ? Mathf.Floor(vector3.y / gridSize) * gridSize : Mathf.Round(vector3.y / gridSize) * gridSize,
                 Mathf.Round(vector3.z / gridSize) * gridSize
             );
         }
