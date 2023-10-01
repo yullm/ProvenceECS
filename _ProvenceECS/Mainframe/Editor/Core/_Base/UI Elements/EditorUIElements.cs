@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
+using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditor.UIElements;
@@ -665,18 +666,23 @@ namespace ProvenceECS.Mainframe{
     public class EntityViewerSaveData{
         public Vector2 anchorPosition;
         public Dictionary<Entity,Vector2> entityNodePositions;
+        public Dictionary<Entity,byte> layerCache;
         public bool bubbleSelection;
+        public float scale;
 
         public EntityViewerSaveData(){
             this.entityNodePositions = new Dictionary<Entity, Vector2>();
+            this.layerCache = new();
             this.anchorPosition = new Vector2();
             this.bubbleSelection = true;
+            this.scale = 1f;
         }
 
         public EntityViewerSaveData(Node<Entity>[] nodeCache):this(){
             this.entityNodePositions = new Dictionary<Entity, Vector2>();
             for(int i = 0; i < nodeCache.Length; i++){
                 entityNodePositions[nodeCache[i].key] = nodeCache[i].PositionToVector2();
+                layerCache[nodeCache[i].key] = nodeCache[i].layer;
             }
         }
     }
@@ -684,7 +690,6 @@ namespace ProvenceECS.Mainframe{
     public class EntityViewer : NodeViewer<Entity>{
 
         protected World world;
-        protected Dictionary<Entity,Node<Entity>> nodeCache;
         protected HashSet<Node<Entity>> draggingNodes;
 
         protected Texture entityIcon;
@@ -704,18 +709,19 @@ namespace ProvenceECS.Mainframe{
         protected Vector2 lastNodePosition;
         protected Vector2 boxSelectionStartingPosition;
 
+        //protected Div testDiv;
+
         public new class UxmlFactory : UxmlFactory<EntityViewer> {}
 
-        public EntityViewer(){
+        public EntityViewer() : base(){
             this.world = null;
-            this.nodeCache = new Dictionary<Entity, Node<Entity>>();
             this.draggingNodes = new HashSet<Node<Entity>>();
             this.hasDraggedNodes = false;
             this.lastMousePosition = new Vector2();
             this.boxSelectionStartingPosition = new Vector2();
         }
 
-        public EntityViewer(World world): base(){
+        public EntityViewer(World world): this(){
             this.world = world;
         }
 
@@ -734,8 +740,12 @@ namespace ProvenceECS.Mainframe{
 
             CreateWorldContextMenu();
             CreateEntityContextMenu();
+            
+            anchor.style.scale = new StyleScale(new Scale(new(1,1,1)));
 
-            //anchor.style.scale = new StyleScale(new Scale(new(0.5f,0.5f,0.5f)));
+            /* testDiv = new Div();
+            testDiv.AddToClassList("entity-viewer-test");
+            anchor.Add(testDiv); */
         }
 
         protected void CreateWorldContextMenu(){
@@ -774,26 +784,29 @@ namespace ProvenceECS.Mainframe{
             });
             this.RegisterCallback<MouseUpEvent>(e =>{
                 if(e.button == 0){
-                    if(!e.shiftKey && e.target == this) Selection.objects = new UnityEngine.Object[0];
+                    //if(!e.shiftKey && e.target == this) Selection.objects = new UnityEngine.Object[0];
                     BoxSelect(e);
                     StopBoxSelection();  
                 }
                 if(e.button == 1){
                     if(e.target == this && !hasDraggedAnchor){
+                        AnchorItemPositionFromMouse(e, out Vector2 position);
+                        lastNodePosition = position;
                         Vector2 positionOffset = e.mousePosition - new Vector2(75,65);
                         worldContextMenu.Show(this, positionOffset);
                         addEntityButton.eventManager.ClearListeners();
                         addEntityButton.eventManager.AddListener<MouseClickEvent>(ev => {
-                            if(ev.button != 0) return;
-                            lastNodePosition = positionOffset - anchor.PositionToVector2();
+                            if(ev.button != 0) return;                            
                             world.CreateEntity();
                             worldContextMenu.style.display = DisplayStyle.None;
                         });
                     }
                 }
-            });            
+            });  
             base.RegisterEventListeners();
         }
+
+       
 
         public void SetWorld(World world){
             this.world = world;
@@ -801,11 +814,12 @@ namespace ProvenceECS.Mainframe{
             worldLabel.text = world.worldName;
         }
 
-        public void LoadPositions(EntityViewerSaveData data){
+        public void LoadSaveData(EntityViewerSaveData data){
             lastRestingPosition = data.anchorPosition;
             anchor.style.left = data.anchorPosition.x;
             anchor.style.top = data.anchorPosition.y;
             coordDisplay.text = "[" + data.anchorPosition.x + "," + data.anchorPosition.y + "]";
+            anchor.style.scale = new StyleScale(new Scale(new(data.scale,data.scale,data.scale)));
 
             foreach(KeyValuePair<Entity,Vector2> kvp in data.entityNodePositions){
                 if(nodeCache.ContainsKey(kvp.Key)){
@@ -813,6 +827,7 @@ namespace ProvenceECS.Mainframe{
                     node.style.left = kvp.Value.x;
                     node.style.top = kvp.Value.y;
                     node.lastRestingPosition = kvp.Value;
+                    node.layer = data.layerCache.ContainsKey(kvp.Key) ? data.layerCache[kvp.Key] :  (byte)0;
                 }
             }
         }
@@ -853,7 +868,7 @@ namespace ProvenceECS.Mainframe{
                             GameObject entityGO = world.GetComponent<UnityGameObject>(newNode.key)?.component.gameObject; 
                             if(entityGO == null) entityGO = world.AddComponent<UnityGameObject>(newNode.key).component.gameObject;
                             if(e.button == 0){
-                                if(entityGO != null){
+                                if(entityGO != null){ 
                                     if(hasDraggedNodes == true){
                                         if(!newNode.ClassListContains("selected")){
                                             HashSet<UnityEngine.Object> newSelection = new (Selection.objects){entityGO};
@@ -888,7 +903,7 @@ namespace ProvenceECS.Mainframe{
                                     else Selection.objects = new UnityEngine.Object[]{entityGO};
                                 }
 
-                                Vector2 position = newNode.PositionToVector2() + anchor.PositionToVector2();
+                                Vector2 position = e.mousePosition - new Vector2(75,65);
                                 entityContextMenu.Show(this, position);
 
                                 openButton.eventManager.ClearListeners();
@@ -918,9 +933,12 @@ namespace ProvenceECS.Mainframe{
                             }
                             StopDraggingNodes(e.mousePosition);
                         });
+                        
                     }else{
                         ComponentHandle<Name> nameHandle = world.GetComponent<Name>(entity);
                         nodeCache[entity].label.text = nameHandle.component.name;
+                        if(currentLayer != nodeCache[entity].layer) nodeCache[entity].style.display = DisplayStyle.None;
+                        else nodeCache[entity].style.display = DisplayStyle.Flex;
                     }
                 }
 
@@ -953,15 +971,13 @@ namespace ProvenceECS.Mainframe{
         }
 
         public void SelectEntities(ProvenceManagerEditorEntitySelection args){
-
             foreach(Node<Entity> node in anchor.Query<Node<Entity>>(null,"selected").Build()){
                 node.RemoveFromClassList("selected");
             }
 
             foreach(Entity entity in args.entities){
                 if(nodeCache.ContainsKey(entity)) nodeCache[entity].AddToClassList("selected");
-            }        
-
+            }
         }
 
         protected void StartDraggingNodes(MouseDownEvent e, Node<Entity> startingNode){
@@ -969,12 +985,12 @@ namespace ProvenceECS.Mainframe{
                 startingNode,
                 anchor.Query<Node<Entity>>(null, "selected").Build()
             };
-            lastMousePosition = e.mousePosition;
+            lastMousePosition = e.mousePosition * (1/anchor.style.scale.value.value.x);
             this.RegisterCallback<MouseMoveEvent>(DragNodes);
         }
 
         protected void DragNodes(MouseMoveEvent e){
-            Vector2 offsetPosition = e.mousePosition - lastMousePosition;
+            Vector2 offsetPosition = (e.mousePosition * (1/anchor.style.scale.value.value.x)) - lastMousePosition;
             if(offsetPosition.magnitude > 5) hasDraggedNodes = true;
             foreach(Node<Entity> node in draggingNodes){
                 Vector2 offset = node.lastRestingPosition + offsetPosition;
@@ -986,7 +1002,7 @@ namespace ProvenceECS.Mainframe{
         protected void StopDraggingNodes(Vector2 mousePosition){
             if(draggingNodes.Count > 0){
                 foreach(Node<Entity> node in draggingNodes){
-                    node.lastRestingPosition += mousePosition - lastMousePosition;
+                    node.lastRestingPosition += mousePosition * (1/anchor.style.scale.value.value.x) - lastMousePosition;
                     /* Debug.Log(node.AbsoluteRect().x + anchor.PositionToVector2().x);
                     Debug.Log(node.AbsoluteRect().x + anchor.PositionToVector2().x * (1 + (1 -  anchor.style.scale.value.value.x))); */
                 }
@@ -1039,21 +1055,19 @@ namespace ProvenceECS.Mainframe{
 
         protected void BoxSelect(MouseUpEvent e){
             if(CanBoxSelect()){
-                HashSet<UnityEngine.Object> newSelection = new HashSet<UnityEngine.Object>();                
+                Vector2 anchorPosition = anchor.PositionToVector2(); 
+
+                HashSet<UnityEngine.Object> newSelection = new();                
                 if(e.shiftKey) newSelection.Add(Selection.objects);
-                //Debug.Log(selectionSquare.style.left);
-                /* selectionSquare.style.left = selectionSquare.style.left.value.value * (1 + (1 - anchor.style.scale.value.value.x));
-                selectionSquare.style.top = selectionSquare.style.top.value.value * (1 + (1 -  anchor.style.scale.value.value.x));
-                selectionSquare.style.width = selectionSquare.style.width.value.value * (1 + (1 -  anchor.style.scale.value.value.x));
-                selectionSquare.style.height = selectionSquare.style.height.value.value * (1 + (1 -  anchor.style.scale.value.value.x)); */
+                selectionSquare.style.left = (selectionSquare.style.left.value.value * (1/anchor.style.scale.value.value.x)) - (anchorPosition.x * (1/anchor.style.scale.value.value.x));
+                selectionSquare.style.top = (selectionSquare.style.top.value.value * (1/anchor.style.scale.value.value.x)) - (anchorPosition.y * (1/anchor.style.scale.value.value.x));
                 Rect boxRect = selectionSquare.AbsoluteRect();
-                
-                Vector2 anchorPosition = anchor.PositionToVector2();                
-                //Debug.Log(selectionSquare.style.left.value.value);
+                boxRect.width *= 1/anchor.style.scale.value.value.x;
+                boxRect.height *= 1/anchor.style.scale.value.value.x;
                 foreach(Node<Entity> node in nodeCache.Values){
                     Rect nodeRect = node.AbsoluteRect();
-                    nodeRect.x += anchorPosition.x;
-                    nodeRect.y += anchorPosition.y;
+                    //nodeRect.x += anchorPosition.x * anchor.style.scale.value.value.x;
+                    //nodeRect.y += anchorPosition.y;
                     if(nodeRect.Overlaps(boxRect)){
                         GameObject go = world.GetComponent<UnityGameObject>(node.key)?.component.gameObject;
                         if(go != null) newSelection.Add(go);
@@ -1066,7 +1080,8 @@ namespace ProvenceECS.Mainframe{
 
         public EntityViewerSaveData GetSaveData(){
             return new EntityViewerSaveData(nodeCache.Values.ToArray()){
-                anchorPosition = anchor.PositionToVector2()
+                anchorPosition = anchor.PositionToVector2(),
+                scale = anchor.style.scale.value.value.x
             };
         }
         

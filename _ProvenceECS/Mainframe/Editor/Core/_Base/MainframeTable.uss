@@ -167,6 +167,14 @@ TableWrapper{
     border-color: #aaa;
 }
 
+.entity-viewer-test{
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-width: 1px;
+    border-color: #aaa;
+}
+
 .list-item{
     height: 30px;
     min-height: 30px;

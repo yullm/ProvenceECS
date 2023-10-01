@@ -5,6 +5,7 @@ using UnityEngine.UIElements;
 using System.Linq;
 using UnityEditor.SceneManagement;
 using System;
+using System.Threading.Tasks;
 
 namespace ProvenceECS.Mainframe{
 
@@ -332,6 +333,7 @@ namespace ProvenceECS.Mainframe{
         public T key;
         public ProvenceText label;
         public Texture icon;
+        public byte layer;
 
         public new class UxmlFactory : UxmlFactory<Node<T>> {}
 
@@ -341,6 +343,7 @@ namespace ProvenceECS.Mainframe{
             this.eventManager = new EventManager<MainframeUIArgs>();
             this.key = default(T);
             this.icon = null;
+            this.layer = 0;
             InitializeElement();
             RegisterEventListeners();
         }
@@ -350,6 +353,7 @@ namespace ProvenceECS.Mainframe{
             this.icon = icon;
 
             this.lastRestingPosition = new Vector2(0,0);
+            this.layer = 0;
             
             this.eventManager = new EventManager<MainframeUIArgs>();
             InitializeElement();
@@ -365,6 +369,7 @@ namespace ProvenceECS.Mainframe{
 
             this.label = new ProvenceText("Untitled");
             this.label.AddToClassList("node-label");
+            this.label.displayTooltipWhenElided = false;
 
             this.Add(iconEl,label);
         }
@@ -380,7 +385,10 @@ namespace ProvenceECS.Mainframe{
 
     public class NodeViewer<T> : VisualElement{
 
-        protected Vector2 lastMousePosition;
+        public bool windowFocused;
+
+        protected Vector2 lastMousePosition;        
+        protected Dictionary<Entity,Node<T>> nodeCache;
         protected Vector2 lastRestingPosition;
         protected bool isDragging;
         protected bool hasDraggedAnchor;
@@ -391,19 +399,25 @@ namespace ProvenceECS.Mainframe{
         protected ProvenceText coordDisplay;
         protected ProvenceText resetButton;
 
+        protected byte currentLayer;
+
         public new class UxmlFactory : UxmlFactory<NodeViewer<T>> {}
 
-        public NodeViewer(){
+        public NodeViewer(){             
+            this.windowFocused = false;           
+            this.nodeCache = new Dictionary<Entity, Node<T>>();
             this.lastMousePosition = new Vector2(0,0);
             this.lastRestingPosition = new Vector2(0,0);
             this.isDragging = false;
             this.hasDraggedAnchor = false;
             this.eventManager = new EventManager<MainframeUIArgs>();   
+            this.currentLayer = 0;
             InitializeElement();
             RegisterEventListeners();
         }
 
-        protected virtual void InitializeElement(){
+        protected virtual void InitializeElement(){            
+            this.focusable = true;
             this.AddToClassList("node-viewer");
             
             anchor = new Div();
@@ -435,6 +449,16 @@ namespace ProvenceECS.Mainframe{
 
             resetButton.RegisterCallback<MouseDownEvent>(e => {
                 if(e.button == 0) ResetDrag();
+            });
+            
+            this.RegisterCallback<WheelEvent>(e => {
+                ZoomWindow(e);
+            });
+            this.RegisterCallback<KeyDownEvent>(e =>{
+                if(e.keyCode == KeyCode.G){                    
+                    e.StopPropagation();
+                    FrameSelection();
+                }
             });
         }
 
@@ -468,7 +492,14 @@ namespace ProvenceECS.Mainframe{
             Vector2 offset = lastRestingPosition + offsetPosition;
             anchor.style.left = offset.x;
             anchor.style.top = offset.y;
-            coordDisplay.text = "[" + offset.x + "," + offset.y + "]";
+            coordDisplay.text = "[" + (int)offset.x + "," + (int)offset.y + "]";
+        }
+
+        protected void SetAnchorPosition(Vector2 position){
+            anchor.style.left = position.x;
+            anchor.style.top = position.y;
+            coordDisplay.text = "[" + (int)position.x + "," + (int)position.y + "]";
+            lastRestingPosition = position;
         }
 
         protected void ResetDrag(){
@@ -479,6 +510,45 @@ namespace ProvenceECS.Mainframe{
             coordDisplay.text = "[0,0]";
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         }
+
+        protected void ZoomWindow(WheelEvent e){
+            float oldScale = anchor.style.scale.value.value.x ;
+            float newScale = Mathf.Clamp(oldScale + (e.delta.y *0.05f), 0.1f, 1);
+            float scaleChange = newScale - oldScale;
+            AnchorItemPositionFromMouse(e, out Vector2 position);
+            float x = -(position.x * scaleChange);
+            float y = -(position.y * scaleChange);
+            anchor.style.scale = new StyleScale(new Scale(new(newScale,newScale,newScale)));            
+            SetAnchorPosition(new(anchor.style.left.value.value + x, anchor.style.top.value.value + y));
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        }
+
+        protected void FrameSelection(){            
+            Rect windowRect = this.AbsoluteRect();
+            Vector2 newPos = new();
+            int count = 0;
+            anchor.Query<Node<T>>(null,"selected").ForEach( node => {
+                count++;
+                Rect nodeRect = node.AbsoluteRect();
+                newPos.x += -nodeRect.x - nodeRect.width/2;
+                newPos.y += -nodeRect.y - nodeRect.height/2;
+                
+            });
+            if(count == 0) return;
+            newPos.x = (newPos.x/count * anchor.style.scale.value.value.x) + (windowRect.width/2);
+            newPos.y = (newPos.y/count * anchor.style.scale.value.value.x) + (windowRect.height/2);
+            SetAnchorPosition(newPos);
+        }
+
+         protected void AnchorItemPositionFromMouse(IMouseEvent e, out Vector2 position){
+            Vector2 anchorPosition = anchor.PositionToVector2();
+            position = new(){
+                x = (e.localMousePosition.x * (1 / anchor.style.scale.value.value.x)) - (anchorPosition.x * (1 / anchor.style.scale.value.value.x)),
+                y = (e.localMousePosition.y * (1 / anchor.style.scale.value.value.x)) - (anchorPosition.y * (1 / anchor.style.scale.value.value.x))
+            };
+        }
+
+        
     }
 
 }

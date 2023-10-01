@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Linq;
 using ProvenceECS.Network;
+using System.Threading.Tasks;
 
 namespace ProvenceECS.Mainframe{
 
@@ -99,6 +100,14 @@ namespace ProvenceECS.Mainframe{
                     return;
                 }
             }
+        }
+
+        void OnFocus(){
+            entityViewer.windowFocused = true;
+        }
+
+        void OnLostFocus(){
+            entityViewer.windowFocused = false;
         }
 
         public override void OnEnable(){            
@@ -223,7 +232,7 @@ namespace ProvenceECS.Mainframe{
                 entityViewer.SetWorld(chosenKey);
                 EntityViewerSaveData data = Helpers.LoadFromSerializedFile<EntityViewerSaveData>(ProvenceCollection<AssetData>.dataPath + "/EntityViewer/" + chosenKey.id + ".meglo");
                 if(data != null){
-                    entityViewer.LoadPositions(data);
+                    entityViewer.LoadSaveData(data);
                     bubbleSelection = data.bubbleSelection;
                 }
                 chosenKey.eventManager.Clear<EditorSelectEntities>();

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -12,6 +13,10 @@ namespace ProvenceECS{
             world.eventManager.Raise(pEvent);
         }
 
+        public static async void DelayRaise<T>(this T pEvent, World world, int delay) where T : ProvenceEventArgs{
+            await Task.Delay(delay);
+            world.eventManager.Raise(pEvent);
+        }
         public static string SerializeObject<T>(this T obj){
             return JsonConvert.SerializeObject(obj, Formatting.None, Helpers.baseSerializerSettings);
         }
@@ -293,7 +298,7 @@ namespace ProvenceECS{
                 }
             }
 
-            new EditorSelectEntities(world, entitiesToSelect).Raise(world);
+            new EditorSelectEntities(world, entitiesToSelect).DelayRaise(world,100);
 
             return newEntities;
         }
