@@ -663,27 +663,15 @@ namespace ProvenceECS.Mainframe{
         }
     }
 
-    public class EntityViewerSaveData{
-        public Vector2 anchorPosition;
-        public Dictionary<Entity,Vector2> entityNodePositions;
-        public Dictionary<Entity,byte> layerCache;
+    public class EntityViewerSaveData : NodeViewerSaveData<Entity>{
         public bool bubbleSelection;
-        public float scale;
 
         public EntityViewerSaveData(){
-            this.entityNodePositions = new Dictionary<Entity, Vector2>();
-            this.layerCache = new();
-            this.anchorPosition = new Vector2();
             this.bubbleSelection = true;
-            this.scale = 1f;
         }
 
-        public EntityViewerSaveData(Node<Entity>[] nodeCache):this(){
-            this.entityNodePositions = new Dictionary<Entity, Vector2>();
-            for(int i = 0; i < nodeCache.Length; i++){
-                entityNodePositions[nodeCache[i].key] = nodeCache[i].PositionToVector2();
-                layerCache[nodeCache[i].key] = nodeCache[i].layer;
-            }
+        public EntityViewerSaveData(Node<Entity>[] nodeCache): base(nodeCache){
+            this.bubbleSelection = true;
         }
     }
 
@@ -815,21 +803,7 @@ namespace ProvenceECS.Mainframe{
         }
 
         public void LoadSaveData(EntityViewerSaveData data){
-            lastRestingPosition = data.anchorPosition;
-            anchor.style.left = data.anchorPosition.x;
-            anchor.style.top = data.anchorPosition.y;
-            coordDisplay.text = "[" + data.anchorPosition.x + "," + data.anchorPosition.y + "]";
-            anchor.style.scale = new StyleScale(new Scale(new(data.scale,data.scale,data.scale)));
-
-            foreach(KeyValuePair<Entity,Vector2> kvp in data.entityNodePositions){
-                if(nodeCache.ContainsKey(kvp.Key)){
-                    Node<Entity> node = nodeCache[kvp.Key];
-                    node.style.left = kvp.Value.x;
-                    node.style.top = kvp.Value.y;
-                    node.lastRestingPosition = kvp.Value;
-                    node.layer = data.layerCache.ContainsKey(kvp.Key) ? data.layerCache[kvp.Key] :  (byte)0;
-                }
-            }
+            LoadSaveData((NodeViewerSaveData<Entity>)data);
         }
 
         public void InspectorUpdate(InspectorUpdateEvent args){
@@ -850,9 +824,9 @@ namespace ProvenceECS.Mainframe{
 
                         anchor.Add(newNode); 
 
-                        newNode.style.left = lastNodePosition.x;
-                        newNode.style.top = lastNodePosition.y;
-                        newNode.lastRestingPosition = lastNodePosition;
+                        newNode.style.left = mouseToAnchorPosition.x;
+                        newNode.style.top = mouseToAnchorPosition.y;
+                        newNode.lastRestingPosition = mouseToAnchorPosition;
                         
                         newNode.RegisterCallback<MouseDownEvent>(e =>{
                             if(e.button == 0) {

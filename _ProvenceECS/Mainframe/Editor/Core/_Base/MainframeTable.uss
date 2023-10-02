@@ -119,7 +119,7 @@ TableWrapper{
     top: 0px;
     left: 0px;
 
-    max-width: 125px;
+    width: 125px;
     max-height:40px;
 
     overflow: hidden;

@@ -341,7 +341,7 @@ namespace ProvenceECS.Mainframe{
             this.lastRestingPosition = new Vector2(0,0);
             
             this.eventManager = new EventManager<MainframeUIArgs>();
-            this.key = default(T);
+            this.key = default;
             this.icon = null;
             this.layer = 0;
             InitializeElement();
@@ -383,12 +383,34 @@ namespace ProvenceECS.Mainframe{
 
     public class RedrawNodeViewer: MainframeUIArgs{}
 
+    public class NodeViewerSaveData<T>{
+        public Vector2 anchorPosition;
+        public Dictionary<T,Vector2> nodePositions;
+        public Dictionary<T,byte> layerCache;
+        public float scale;
+
+        public NodeViewerSaveData(){
+            this.nodePositions = new Dictionary<T, Vector2>();
+            this.layerCache = new();
+            this.anchorPosition = new Vector2();
+            this.scale = 1f;
+        }
+
+        public NodeViewerSaveData(Node<T>[] nodeCache):this(){
+            this.nodePositions = new Dictionary<T, Vector2>();
+            for(int i = 0; i < nodeCache.Length; i++){
+                nodePositions[nodeCache[i].key] = nodeCache[i].PositionToVector2();
+                layerCache[nodeCache[i].key] = nodeCache[i].layer;
+            }
+        }
+    }
+
     public class NodeViewer<T> : VisualElement{
 
         public bool windowFocused;
 
         protected Vector2 lastMousePosition;        
-        protected Dictionary<Entity,Node<T>> nodeCache;
+        protected Dictionary<T,Node<T>> nodeCache;
         protected Vector2 lastRestingPosition;
         protected bool isDragging;
         protected bool hasDraggedAnchor;
@@ -400,18 +422,26 @@ namespace ProvenceECS.Mainframe{
         protected ProvenceText resetButton;
 
         protected byte currentLayer;
+        protected Vector2 gridSize;
+
+        protected Vector2 mouseToAnchorPosition;
 
         public new class UxmlFactory : UxmlFactory<NodeViewer<T>> {}
 
         public NodeViewer(){             
             this.windowFocused = false;           
-            this.nodeCache = new Dictionary<Entity, Node<T>>();
+            this.nodeCache = new Dictionary<T, Node<T>>();
             this.lastMousePosition = new Vector2(0,0);
             this.lastRestingPosition = new Vector2(0,0);
             this.isDragging = false;
             this.hasDraggedAnchor = false;
-            this.eventManager = new EventManager<MainframeUIArgs>();   
+            this.eventManager = new EventManager<MainframeUIArgs>(); 
+
             this.currentLayer = 0;
+            this.gridSize = new(140,50);
+            
+            this.mouseToAnchorPosition = new();
+
             InitializeElement();
             RegisterEventListeners();
         }
@@ -447,6 +477,11 @@ namespace ProvenceECS.Mainframe{
                 hasDraggedAnchor = true;
             });
 
+            this.RegisterCallback<MouseMoveEvent>(e => {
+                AnchorItemPositionFromMouse(e, out Vector2 pos);
+                mouseToAnchorPosition = pos;
+            });
+
             resetButton.RegisterCallback<MouseDownEvent>(e => {
                 if(e.button == 0) ResetDrag();
             });
@@ -455,11 +490,37 @@ namespace ProvenceECS.Mainframe{
                 ZoomWindow(e);
             });
             this.RegisterCallback<KeyDownEvent>(e =>{
+                if(e.target != this) return;
                 if(e.keyCode == KeyCode.G){                    
                     e.StopPropagation();
+                    if(e.ctrlKey) GridSelection();
+                    FrameSelection();
+                }
+                if(e.keyCode == KeyCode.H){
+                    e.StopPropagation();
+                    if(e.ctrlKey) RowSelection();
+                    else ColumnSelection();
                     FrameSelection();
                 }
             });
+        }
+
+        public void LoadSaveData(NodeViewerSaveData<T> data){
+            SetAnchorPosition(data.anchorPosition);
+            anchor.style.left = data.anchorPosition.x;
+            anchor.style.top = data.anchorPosition.y;
+            coordDisplay.text = "[" + data.anchorPosition.x + "," + data.anchorPosition.y + "]";
+            anchor.style.scale = new StyleScale(new Scale(new(data.scale,data.scale,data.scale)));
+
+            foreach(KeyValuePair<T,Vector2> kvp in data.nodePositions){
+                if(nodeCache.ContainsKey(kvp.Key)){
+                    Node<T> node = nodeCache[kvp.Key];
+                    node.style.left = kvp.Value.x;
+                    node.style.top = kvp.Value.y;
+                    node.lastRestingPosition = kvp.Value;
+                    node.layer = data.layerCache.ContainsKey(kvp.Key) ? data.layerCache[kvp.Key] :  (byte)0;
+                }
+            }
         }
 
         protected void StartDragging(MouseDownEvent e){
@@ -540,6 +601,88 @@ namespace ProvenceECS.Mainframe{
             SetAnchorPosition(newPos);
         }
 
+        protected void GridSelection(){
+            List<Node<T>> selectedNodes = new();
+            anchor.Query<Node<T>>(null,"selected").ForEach( node => {selectedNodes.Add(node);});
+            if(selectedNodes.Count == 0) return;
+            Vector2 furthestOut = selectedNodes.First().PositionToVector2();
+
+            foreach(Node<T> node in selectedNodes){
+                Vector2 position = node.PositionToVector2();
+                if(position.x < furthestOut.x) furthestOut.x = position.x;
+                if(position.y < furthestOut.y) furthestOut.y = position.y;
+            }
+
+            selectedNodes = selectedNodes.OrderBy(node => node.PositionToVector2().y).ThenBy(node => node.PositionToVector2().x).ToList();
+            int size = Mathf.CeilToInt(Mathf.Sqrt(selectedNodes.Count));
+        
+            int index = 0;
+            for(int y = 0; y < size; y++){
+                for(int x = 0; x < size; x++){
+                    if(index < selectedNodes.Count){
+                        Vector2 newPosition = new(){
+                            x = furthestOut.x + gridSize.x * x,
+                            y = furthestOut.y + gridSize.y * y
+                        };
+                        selectedNodes[index].style.left = newPosition.x;
+                        selectedNodes[index].style.top = newPosition.y;
+                        selectedNodes[index].lastRestingPosition = newPosition;
+                    }                    
+                    index++;
+                }
+            }
+        }
+
+        protected void ColumnSelection(){
+            List<Node<T>> selectedNodes = new();
+            anchor.Query<Node<T>>(null,"selected").ForEach( node => {selectedNodes.Add(node);});
+            if(selectedNodes.Count == 0) return;
+            Vector2 furthestOut = selectedNodes.First().PositionToVector2();
+
+            foreach(Node<T> node in selectedNodes){
+                Vector2 position = node.PositionToVector2();
+                if(position.x < furthestOut.x) furthestOut.x = position.x;
+                if(position.y < furthestOut.y) furthestOut.y = position.y;
+            }
+            
+            selectedNodes = selectedNodes.OrderBy(node => node.PositionToVector2().y).ThenBy(node => node.PositionToVector2().x).ToList();
+
+            for(int y = 0; y < selectedNodes.Count; y++){
+                Vector2 newPosition = new(){
+                    x = furthestOut.x,
+                    y = furthestOut.y + gridSize.y * y
+                };
+                selectedNodes[y].style.left = newPosition.x;
+                selectedNodes[y].style.top = newPosition.y;
+                selectedNodes[y].lastRestingPosition = newPosition;                    
+            }
+        }
+
+        protected void RowSelection(){
+            List<Node<T>> selectedNodes = new();
+            anchor.Query<Node<T>>(null,"selected").ForEach( node => {selectedNodes.Add(node);});
+            if(selectedNodes.Count == 0) return;
+            Vector2 furthestOut = selectedNodes.First().PositionToVector2();
+
+            foreach(Node<T> node in selectedNodes){
+                Vector2 position = node.PositionToVector2();
+                if(position.x < furthestOut.x) furthestOut.x = position.x;
+                if(position.y < furthestOut.y) furthestOut.y = position.y;
+            }
+            
+            selectedNodes = selectedNodes.OrderBy(node => node.PositionToVector2().x).ThenBy(node => node.PositionToVector2().y).ToList();
+
+            for(int x = 0; x < selectedNodes.Count; x++){
+                Vector2 newPosition = new(){
+                    x = furthestOut.x + gridSize.x * x,
+                    y = furthestOut.y 
+                };
+                selectedNodes[x].style.left = newPosition.x;
+                selectedNodes[x].style.top = newPosition.y;
+                selectedNodes[x].lastRestingPosition = newPosition;                    
+            }
+        }
+
          protected void AnchorItemPositionFromMouse(IMouseEvent e, out Vector2 position){
             Vector2 anchorPosition = anchor.PositionToVector2();
             position = new(){
@@ -547,7 +690,6 @@ namespace ProvenceECS.Mainframe{
                 y = (e.localMousePosition.y * (1 / anchor.style.scale.value.value.x)) - (anchorPosition.y * (1 / anchor.style.scale.value.value.x))
             };
         }
-
         
     }
 

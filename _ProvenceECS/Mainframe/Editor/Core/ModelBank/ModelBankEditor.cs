@@ -26,7 +26,7 @@ namespace ProvenceECS.Mainframe{
         protected Texture delIcon;
         protected Texture caretIcon;
 
-        [MenuItem("ProvenceECS/Model Bank")]
+        [MenuItem("ProvenceECS/Model Bank &2")]
         public static void ShowWindow(){
             ModelBankEditor window = GetWindow<ModelBankEditor>();
         }

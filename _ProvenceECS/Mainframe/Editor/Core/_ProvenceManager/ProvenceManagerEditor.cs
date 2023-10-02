@@ -102,13 +102,13 @@ namespace ProvenceECS.Mainframe{
             }
         }
 
-        void OnFocus(){
+        /* void OnFocus(){
             entityViewer.windowFocused = true;
         }
 
         void OnLostFocus(){
             entityViewer.windowFocused = false;
-        }
+        } */
 
         public override void OnEnable(){            
             foreach(World world in ProvenceManager.Instance.worlds.Values){
