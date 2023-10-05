@@ -10,7 +10,7 @@
         <MenuBar>
             <ListItem>
                 <ListItemText name="select-menu-button" class="list-item-button alternate" text="Select"/>
-                <ListItemText name="archetype-menu-button" class="list-item-button alternate" text="Archetype"/>
+                <ListItemText name="actor-manual-button" class="list-item-button alternate" text="Manual Entry"/>
             </ListItem>
         </MenuBar>
         <TableWrapper>
@@ -55,14 +55,14 @@
         </TableWrapper>
 
         <Div name="drop-downs">
-            <DropDownMenu name="archetype-menu">
+            <!-- <DropDownMenu name="archetype-menu">
                 <ListItem>
                     <ListItemText class="list-item-button third-alternate" text="Make Archetype"/>
                 </ListItem>
                 <ListItem class="alternate">
                     <ListItemText class="list-item-button third-alternate" text="Clone Archetype"/>
                 </ListItem>
-            </DropDownMenu>
+            </DropDownMenu> -->
             <DropDownMenu name="component-list-context-menu">
                 <ListItem>
                     <ListItemText name="component-list-context-menu-remove-button" class="list-item-button third-alternate" text="Remove Component"/>

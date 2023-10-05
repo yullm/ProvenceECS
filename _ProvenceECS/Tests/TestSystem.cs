@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using ProvenceECS.Network;
 using System.Collections.Generic;
+using Sjena.Movement;
+using Ransacked.AI;
+using Sjena.Mainframe;
+using ProvenceECS.Mainframe;
 
 namespace ProvenceECS{
     [ProvencePacket(666)]
@@ -70,15 +74,55 @@ namespace ProvenceECS{
     }
 
     public class TestSystemB : ProvenceSystem{
-        
-        public override void Awaken(WakeSystemEvent args){}
+
+        public Entity tempActor;
+        protected GameObject tempActorGO;
+
+        public TestSystemB(){
+            this.tempActor = null;
+        }
 
         protected override void RegisterEventListeners(){
-            
+            //world.eventManager.RemoveListener<WakeSystemEvent>(Awaken);            
+            if(Application.isPlaying){
+                //world.eventManager.AddListener<WakeSystemEvent>(Awaken,1);
+                world.eventManager.AddListener<WorldUpdateEvent>(Tick);
+            }
         }
 
         protected override void DeregisterEventListeners(){
+            world.eventManager.RemoveListener<WorldUpdateEvent>(Tick);
+        }
 
+        public override void Awaken(WakeSystemEvent args){
+            /* if(Application.isPlaying){
+                FactionMember member = world.AddComponent(tempActor, new FactionMember(FactionDataKeys.Primary)).component;
+
+                EntityHandle newEntity = world.CreateEntity();
+                FactionMember newMember = newEntity.AddComponent(new FactionMember(FactionDataKeys.Primary)).component;
+
+                Debug.Log(newMember.factionData.alignment);
+                member.factionData.alignment = FactionAlignment.EVIL;
+                Debug.Log(newMember.factionData.alignment);
+            } */
+        }
+
+        protected void Tick(WorldUpdateEvent args){
+            //HeightTick(args);
+            if(Input.GetMouseButtonDown(0)){
+                if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, LayerMask.GetMask("Tile"))){
+                    Vector3 point = hit.collider.gameObject.transform.parent.transform.position.Snap();
+                    Entity tileEntity = world.eventManager.RaiseReturn<TileAtPointCheck,Entity>(new (point));
+                    if(tileEntity != null)TestFindPath(tileEntity);
+                }
+            }
+        }  
+
+        protected void TestFindPath(Entity goal){   
+            TilePath path = world.eventManager.RaiseReturn<FindPathRequest,TilePath>(new FindPathRequest(tempActor,goal));
+            if(path != null){
+                new RegisterQueueAction(tempActor, new PathQueueAction(path)).Raise(world);
+            }
         }
         
     }

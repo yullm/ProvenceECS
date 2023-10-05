@@ -142,7 +142,7 @@ namespace ProvenceECS.Mainframe{
 
                     GameObject asset = this.LoadModel(entry.name);
                     if(asset != null){
-                        modelHandle.component.root = Object.Instantiate(asset,entityObj.transform.position + entry.positionOffset, entityObj.transform.rotation, entityObj.transform);
+                        modelHandle.component.root = Object.Instantiate(asset,entityObj.transform.position + (entityObj.transform.rotation * entry.positionOffset), entityObj.transform.rotation, entityObj.transform);
                         modelHandle.component.root.transform.Rotate(entry.rotationOffset);
                         Vector3 localScale = modelHandle.component.root.transform.localScale;
                         modelHandle.component.root.transform.localScale = Vector3.Scale(localScale,entry.scaleOffset);

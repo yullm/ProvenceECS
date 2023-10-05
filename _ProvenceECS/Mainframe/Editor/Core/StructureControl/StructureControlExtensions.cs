@@ -50,14 +50,14 @@ namespace ProvenceECS.Mainframe{
             }
         }
 
-        protected static void CreateControl<V>(StructureControl<List<V>> control){
+        protected static void CreateControl<V>(StructureControl<List<V>> control) where V : new(){
             Div container = new Div();
             ListItem addBar = new ListItem().AddToClassList("spacer","alternate");
             addBar.AddDiv().AddToClassList("filler");
             addBar.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/plus.png"));
             addBar.eventManager.AddListener<MouseClickEvent>(e => {
                 if(e.button != 0) return;
-                control.structure.Add(default);
+                control.structure.Add(new V());
                 control.eventManager.Raise(new StructureControlUpdated<List<V>>(control));
                 DrawListControls(control, container);
             });
@@ -88,6 +88,19 @@ namespace ProvenceECS.Mainframe{
                     structureControl.eventManager.AddListener<StructureControlUpdated<V>>(e => {
                         control.eventManager.Raise(new StructureControlUpdated<List<V>>(control));
                     });
+
+                    ListItem titleItem = new();
+                    titleItem.MakeShelf(typeof(V).Name, out Div shelf);
+                    shelf.Add(structureControl);
+
+                    ListItemImage delButton = titleItem.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/times.png")).AddToClassList("selectable","hoverable","icon");
+                    delButton.eventManager.AddListener<MouseClickEvent>(e => {
+                        control.structure.RemoveAt(index);
+                        control.eventManager.Raise(new StructureControlUpdated<List<V>>(control));
+                        DrawListControls<V>(control, container);
+                    });
+                    
+                    container.Add(titleItem,shelf);
                 }
             }
         }
@@ -126,6 +139,23 @@ namespace ProvenceECS.Mainframe{
                 control.eventManager.Raise<StructureControlUpdated<Model>>(new StructureControlUpdated<Model>(control));
             });
             control.Add(keySelectorItem);
+        }
+
+        protected static void CreateControl(StructureControl<SubActorEntry> control){
+            ListItem keyItem = new();
+            HashSet<string> keys = ProvenceManager.Collections<ActorManualEntry>().Keys.ToSet();
+            KeySelectorElement keySelector = keyItem.AddKeySelector("Actor Key:",control.structure.key,keys);
+            keySelector.eventManager.AddListener<MainframeKeySelection<string>>(e=>{
+                control.structure.key = e.value;
+                control.eventManager.Raise(new MainframeKeySelection<string>(e.value));
+                control.eventManager.Raise(new StructureControlUpdated<SubActorEntry>(control));
+            });
+            FieldControl<Vector3> posControl = new (control.structure.position,"entry-position","position");
+            posControl.eventManager.AddListener<FieldControlUpdated<Vector3>>(e => {
+                control.structure.position = e.control.value;
+                control.eventManager.Raise(new StructureControlUpdated<SubActorEntry>(control));
+            });
+            control.Add(keyItem,posControl);
         }
 
     }

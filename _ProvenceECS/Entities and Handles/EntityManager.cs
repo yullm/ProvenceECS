@@ -5,6 +5,11 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 namespace ProvenceECS{
+
+    public class EntityManagerUpdate : ProvenceEventArgs{
+        public EntityManagerUpdate(){}
+    }
+
     [Serializable]
     public class EntityManager{   
         public World world;
@@ -24,7 +29,8 @@ namespace ProvenceECS{
             Entity entity = new Entity();
             entities.Add(entity);
             EntityHandle entityHandle = new EntityHandle(entity, world);
-            entityHandle.AddComponent<Name>(new Name(!name.Equals("") ? name : entity.ToString()));            
+            entityHandle.AddComponent<Name>(new Name(!name.Equals("") ? name : entity.ToString()));
+            new EntityManagerUpdate().Raise(world);            
             return entityHandle;
         }
 
@@ -32,7 +38,8 @@ namespace ProvenceECS{
             EntityHandle entityHandle = new EntityHandle(entity, world);
             if(!entities.Contains(entity)){
                 entities.Add(entity);
-                entityHandle.AddComponent<Name>(new Name(!name.Equals("") ? name : entity.ToString()));   
+                entityHandle.AddComponent<Name>(new Name(!name.Equals("") ? name : entity.ToString()));
+                new EntityManagerUpdate().Raise(world);        
             }
             return entityHandle;
         }
@@ -40,10 +47,11 @@ namespace ProvenceECS{
         public void RemoveEntity(Entity entity){
             if(!entities.Contains(entity)) return;
             entities.Remove(entity);
+            new EntityManagerUpdate().Raise(world);      
         }
 
         public EntityHandle LookUpEntity(Entity entity){
-            if(!entities.Contains(entity)) return null;
+            if(entity == null || !entities.Contains(entity)) return null;
             return new EntityHandle(entity, world);
         }
 
@@ -55,6 +63,7 @@ namespace ProvenceECS{
 
         public void ClearEntities(){
             entities.Clear();
+            new EntityManagerUpdate().Raise(world);            
         }
     }
     

@@ -574,7 +574,7 @@ namespace ProvenceECS.Mainframe{
 
         protected void ZoomWindow(WheelEvent e){
             float oldScale = anchor.style.scale.value.value.x ;
-            float newScale = Mathf.Clamp(oldScale + (e.delta.y *0.05f), 0.1f, 1);
+            float newScale = Mathf.Clamp(oldScale + (-e.delta.y * 0.05f), 0.1f, 1);
             float scaleChange = newScale - oldScale;
             AnchorItemPositionFromMouse(e, out Vector2 position);
             float x = -(position.x * scaleChange);
@@ -682,6 +682,7 @@ namespace ProvenceECS.Mainframe{
                 selectedNodes[x].lastRestingPosition = newPosition;                    
             }
         }
+
 
          protected void AnchorItemPositionFromMouse(IMouseEvent e, out Vector2 position){
             Vector2 anchorPosition = anchor.PositionToVector2();

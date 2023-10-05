@@ -17,6 +17,11 @@ namespace ProvenceECS{
             await Task.Delay(delay);
             world.eventManager.Raise(pEvent);
         }
+
+        public static U RaiseReturn<T,U>(this T pEvent, World world) where T : ProvenceEventArgs{
+            return world.eventManager.RaiseReturn<T,U>(pEvent);
+        }
+
         public static string SerializeObject<T>(this T obj){
             return JsonConvert.SerializeObject(obj, Formatting.None, Helpers.baseSerializerSettings);
         }

@@ -63,13 +63,17 @@ namespace ProvenceECS.Mainframe{
             
             if(root == null) return;
 
-            DropDownMenu archetypeMenu = root.Q<DropDownMenu>("archetype-menu");
+            /* DropDownMenu archetypeMenu = root.Q<DropDownMenu>("archetype-menu");
             root.Q<ListItemText>("select-menu-button").eventManager.AddListener<MouseClickEvent>(e =>{
                 if(e.button != 0) return;
             });
             root.Q<ListItemText>("archetype-menu-button").eventManager.AddListener<MouseClickEvent>(e =>{
                 if(e.button != 0) return;
                 archetypeMenu.Show(root,e);
+            }); */
+            root.Q<ListItemText>("actor-manual-button").eventManager.AddListener<MouseClickEvent>(e =>{
+                if(e.button != 0) return;
+                AddComponent<ProvenceCollectionInstance<ActorManualEntry>>();
             });
             root.Q<ListItem>("add-component-button").eventManager.AddListener<MouseClickEvent>(AddComponentButtonClicked);
 
@@ -141,7 +145,7 @@ namespace ProvenceECS.Mainframe{
         protected void AddComponent<T>() where T : ProvenceComponent, new(){
             if(typeof(T) == typeof(Name)) return;
             if(chosenKey != null && chosenKey.GetComponent<T>() == null){
-                chosenKey.AddComponent<T>();
+                chosenKey.GetOrCreateComponent<T>();
                 eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
                 eventManager.Raise<DrawColumnEventArgs<ProvenceComponent>>(new DrawColumnEventArgs<ProvenceComponent>(0));
             }

@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Unity.VisualScripting;
 using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 using UnityEditor;
@@ -288,6 +290,21 @@ namespace ProvenceECS.Mainframe{
             if(alternate) el.AddToClassList("alternate");
             if(secondAlternate) el.AddToClassList("second-alternate");
             if(thirdAlternate) el.AddToClassList("third-alternate");
+        }
+        
+        public void MakeShelf(string titleText, out Div container){
+            this.AddToClassList("spacer","selectable","container-title");
+            ListItemText title = AddTitle(titleText);
+            container = new Div();
+            container.AddToClassList("category-container");
+            
+            Div containerRef = container;
+            eventManager.AddListener<MouseClickEvent>(e =>{
+                if(e.button != 0) return;
+                if(title.ClassListContains("second-alternate")) title.RemoveFromClassList("second-alternate");
+                else title.AddToClassList("second-alternate");
+                containerRef.Toggle();
+            });
         }
 
     }
@@ -697,6 +714,10 @@ namespace ProvenceECS.Mainframe{
         protected Vector2 lastNodePosition;
         protected Vector2 boxSelectionStartingPosition;
 
+        protected bool checkOverlap = false;
+        protected float nameUpdateCounter = 0;
+        protected float nameUpdateGoal = 1f;
+
         //protected Div testDiv;
 
         public new class UxmlFactory : UxmlFactory<EntityViewer> {}
@@ -790,16 +811,32 @@ namespace ProvenceECS.Mainframe{
                         });
                     }
                 }
-            });  
+            });
+            this.RegisterCallback<KeyDownEvent>(e =>{
+                if(e.target != this) return;
+                if(e.keyCode == KeyCode.T){                    
+                    e.StopPropagation();
+                    if(e.ctrlKey) ArrangeByWorldSpace();
+                    FrameSelection();
+                }
+            });
             base.RegisterEventListeners();
         }
 
        
 
         public void SetWorld(World world){
+            if(this.world != null) world.eventManager.RemoveListener<EntityManagerUpdate>(EntityUpdate);
             this.world = world;
+            world.eventManager.AddListener<EntityManagerUpdate>(EntityUpdate);
             VerifyEntities();
             worldLabel.text = world.worldName;
+        }
+
+        protected async void EntityUpdate(EntityManagerUpdate args){
+            VerifyEntities();
+            await Task.Delay(100);
+            checkOverlap = true;
         }
 
         public void LoadSaveData(EntityViewerSaveData data){
@@ -807,8 +844,25 @@ namespace ProvenceECS.Mainframe{
         }
 
         public void InspectorUpdate(InspectorUpdateEvent args){
-            ResolveOverlapping();
-            VerifyEntities();
+            if(checkOverlap == true){
+                checkOverlap = false;
+                ResolveOverlapping();
+            }
+            nameUpdateCounter += Time.fixedDeltaTime;
+            if(nameUpdateCounter >= nameUpdateGoal){
+                nameUpdateCounter = 0;
+                UpdateNames();
+            }
+        }
+
+        protected void UpdateNames(){
+            foreach(Node<Entity> node in nodeCache.Values){
+                Entity entity = node.key;
+                ComponentHandle<Name> nameHandle = world.GetComponent<Name>(entity);
+                nodeCache[entity].label.text = nameHandle.component.name;
+                if(currentLayer != nodeCache[entity].layer) nodeCache[entity].style.display = DisplayStyle.None;
+                else nodeCache[entity].style.display = DisplayStyle.Flex;
+            }
         }
 
         protected void VerifyEntities(){
@@ -908,14 +962,9 @@ namespace ProvenceECS.Mainframe{
                             StopDraggingNodes(e.mousePosition);
                         });
                         
-                    }else{
-                        ComponentHandle<Name> nameHandle = world.GetComponent<Name>(entity);
-                        nodeCache[entity].label.text = nameHandle.component.name;
-                        if(currentLayer != nodeCache[entity].layer) nodeCache[entity].style.display = DisplayStyle.None;
-                        else nodeCache[entity].style.display = DisplayStyle.Flex;
                     }
                 }
-
+                
                 foreach(Entity entity in nodeCache.Keys.ToSet()){
                     if(!entities.Contains(entity)){
                         anchor.Remove(nodeCache[entity]);
@@ -984,6 +1033,7 @@ namespace ProvenceECS.Mainframe{
             this.UnregisterCallback<MouseMoveEvent>(DragNodes);
             draggingNodes.Clear();
             hasDraggedNodes = false;
+            checkOverlap = true;
         }
 
         protected void StartBoxSelection(MouseDownEvent e){
@@ -1049,6 +1099,66 @@ namespace ProvenceECS.Mainframe{
                 }
 
                 Selection.objects = newSelection.ToArray();
+            }
+        }
+
+        protected void ArrangeByWorldSpace(){
+            List<Node<Entity>> selectedNodes = new();
+            anchor.Query<Node<Entity>>(null,"selected").ForEach( node => {selectedNodes.Add(node);});
+            if(selectedNodes.Count == 0) return;
+            Vector2 furthestOut = selectedNodes.First().PositionToVector2();
+
+            Dictionary<int,Dictionary<int,Dictionary<int,Node<Entity>>>> positions = new();
+
+            int? highestX = null;
+
+            foreach(Node<Entity> node in selectedNodes){
+                if(world.GetComponent<UnityGameObject>(node.key)?.component.gameObject is GameObject go && go != null){
+                    Vector3 pos = go.transform.position.Snap();
+                    if(!positions.ContainsKey((int)pos.y)) positions[(int)pos.y] = new();
+                    if(!positions[(int)pos.y].ContainsKey((int)pos.z)) positions[(int)pos.y][(int)pos.z] = new();
+                    positions[(int)pos.y][(int)pos.z][(int)pos.x] = node;
+                    if(highestX == null || highestX < pos.x) highestX = (int)pos.x;
+                }
+                Vector2 position = node.PositionToVector2();
+                if(position.x < furthestOut.x) furthestOut.x = position.x;
+                if(position.y < furthestOut.y) furthestOut.y = position.y;
+            }
+            float currentY = furthestOut.y;
+
+            positions.Sort();
+            int minY = positions.First().Key;
+            int maxY = positions.Last().Key;
+            for(int y = maxY; y >= minY; y--){
+                if(positions.ContainsKey(y)){
+                    positions[y].Sort();
+                    int minZ = positions[y].First().Key;
+                    int maxZ = positions[y].Last().Key;  
+                    //float groupY = furthestOut.y + 
+                    for(int z = minZ; z <= maxZ; z++){
+                        if(positions[y].ContainsKey(z)){
+                            positions[y][z].Sort();
+                            int minX = positions[y][z].First().Key;
+                            int maxX = positions[y][z].Last().Key;
+                            for(int x = minX; x <= maxX; x++){   
+                                if(positions[y][z].ContainsKey(x)){
+                                    int diffZ = z - minZ;
+                                    int diffX = x - (int)highestX;
+                                    Vector2 newPosition = new(){
+                                        x = furthestOut.x + (gridSize.x * (maxX - x + ((int)highestX - maxX))),
+                                        y = currentY + (gridSize.y * diffZ)
+                                        //y = currentY + (gridSize.y * zCount)
+                                    };
+                                    positions[y][z][x].style.left = newPosition.x;
+                                    positions[y][z][x].style.top = newPosition.y;
+                                    positions[y][z][x].lastRestingPosition = newPosition;
+                                }
+                            }                            
+                        }
+                    }
+                    currentY += gridSize.y * (maxZ - minZ + 2);                                    
+                    //currentY += gridSize.y * (positions[y].Count + 2);
+                }
             }
         }
 
