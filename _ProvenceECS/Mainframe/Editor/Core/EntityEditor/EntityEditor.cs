@@ -1,7 +1,6 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
@@ -280,6 +279,13 @@ namespace ProvenceECS.Mainframe{
             titleItem.name = typeof(T).Name.ToLower() + "-control-title";
             titleItem.AddToClassList("spacer","structure-control-title");
             titleItem.AddTextDisplay(System.Text.RegularExpressions.Regex.Replace(component.GetType().Name, @"((?<=\p{Ll})\p{Lu})|((?!\A)\p{Lu}(?>\p{Ll}))", " $0"), true);
+            
+            Div toggle = titleItem.AddFloatingToggle(component.preventOverride);
+            toggle.eventManager.AddListener<FloatingToggleChange>(e => {
+                component.preventOverride = e.on;
+                eventManager.Raise(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
+            });
+            
             StructureControl<T> control = new StructureControl<T>(ref component, component.GetType().Name, false, chosenKey.world, chosenKey.entity);
             control.eventManager.AddListener<StructureControlUpdated<T>>(e =>{
                 eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));

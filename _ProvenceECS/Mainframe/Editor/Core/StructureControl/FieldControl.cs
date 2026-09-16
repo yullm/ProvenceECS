@@ -20,15 +20,21 @@ namespace ProvenceECS.Mainframe{
         public T value;
         protected string label;
         protected bool alternate;
+        protected bool fieldToggle;
+        protected int depth;
         
-        public FieldControl(T value, string name, string label = "", bool alternate = false, World world = null):base(alternate){
+        public FieldControl(T value, string name, string label = "", bool alternate = false, World world = null, int depth = 0):base(alternate){
             this.value = value;
             this.name = name;
             this.label = System.Text.RegularExpressions.Regex.Replace(label, @"((?<=\p{Ll})\p{Lu})|((?!\A)\p{Lu}(?>\p{Ll}))", " $0");
             this.alternate = alternate;
             this.world = world;
+            this.fieldToggle = false;
+            this.depth = depth;
             DrawListItem();            
         }
+
+        public FieldControl(T value, string name, string label, int depth) : this(value, name, label, false, null, depth){}
 
         protected void DrawListItem(){
             if(alternate) this.AddToClassList("alternate"); 
@@ -44,6 +50,7 @@ namespace ProvenceECS.Mainframe{
             }catch(Exception e){
                 Debug.LogWarning("Missing extension for type: " + typeof(T) +"; " + e);
             }
+            //if(depth == 0) AddFloatingToggle(fieldToggle);
         }
         
         protected void InitEnumControl(){

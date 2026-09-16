@@ -10,14 +10,14 @@ namespace ProvenceECS.Mainframe{
         public ModelLoaderSystem(){}
 
         protected override void RegisterEventListeners(){
-            world.eventManager.AddListener<ComponentAdded<Model>>(ModelAdded);
+            world.eventManager.AddListener<ComponentAddedEarly<Model>>(ModelAdded);
         }
 
         protected override void DeregisterEventListeners(){
-            world.eventManager.RemoveListener<ComponentAdded<Model>>(ModelAdded);
+            world.eventManager.RemoveListener<ComponentAddedEarly<Model>>(ModelAdded);
         }
 
-        protected void ModelAdded(ComponentAdded<Model> args){
+        protected void ModelAdded(ComponentAddedEarly<Model> args){
             ProvenceManager.ModelBank.LoadModel(args.handle);
         }
 

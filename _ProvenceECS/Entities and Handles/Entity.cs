@@ -40,7 +40,9 @@ namespace ProvenceECS{
             if(obj.GetType() != typeof(Entity))
                 if(obj.GetType() != typeof(string)) return false;
 
-            if(obj.GetType() == typeof(Entity)) return (id == ((Entity)obj).id);
+            if(obj.GetType() == typeof(Entity)){
+                return (id == ((Entity)obj).id);
+            }
             else return (id == (string)obj);
         }
 

@@ -61,6 +61,9 @@
                 <ListItem name="key-list-context-menu-edit-button" class="selectable hoverable">
                     <ListItemText class="list-item-text-display" text="Edit Name"/>
                 </ListItem>
+                <ListItem name="key-list-context-menu-duplicate-button" class="selectable hoverable">
+                    <ListItemText class="list-item-text-display" text="Duplicate Entry"/>
+                </ListItem>
                 <ListItem name="key-list-context-menu-remove-button" class="selectable hoverable">
                     <ListItemText class="list-item-text-display" text="Remove Entry"/>
                 </ListItem>

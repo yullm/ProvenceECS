@@ -29,13 +29,23 @@ namespace ProvenceECS.Mainframe.IO{
             if(!className.Equals("")){
                 using(StreamWriter sr = new StreamWriter(fs)){
                     bool hasNamespace = !namespacePath.Equals("");
+                    sr.WriteLine("using System.Collections.Generic;");
                     if(hasNamespace) sr.WriteLine("namespace " + namespacePath +"{");
 
                     sr.WriteLine( (hasNamespace ? "\t" : "") + "public class " + className + "{");
 
+                    HashSet<string> validNames = new();
                     foreach(string c in constants){
-                        sr.WriteLine((hasNamespace ? "\t" : "") + "\tpublic static readonly string " + ValidateName(c) +" = " + "\"" + c +"\";");
+                        string validName = ValidateName(c);
+                        validNames.Add(validName);
+                        sr.WriteLine((hasNamespace ? "\t" : "") + "\tpublic static readonly string " + validName +" = " + "\"" + c +"\";");
                     }
+                    
+                    sr.WriteLine((hasNamespace ? "\t" : "") + "\tpublic static HashSet<string> all = new(){");
+                    foreach(string validName in validNames){
+                        sr.WriteLine((hasNamespace ? "\t" : "") + $"\t\t{validName},");
+                    }
+                    sr.WriteLine((hasNamespace ? "\t" : "") + "\t};");
 
                     sr.WriteLine((hasNamespace ? "\t" : "") + "}");
 

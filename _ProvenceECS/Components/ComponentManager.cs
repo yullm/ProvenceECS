@@ -6,21 +6,40 @@ using Newtonsoft.Json;
 using System.Linq;
 using ProvenceECS.Mainframe;
 using UnityEngine;
+using System.Threading.Tasks;
+using Sjena.Selection;
+using Sjena.Interact;
 
 namespace ProvenceECS{
 
-    public class ComponentAdded<T> : ProvenceEventArgs where T : ProvenceComponent{
+    public class ComponentAddedEarly<T> : ProvenceEventArgs where T : ProvenceComponent{
         public ComponentHandle<T> handle;
 
-        public ComponentAdded(ComponentHandle<T> handle){
+        public ComponentAddedEarly(ComponentHandle<T> handle){
             this.handle = handle;
         }
     }
 
-    public class ComponentRemoved<T> : ProvenceEventArgs where T : ProvenceComponent{
+    public class ComponentAddedLate<T> : ProvenceEventArgs where T : ProvenceComponent{
         public ComponentHandle<T> handle;
 
-        public ComponentRemoved(ComponentHandle<T> handle){
+        public ComponentAddedLate(ComponentHandle<T> handle){
+            this.handle = handle;
+        }
+    }
+
+    public class ComponentRemovedEarly<T> : ProvenceEventArgs where T : ProvenceComponent{
+        public ComponentHandle<T> handle;
+
+        public ComponentRemovedEarly(ComponentHandle<T> handle){
+            this.handle = handle;
+        }
+    }
+
+    public class ComponentRemovedLate<T> : ProvenceEventArgs where T : ProvenceComponent{
+        public ComponentHandle<T> handle;
+
+        public ComponentRemovedLate(ComponentHandle<T> handle){
             this.handle = handle;
         }
     }
@@ -47,16 +66,18 @@ namespace ProvenceECS{
         }
 
         protected void AddInitial(WakeSystemEvent args){
-            foreach(Dictionary<Entity,ProvenceComponent> dict in new List<Dictionary<Entity,ProvenceComponent>>(initialCopy.Values)){
-                foreach(KeyValuePair<Entity,ProvenceComponent> kvp in dict){
+            foreach(Dictionary<Entity,ProvenceComponent> dict in initialCopy.Values.ToList()){
+                foreach(KeyValuePair<Entity,ProvenceComponent> kvp in dict.OrderBy(entry => entry.Value.sortingIndex)){
                     AddInitialComponent(kvp.Key,(dynamic) kvp.Value);
                 }
             }
         }
 
         protected void AddInitialComponent<T>(Entity entity, T component) where T : ProvenceComponent{
-            world.eventManager.Raise<ComponentAdded<T>>(new ComponentAdded<T>(new ComponentHandle<T>(entity,component,world)));
-            world.eventManager.Raise<CacheUpdate<T>>(new CacheUpdate<T>(world, GetAllComponentsAsDictionary<T>()));
+            ComponentHandle<T> handle = new ComponentHandle<T>(entity,component,world);
+            new ComponentAddedEarly<T>(handle).Raise(world);
+            new CacheUpdate<T>(world, GetAllComponentsAsDictionary<T>()).Raise(world);
+            new ComponentAddedLate<T>(handle).Raise(world);
         }
 
         public ComponentHandle<T> AddComponent<T>(Entity entity) where T : ProvenceComponent, new(){
@@ -73,10 +94,22 @@ namespace ProvenceECS{
                 componentDictionary[componentType] = new Dictionary<Entity,ProvenceComponent>();
                 world.systemManager.AddRequiredSystems(component.requiredSystems);
             }
+            T exisitingComponent = componentDictionary[componentType].ContainsKey(entity) ? componentDictionary[componentType][entity] as T : null;
+            ComponentHandle<T> handle;
+            if(exisitingComponent != null && (exisitingComponent.alwaysPreventOverride || exisitingComponent.preventOverride)){
+                handle = new ComponentHandle<T>(entity, exisitingComponent, world);
+                if(exisitingComponent.Merge(component)){  
+                    new ComponentAddedEarly<T>(handle).Raise(world);
+                    new CacheUpdate<T>(world, GetAllComponentsAsDictionary<T>()).Raise(world);
+                    new ComponentAddedLate<T>(handle).Raise(world);
+                }                
+                return handle;
+            }
             componentDictionary[componentType][entity] = component as T;
-            ComponentHandle<T> handle = new ComponentHandle<T>(entity, component, world);
-            world.eventManager.Raise<ComponentAdded<T>>(new ComponentAdded<T>(handle));
-            world.eventManager.Raise<CacheUpdate<T>>(new CacheUpdate<T>(world, GetAllComponentsAsDictionary<T>()));
+            handle = new ComponentHandle<T>(entity, component, world);
+            new ComponentAddedEarly<T>(handle).Raise(world);
+            new CacheUpdate<T>(world, GetAllComponentsAsDictionary<T>()).Raise(world);
+            new ComponentAddedLate<T>(handle).Raise(world);
             return handle;
         }
 
@@ -94,8 +127,9 @@ namespace ProvenceECS{
                         ComponentHandle<T> handle = new ComponentHandle<T>(entity,componentDictionary[typeof(T)][entity] as T,world);
                         componentDictionary[typeof(T)].Remove(entity);
                         if(componentDictionary[typeof(T)].Count == 0) componentDictionary.Remove(typeof(T));
-                        world.eventManager.Raise<ComponentRemoved<T>>(new ComponentRemoved<T>(handle));
-                        world.eventManager.Raise<CacheUpdate<T>>(new CacheUpdate<T>(world, GetAllComponentsAsDictionary<T>()));
+                        new ComponentRemovedEarly<T>(handle).Raise(world);
+                        new CacheUpdate<T>(world, GetAllComponentsAsDictionary<T>()).Raise(world);
+                        new ComponentRemovedLate<T>(handle).Raise(world);
                     }
                 }
             }catch(System.Exception e){
@@ -150,6 +184,11 @@ namespace ProvenceECS{
                 return new ComponentHandle<ProvenceComponent>(entity, component, world);
             }
             return null;
+        }
+
+        public bool TryGetComponent<T>(Entity entity, out ComponentHandle<T> componentHandle) where T : ProvenceComponent{
+            componentHandle = GetComponent<T>(entity);
+            return componentHandle != null;
         }
 
         public HashSet<ComponentHandle<ProvenceComponent>> GetAllComponents(Entity entity){

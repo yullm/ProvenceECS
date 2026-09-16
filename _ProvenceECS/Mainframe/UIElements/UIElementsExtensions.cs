@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.UIElements.Experimental;
 
 public static class UIElementsExtensions{
 
@@ -9,6 +10,11 @@ public static class UIElementsExtensions{
         for(int i = 0; i < elements.Length; i++){
             ve.Add(elements[i]);
         }
+    }
+
+    public static T AddToClassList<T>(this T ve, string className) where T : VisualElement{        
+        ve.AddToClassList(className);        
+        return ve;
     }
 
     public static T AddToClassList<T>(this T ve, params string[] classes) where T : VisualElement{
@@ -44,6 +50,13 @@ public static class UIElementsExtensions{
     public static void SetPosition(this VisualElement ve, Vector2 position){
         ve.style.left = position.x;
         ve.style.top = position.y;
+    }
+
+    public static void SetBorderColour(this VisualElement ve, Color color){
+        ve.style.borderTopColor = color;
+        ve.style.borderLeftColor = color;
+        ve.style.borderBottomColor = color;
+        ve.style.borderRightColor = color;
     }
    
 }

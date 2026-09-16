@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -83,6 +84,10 @@ namespace ProvenceECS{
 
         public ComponentHandle<T> GetComponent<T>(Entity entity) where T : ProvenceComponent{
             return componentManager.GetComponent<T>(entity);
+        }
+
+        public bool TryGetComponent<T>(Entity entity, out ComponentHandle<T> componentHandle) where T : ProvenceComponent{
+            return componentManager.TryGetComponent<T>(entity,out componentHandle);
         }
 
         public HashSet<ComponentHandle<ProvenceComponent>> GetAllComponents(Entity entity){

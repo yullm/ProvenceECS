@@ -60,6 +60,10 @@ TableWrapper{
     background-color: #262626;
 }
 
+.page-column.alternate{
+    flex-direction:row;
+}
+
 .column-scroller{
     flex: 1;
 }
@@ -68,6 +72,12 @@ TableWrapper{
     flex-direction: row;
     height: 100%;
     align-items: center;
+}
+
+.column-scroller.alternate .column-scroller #unity-content-container{
+    flex-direction: column;
+    height: auto;
+    align-items: stretch;
 }
 
 .drop-down-menu{
@@ -510,7 +520,29 @@ KeySelectorElement.alternate, HierarchySelectorElement.alternate{
     border-right-width: 0px;
 }
 
+.floating-toggle{
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    height: 20px;
+    width: 20px;
+    border-color: #aaaaaa;
+    border-width: 1px;
+}
 
+.floating-toggle.on{
+    background-color: #aaaaaa;
+}
+
+.field-control .floating-toggle{
+    position: relative;
+    right: auto;
+    top: auto;
+}
+
+/* .nested .floating-toggle{
+    display: none;
+} */
 
 /*creation prompt*/
 

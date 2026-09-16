@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Unity.VisualScripting;
-using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditor.UIElements;
@@ -14,6 +12,14 @@ using UnityEngine.UIElements;
 
 namespace ProvenceECS.Mainframe{
     
+    public class FloatingToggleChange : MainframeUIArgs{
+        public bool on;
+
+        public FloatingToggleChange(bool on){
+            this.on = on;
+        }
+    }
+
     //Elements
 
     public partial class ListItem : VisualElement{
@@ -123,6 +129,8 @@ namespace ProvenceECS.Mainframe{
         public ListItemIntInput AddIntField(int value = 0, bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
             ListItemIntInput el = new ListItemIntInput();
             el.value = value;
+            el.AddToClassList("list-item-input");
+            el.AddToClassList("list-item-int-input");
             el.RegisterValueChangedCallback(e =>{
                 eventManager.Raise<ListItemInputChange>(new ListItemInputChange(el));
             });
@@ -286,6 +294,25 @@ namespace ProvenceECS.Mainframe{
             return hierarchySelector;
         }
 
+        public Div AddFloatingToggle(bool on){
+            Div toggle = new();
+            toggle.AddToClassList("floating-toggle");
+            if(on) toggle.AddToClassList("on");
+            toggle.eventManager.AddListener<MouseClickEvent>(e => {
+                if(e.button == 0){
+                    if(toggle.ClassListContains("on")){
+                        toggle.eventManager.Raise(new FloatingToggleChange(false));
+                        toggle.RemoveFromClassList("on");
+                    }else{
+                        toggle.eventManager.Raise(new FloatingToggleChange(true));
+                        toggle.AddToClassList("on");
+                    }
+                }
+            });
+            this.Add(toggle);
+            return toggle;
+        }
+
         public static void AddAlternates(VisualElement el, bool alternate = false, bool secondAlternate = false, bool thirdAlternate = false){
             if(alternate) el.AddToClassList("alternate");
             if(secondAlternate) el.AddToClassList("second-alternate");
@@ -305,6 +332,24 @@ namespace ProvenceECS.Mainframe{
                 else title.AddToClassList("second-alternate");
                 containerRef.Toggle();
             });
+        }
+
+        public static ListItem DrawShelf(string titleText, out Div container){
+            ListItem titleItem = new ListItem();
+            titleItem.AddToClassList("spacer","selectable","container-title");
+            ListItemText title = titleItem.AddTitle(titleText);
+            container = new Div();
+            container.AddToClassList("category-container");
+            
+            Div containerRef = container;
+            titleItem.eventManager.AddListener<MouseClickEvent>(e =>{
+                if(e.button == 0){
+                    if(title.ClassListContains("second-alternate")) title.RemoveFromClassList("second-alternate");
+                    else title.AddToClassList("second-alternate");
+                    containerRef.Toggle();
+                }
+            });
+            return titleItem; 
         }
 
     }
@@ -598,12 +643,15 @@ namespace ProvenceECS.Mainframe{
         public ListItemText label;
         public ListItemText keyDisplay;
         public ListItemImage button;
+        public ListItemImage clearButton;
         protected Texture caretIcon;
+        protected Texture timesIcon;
 
         public KeySelectorElement(string labelText, string value, HashSet<string> keys){
             this.value = value;
             this.keys = keys;
             this.caretIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/caret-down.png");
+            timesIcon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/times.png");
             InitializeElement(labelText,value);
         }
 
@@ -626,6 +674,18 @@ namespace ProvenceECS.Mainframe{
                     value = ev.value;
                     this.eventManager.Raise<MainframeKeySelection<string>>(ev);
                 });
+            });
+
+            clearButton = new ListItemImage(timesIcon);
+            clearButton.AddToClassList("selectable","hoverable");
+
+            clearButton.eventManager.AddListener<MouseClickEvent>(e =>{
+                if(e.button != 0) return;                
+
+                keyDisplay.text = "";
+                value = "";
+                this.eventManager.Raise<MainframeKeySelection<string>>(new(""));
+               
             });
 
             this.Add(label,keyDisplay,button);

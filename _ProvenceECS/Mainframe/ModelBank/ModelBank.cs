@@ -11,6 +11,7 @@ namespace ProvenceECS.Mainframe{
         [JsonIgnore] [DontDisplayInManual] public GameObject root;
         [JsonIgnore] [DontDisplayInEditor] public Dictionary<string, int[]> anchors;
         [JsonIgnore] [DontDisplayInEditor] public Animator animatorComponent;
+        [JsonIgnore] [DontDisplayInEditor] public HashSet<string> animatorParameters;
         [JsonIgnore] [DontDisplayInEditor] public string currentState;
         [JsonIgnore] [DontDisplayInEditor] public Dictionary<string, ModelAnimationData> animationData;
         [JsonIgnore] [DontDisplayInEditor] public HashSet<Renderer> renderers;
@@ -19,20 +20,25 @@ namespace ProvenceECS.Mainframe{
         [JsonIgnore] [DontDisplayInEditor]public Vector3 scaleOffset;
 
         public Model(){
-            this.manualKey = "";
-            this.root = null;
-            this.anchors = new Dictionary<string, int[]>();
-            this.animatorComponent = null;
-            this.currentState = "";
-            this.animationData = new Dictionary<string, ModelAnimationData>();
-            this.renderers = new HashSet<Renderer>();
-            this.positionOffset = new Vector3();
-            this.rotationOffset = new Vector3();
-            this.scaleOffset = Vector3.one;
+            manualKey = "";
+            root = null;
+            anchors = new Dictionary<string, int[]>();
+            animatorComponent = null;
+            animatorParameters = new();
+            currentState = "";
+            animationData = new Dictionary<string, ModelAnimationData>();
+            renderers = new HashSet<Renderer>();
+            positionOffset = new Vector3();
+            rotationOffset = new Vector3();
+            scaleOffset = Vector3.one;
         }
 
         public Model(string key) : this(){
             this.manualKey = key;
+        }
+
+        public HashSet<Material> ModelMaterials(){
+            return renderers.Select(r => r.material).ToSet();
         }
 
     }
@@ -82,12 +88,12 @@ namespace ProvenceECS.Mainframe{
         public Dictionary<string, ModelAnimationData> animationData;
         
         public ModelBankEntry() : base(){
-            this.resourcePath = "";
-            this.positionOffset = new Vector3();
-            this.rotationOffset = new Vector3();
-            this.scaleOffset = Vector3.one;
-            this.anchors = new Dictionary<string, ModelAnchorData>();
-            this.animationData = new Dictionary<string, ModelAnimationData>();
+            resourcePath = "";
+            positionOffset = new Vector3();
+            rotationOffset = new Vector3();
+            scaleOffset = Vector3.one;
+            anchors = new Dictionary<string, ModelAnchorData>();
+            animationData = new Dictionary<string, ModelAnimationData>();
         }
 
         public ModelBankEntry(string name) : this(){
@@ -161,6 +167,9 @@ namespace ProvenceECS.Mainframe{
                         if(animatorComponent != null){
                             modelHandle.component.animatorComponent = animatorComponent;
                             modelHandle.component.animationData = entry.animationData;
+                            foreach(AnimatorControllerParameter param in modelHandle.component.animatorComponent.parameters){
+                                modelHandle.component.animatorParameters.Add(param.name);
+                            }
 
                             AnimationEventReciever reciever = modelHandle.component.root.AddComponent<AnimationEventReciever>();
                             reciever.entity = modelHandle.entity;

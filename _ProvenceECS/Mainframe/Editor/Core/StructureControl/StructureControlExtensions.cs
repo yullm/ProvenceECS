@@ -7,15 +7,15 @@ using UnityEngine.UIElements;
 namespace ProvenceECS.Mainframe{
 
     public partial class StructureControl<T> : VisualElement {
-
+        
         protected static void CreateControl<V>(StructureControl<HashSet<V>> control){
             Div container = new Div();
-            ListItem addBar = new ListItem().AddToClassList("spacer","alternate");
+            ListItem addBar = new ListItem().AddToClassList("spacer","alternate","add-bar");
             addBar.AddDiv().AddToClassList("filler");
             addBar.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/plus.png"));
             addBar.eventManager.AddListener<MouseClickEvent>(e => {
                 if(e.button != 0) return;
-                control.structure.Add(default(V));
+                control.structure.Add(default);
                 control.eventManager.Raise(new StructureControlUpdated<HashSet<V>>(control));
                 DrawSetControls(control, container);
             });
@@ -52,7 +52,7 @@ namespace ProvenceECS.Mainframe{
 
         protected static void CreateControl<V>(StructureControl<List<V>> control) where V : new(){
             Div container = new Div();
-            ListItem addBar = new ListItem().AddToClassList("spacer","alternate");
+            ListItem addBar = new ListItem().AddToClassList("spacer","alternate","add-bar");
             addBar.AddDiv().AddToClassList("filler");
             addBar.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/plus.png"));
             addBar.eventManager.AddListener<MouseClickEvent>(e => {
@@ -60,6 +60,26 @@ namespace ProvenceECS.Mainframe{
                 control.structure.Add(new V());
                 control.eventManager.Raise(new StructureControlUpdated<List<V>>(control));
                 DrawListControls(control, container);
+            });
+            control.Add(container,addBar);
+            DrawListControls(control, container);
+        }
+
+        protected static void CreateControl(StructureControl<List<ProvenceComponent>> control){
+            Div container = new Div();
+            ListItem addBar = new ListItem().AddToClassList("spacer","alternate","add-bar");
+            addBar.AddDiv().AddToClassList("filler");
+            addBar.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/plus.png"));
+            addBar.eventManager.AddListener<MouseClickEvent>(e => {
+                if(e.button != 0) return;
+                List<System.Type> existingTypes = new(){};
+                TypeSelector.TypeSelectorParameters searchParameters = new (typeof(ProvenceComponent), false, existingTypes);
+                TypeSelector.Open(searchParameters, args =>{
+                    ProvenceComponent component = System.Activator.CreateInstance(args.value) as ProvenceComponent;
+                    control.structure.Add(component);
+                    control.eventManager.Raise(new StructureControlUpdated<List<ProvenceComponent>>(control));
+                    DrawListControls(control, container);
+                });                
             });
             control.Add(container,addBar);
             DrawListControls(control, container);
@@ -122,6 +142,14 @@ namespace ProvenceECS.Mainframe{
                     control.eventManager.Raise(new StructureControlRefreshRequest(100));
                 }
             });
+            item.AddButton("Set To Model").eventManager.AddListener<MouseClickEvent>(e => {
+                if(e.button == 0){
+                    if(control.world != null && control.entity != null){
+                        ProvenceManager.Collections<V>().SetToModel(control.world,control.entity,control.structure.key);
+                        control.eventManager.Raise(new StructureControlUpdated<ProvenceCollectionInstance<V>>(control));
+                    }
+                }
+            });
             control.Add(item);
         }
 
@@ -156,6 +184,22 @@ namespace ProvenceECS.Mainframe{
                 control.eventManager.Raise(new StructureControlUpdated<SubActorEntry>(control));
             });
             control.Add(keyItem,posControl);
+        }
+
+        protected static void CreateControl<V>(StructureControl<ProvenceAsset<V>> control) where V : Object{
+            ListItem keyItem = new();
+            keyItem.AddLabel($"Resource Path:");
+            ListItemTextInput input = keyItem.AddTextField(control.structure.resourcePath);
+            input.eventManager.AddListener<ListItemInputCommit>(e =>{
+                try{
+                    control.structure.resourcePath = new(input.text);
+                    control.structure.asset = Resources.Load<V>(input.text);
+                    control.eventManager.Raise(new StructureControlUpdated<ProvenceAsset<V>>(control));
+                }catch(System.Exception ex){
+                    Debug.Log(ex);
+                }
+            });
+            control.Add(keyItem);
         }
 
     }

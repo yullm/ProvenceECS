@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -17,7 +18,11 @@ namespace ProvenceECS{
         }
 
         void Update(){
+            //try{
             world?.eventManager.Raise(new WorldUpdateEvent(world, Time.deltaTime));
+            /* }catch(Exception e){
+                Helpers.SerializeAndSaveToFile(e,@"./_ProvenceECSData/Mainframe/Errors/","UpdateError",".meglo");
+            } */
         }
 
         void LateUpate(){

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace ProvenceECS{
@@ -7,13 +8,17 @@ namespace ProvenceECS{
     public class ProvenceComponent{
         
         [DontDisplayInEditor] public string id;
-        [DontDisplayInEditor] public byte sortingIndex;
-        [DontDisplayInEditor] public HashSet<System.Type> requiredSystems;
+        [DontDisplayInEditor] [JsonIgnore] public byte sortingIndex;
+        [DontDisplayInEditor] [JsonIgnore] public HashSet<System.Type> requiredSystems;
+        [DontDisplayInEditor] public bool preventOverride;
+        [DontDisplayInEditor] public bool alwaysPreventOverride;
 
         public ProvenceComponent(){
-            this.id = System.Guid.NewGuid().ToString();
-            this.sortingIndex = 0;
-            this.requiredSystems = new HashSet<System.Type>();
+            id = System.Guid.NewGuid().ToString();
+            sortingIndex = 0;
+            requiredSystems = new HashSet<System.Type>();
+            preventOverride = false;
+            alwaysPreventOverride = false;
         }
 
         public ProvenceComponent(string id) : this(){
@@ -24,6 +29,10 @@ namespace ProvenceECS{
             ProvenceComponent clone = this.MemberwiseClone() as ProvenceComponent;
             clone.id = System.Guid.NewGuid().ToString();
             return clone;
+        }
+
+        public virtual bool Merge(ProvenceComponent otherComponent){
+            return true;
         }
 
     }

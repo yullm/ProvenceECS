@@ -11,6 +11,8 @@ using System.Linq;
 
 namespace ProvenceECS{
 
+    public enum AlphabetLetters {A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z};
+
     public class TickRateTimer{
 
         protected  float goal;
@@ -35,6 +37,10 @@ namespace ProvenceECS{
     public enum BooleanEnum {FALSE,TRUE};
 
     public class Helpers{
+
+        public static T CreateComponent<T>() where T : ProvenceComponent, new(){
+            return new T();
+        }
 
         public static JsonSerializerSettings baseSerializerSettings{
             get{

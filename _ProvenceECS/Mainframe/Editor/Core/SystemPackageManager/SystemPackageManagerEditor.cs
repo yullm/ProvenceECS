@@ -22,7 +22,7 @@ namespace ProvenceECS.Mainframe{
         
         protected Texture delIcon;
 
-        [MenuItem("ProvenceECS/System Package Manager")]
+        [MenuItem("ProvenceECS/System Package Manager &3")]
         public static void ShowWindow(){
             SystemPackageManagerEditor window = GetWindow<SystemPackageManagerEditor>();
         }

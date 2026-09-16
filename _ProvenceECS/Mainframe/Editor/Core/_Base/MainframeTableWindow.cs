@@ -197,22 +197,5 @@ namespace ProvenceECS.Mainframe{
             }
             
         }
-
-        protected ListItem DrawShelf(string titleText, out Div container){
-            ListItem titleItem = new ListItem();
-            titleItem.AddToClassList("spacer","selectable","container-title");
-            ListItemText title = titleItem.AddTitle(titleText);
-            container = new Div();
-            container.AddToClassList("category-container");
-            
-            Div containerRef = container;
-            titleItem.eventManager.AddListener<MouseClickEvent>(e =>{
-                if(e.button != 0) return;
-                if(title.ClassListContains("second-alternate")) title.RemoveFromClassList("second-alternate");
-                else title.AddToClassList("second-alternate");
-                containerRef.Toggle();
-            });
-            return titleItem; 
-        }
     }
 }

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.Linq;
+#if UNITY_EDITOR
 using UnityEditor.SceneManagement;
+#endif
 using System;
 using System.Threading.Tasks;
 
@@ -178,7 +180,6 @@ namespace ProvenceECS.Mainframe{
         public ColumnScroller(bool alternate) : this(){
             if(alternate) this.AddToClassList("alternate");
         }
-
     }
 
     public class DropDownMenu : VisualElement{
@@ -264,7 +265,7 @@ namespace ProvenceECS.Mainframe{
 
             public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc){
                 base.Init(ve, bag, cc);
-                ((img)ve).SetImage(Resources.Load<Texture>(textAttribute.GetValueFromBag(bag, cc)));
+                ((img)ve).SetImage(Resources.Load<Texture2D>(textAttribute.GetValueFromBag(bag, cc)));
             }
         }
 
@@ -404,7 +405,7 @@ namespace ProvenceECS.Mainframe{
             }
         }
     }
-
+#if UNITY_EDITOR
     public class NodeViewer<T> : VisualElement{
 
         public bool windowFocused;
@@ -581,7 +582,7 @@ namespace ProvenceECS.Mainframe{
             float y = -(position.y * scaleChange);
             anchor.style.scale = new StyleScale(new Scale(new(newScale,newScale,newScale)));            
             SetAnchorPosition(new(anchor.style.left.value.value + x, anchor.style.top.value.value + y));
-            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            if(!Application.isPlaying) EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         }
 
         protected void FrameSelection(){            
@@ -693,5 +694,5 @@ namespace ProvenceECS.Mainframe{
         }
         
     }
-
+#endif
 }

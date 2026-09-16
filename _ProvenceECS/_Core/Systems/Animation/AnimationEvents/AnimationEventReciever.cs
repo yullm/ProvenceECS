@@ -9,9 +9,9 @@ namespace ProvenceECS.Mainframe{
         public Entity entity;
         public World world;
 
-        public void AnimationEvent(string eventName){
+        public void AnimationEvent(string eventData){
             if(world != null && entity != null)
-                world.eventManager.Raise<AnimationEvent>(new AnimationEvent(entity, eventName));
+                new AnimationEvent(entity, eventData).Raise(world);
         }
 
     }

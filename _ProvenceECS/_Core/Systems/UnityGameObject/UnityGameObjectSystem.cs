@@ -43,16 +43,16 @@ namespace ProvenceECS{
         protected override void RegisterEventListeners(){
             //world.eventManager.AddListener<WakeSystemEvent>(LoadGameObjects,-2);
             world.eventManager.AddListener<WorldUpdateEvent>(Tick);
-            world.eventManager.AddListener<ComponentAdded<UnityGameObject>>(ComponentAdded);
-            world.eventManager.AddListener<ComponentRemoved<UnityGameObject>>(ComponentRemoved);
+            world.eventManager.AddListener<ComponentAddedEarly<UnityGameObject>>(ComponentAdded);
+            world.eventManager.AddListener<ComponentRemovedLate<UnityGameObject>>(ComponentRemoved);
             objectCache.StandardRegistration(world);
         }
 
         protected override void DeregisterEventListeners(){
             //world.eventManager.RemoveListener<WakeSystemEvent>(LoadGameObjects);
             world.eventManager.RemoveListener<WorldUpdateEvent>(Tick);
-            world.eventManager.RemoveListener<ComponentAdded<UnityGameObject>>(ComponentAdded);
-            world.eventManager.RemoveListener<ComponentRemoved<UnityGameObject>>(ComponentRemoved);
+            world.eventManager.RemoveListener<ComponentAddedEarly<UnityGameObject>>(ComponentAdded);
+            world.eventManager.RemoveListener<ComponentRemovedLate<UnityGameObject>>(ComponentRemoved);
             objectCache.StandardDeregistration(world);
         }
 
@@ -66,7 +66,7 @@ namespace ProvenceECS{
             }
         }
 
-        protected void ComponentAdded(ComponentAdded<UnityGameObject> args){
+        protected void ComponentAdded(ComponentAddedEarly<UnityGameObject> args){
             GameObject gameObject = args.handle.component.gameObject;
             if(gameObject != null)
                 gameObject.name = args.handle.entity.ToString();
@@ -84,7 +84,7 @@ namespace ProvenceECS{
             }
         }
 
-        protected void ComponentRemoved(ComponentRemoved<UnityGameObject> args){
+        protected void ComponentRemoved(ComponentRemovedLate<UnityGameObject> args){
             if(args.handle.component.gameObject != null)
                 UnityEngine.Object.DestroyImmediate(args.handle.component.gameObject);
         }

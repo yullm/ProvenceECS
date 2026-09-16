@@ -8,6 +8,7 @@ using ProvenceECS.Mainframe;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using UnityEditor;
+using System.Threading.Tasks;
 
 namespace ProvenceECS.Mainframe{
 
@@ -177,6 +178,14 @@ namespace ProvenceECS.Mainframe{
                                 keyListContextMenu.style.display = DisplayStyle.None;
                             });
 
+                            ListItem duplicateButton = keyListContextMenu.Q<ListItem>("key-list-context-menu-duplicate-button");
+                            duplicateButton.eventManager.ClearListeners();
+                            duplicateButton.eventManager.AddListener<MouseClickEvent>(ev=>{
+                                if(ev.button != 0) return;
+                                DuplicateManualEntry(key);
+                                keyListContextMenu.style.display = DisplayStyle.None;
+                            });
+
                             ListItem removeButton = keyListContextMenu.Q<ListItem>("key-list-context-menu-remove-button");
                             removeButton.eventManager.ClearListeners();
                             removeButton.eventManager.AddListener<MouseClickEvent>(ev=>{
@@ -205,7 +214,6 @@ namespace ProvenceECS.Mainframe{
         }
 
         protected virtual void SearchKeyList(string searchString){
-
             keyListScroller.Query<ListItem>().ForEach(item => {
                 item.style.display = DisplayStyle.Flex;
             });
@@ -266,6 +274,7 @@ namespace ProvenceECS.Mainframe{
             DrawTagList();
             VerifyTagComponents();
             DrawModelViewer();
+            root.Q<ListItemSearchBar>("entry-editor-search-bar").searchInput.eventManager.Raise(new ListItemInputChange(null));
         }
 
         protected virtual void DrawEntryTitle(){
@@ -335,6 +344,9 @@ namespace ProvenceECS.Mainframe{
             StructureControl<V> control = new StructureControl<V>(ref component,null,false,null,null,0,typeof(DontDisplayInManual));
             control.eventManager.AddListener<StructureControlUpdated<V>>(e =>{
                 eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
+            });
+            control.eventManager.AddListener<DrawColumnEventArgs<string>>(e =>{
+                eventManager.Raise<DrawColumnEventArgs<string>>(e);
             });
 
             container.Add(control);
@@ -460,6 +472,23 @@ namespace ProvenceECS.Mainframe{
                 eventManager.Raise<DrawColumnEventArgs<string>>(new DrawColumnEventArgs<string>(0));
             }
         }
+
+        protected virtual void DuplicateManualEntry(string key){
+            if(collection.ContainsKey(key)){
+                string newName = $"{key}-copy";
+                while(collection.ContainsKey(newName)) newName =  $"{newName}-copy";
+                U entry = new(){
+                    name = newName,
+                    tags = new(collection[key].tags.ToSet())
+                };
+                foreach(KeyValuePair<Type,ProvenceComponent> kvp in collection[key].components){
+                    entry.components[kvp.Key] = kvp.Value.Clone();
+                }
+                collection[newName] = entry;
+                eventManager.Raise(new SetSceneDirtyEvent(SceneManager.GetActiveScene()));
+                eventManager.Raise(new DrawColumnEventArgs<string>(0));
+            }
+        }
         
         protected virtual void AddComponentToEntry<V>() where V : ProvenceComponent, new(){
             if(collection.ContainsKey(chosenKey) && !collection[chosenKey].components.ContainsKey(typeof(V))){
@@ -512,7 +541,9 @@ namespace ProvenceECS.Mainframe{
             }
         }
 
-        protected abstract void LoadCollection();
+        protected virtual void LoadCollection(){
+            collection = ProvenceManager.Collections<U>();
+        }
 
         protected void SaveManual(SceneSavedEvent args){
             collection.Save();

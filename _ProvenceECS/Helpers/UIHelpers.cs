@@ -38,12 +38,19 @@ namespace ProvenceECS{
             Vector3 topLeft = Vector3.Min(screenPosition1, screenPosition2);
             Vector3 bottomRight = Vector3.Max(screenPosition1, screenPosition2);
 
-            return Rect.MinMaxRect(topLeft.x,topLeft.y,bottomRight.x, bottomRight.y);
+            return Rect.MinMaxRect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
         }
 
         public static Vector3 GetScreenRectPosition(Vector3 pos){
             Vector3 screenPosition = new Vector3(pos.x,pos.y,pos.z);
             screenPosition.y = Screen.height - screenPosition.y;
+            return screenPosition;
+        }
+
+        public static Vector3 GetScreenSpacePosition(Vector3 pos){
+            Vector3 screenPosition = new (pos.x,pos.y,0);
+            screenPosition.x = ((screenPosition.x / Screen.width) * 1920);
+            screenPosition.y = ((Screen.height - screenPosition.y) / Screen.height) * 1080;
             return screenPosition;
         }
 

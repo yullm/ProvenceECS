@@ -42,9 +42,9 @@ namespace ProvenceECS{
         protected ComponentCache<Child> childrenCache = new ComponentCache<Child>();
         
         protected override void RegisterEventListeners(){
-            /* world.eventManager.AddListener<ComponentRemoved<Parent>>(ParentRemoved);
-            world.eventManager.AddListener<ComponentRemoved<Child>>(ChildRemoved); */
-            //world.eventManager.AddListener<ComponentAdded<Child>>(ChildAdded);
+            /* world.eventManager.AddListener<ComponentRemovedLate<Parent>>(ParentRemoved);
+            world.eventManager.AddListener<ComponentRemovedLate<Child>>(ChildRemoved); */
+            //world.eventManager.AddListener<ComponentAddedEarly<Child>>(ChildAdded);
             world.eventManager.AddListener<WorldUpdateEvent>(Update);
             world.eventManager.AddListener<EditorPersistanceUpdateEvent>(Update);
 
@@ -53,9 +53,9 @@ namespace ProvenceECS{
         }
 
         protected override void DeregisterEventListeners(){
-            /* world.eventManager.RemoveListener<ComponentRemoved<Parent>>(ParentRemoved);
-            world.eventManager.RemoveListener<ComponentRemoved<Child>>(ChildRemoved); */
-            //world.eventManager.RemoveListener<ComponentAdded<Child>>(ChildAdded); 
+            /* world.eventManager.RemoveListener<ComponentRemovedLate<Parent>>(ParentRemoved);
+            world.eventManager.RemoveListener<ComponentRemovedLate<Child>>(ChildRemoved); */
+            //world.eventManager.RemoveListener<ComponentAddedEarly<Child>>(ChildAdded); 
             world.eventManager.RemoveListener<WorldUpdateEvent>(Update);
             world.eventManager.RemoveListener<EditorPersistanceUpdateEvent>(Update);
             
@@ -121,7 +121,7 @@ namespace ProvenceECS{
             }
         }
 
-        protected void ChildAdded(ComponentAdded<Child> args){
+        protected void ChildAdded(ComponentAddedEarly<Child> args){
             /* childrenCache[args.handle.entity] = args.handle;
             InitializeParent(args.handle.entity); */
         }

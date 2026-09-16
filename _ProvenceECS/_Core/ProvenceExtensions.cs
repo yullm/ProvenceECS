@@ -9,8 +9,13 @@ namespace ProvenceECS{
     
     public static partial class ProvenceExtensions{
 
-        public static void Raise<T>(this T pEvent, World world) where T : ProvenceEventArgs{
+        public static string TitleSpace(this string text){
+            return System.Text.RegularExpressions.Regex.Replace(text, @"((?<=\p{Ll})\p{Lu})|((?!\A)\p{Lu}(?>\p{Ll}))", " $0");
+        }
+
+        public static T Raise<T>(this T pEvent, World world) where T : ProvenceEventArgs{
             world.eventManager.Raise(pEvent);
+            return pEvent;
         }
 
         public static async void DelayRaise<T>(this T pEvent, World world, int delay) where T : ProvenceEventArgs{
@@ -137,33 +142,16 @@ namespace ProvenceECS{
                     object fieldValue = field.GetValue(component);
 
                     if(fieldValue is ProvenceComponent fieldComponent){
-                        if(componentCloneCache.ContainsKey(fieldComponent))
+                        // Check if the component is already cloned and cached
+                        if(componentCloneCache.ContainsKey(fieldComponent)){
+                            //Set the field value to the cached cloned component
                             field.SetValue(component, componentCloneCache[fieldComponent]);
-                        else{
+                        }else{
+                            // Clone the component and set the field value to the clone
                             field.SetValue(component, fieldComponent.Clone());
                         }
                         continue;
                     }
-
-                    // if(fieldValue is System.Collections.IEnumerable collection){
-                    //     System.Type[] genericTypes = collection.GetType().GenericTypeArguments;
-                    //     if(genericTypes.Length == 1 && collection.GetType().GenericTypeArguments[0].IsSubclassOf(typeof(ProvenceComponent))){
-
-                    //     }
-                    //     /* System.Type[] genericTypes = collection.GetType().GenericTypeArguments;
-                    //     for(int i = 0; i < genericTypes.Length; i++){
-                    //         if(genericTypes[i] == typeof(ProvenceComponent) || genericTypes[i].IsSubclassOf(typeof(ProvenceComponent))){ 
-                    //             if(collection is System.Collections.IDictionary dict){
-
-                    //             }else{
-                    //                 if(i == 0){
-                                        
-                    //                 }
-                    //             }
-                    //         }
-                    //     }  */
-                    // }                               
-
                 }
             }
 
@@ -266,6 +254,12 @@ namespace ProvenceECS{
             return value >= min && value <= max;
         }
 
+        /// Duplicates the given entities in the world, updates child-parent relationships, and selects the new entities in the editor.
+        /// 
+
+        /// The world in which to duplicate the entities.
+        /// The entities to duplicate.
+        /// A set of the newly created entities.
         public static HashSet<Entity> DuplicateEntities(this World world, params Entity[] entities){
             //keep log of parent child relations and then check coupling components and replace, store GOs for ease
             Dictionary<Entity,Entity> clonePairs = new Dictionary<Entity, Entity>();
@@ -320,6 +314,13 @@ namespace ProvenceECS{
                 floorY ? Mathf.Floor(vector3.y / gridSize) * gridSize : Mathf.Round(vector3.y / gridSize) * gridSize,
                 Mathf.Round(vector3.z / gridSize) * gridSize
             );
+        }
+
+        public static bool SearchSetInDictionary<T,J>(this Dictionary<T,HashSet<J>> dict, J item){
+            foreach(HashSet<J> set in dict.Values){
+                if(set.Contains(item)) return true;
+            }
+            return false;
         }
     }
 

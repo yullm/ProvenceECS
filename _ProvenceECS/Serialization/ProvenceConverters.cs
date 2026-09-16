@@ -34,11 +34,16 @@ namespace ProvenceECS{
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer){
             ProvenceAsset<T> asset = JsonConvert.DeserializeObject<ProvenceAsset<T>>(JToken.Load(reader).ToString());
+            if(asset == null) return null;
             if(!asset.resourcePath.Equals("")) asset.asset = Resources.Load<T>(asset.resourcePath);
             return asset;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer){
+            if(value == null){ 
+                writer.WriteNull();
+                return;
+            }
             JToken.FromObject(JsonConvert.SerializeObject(value)).WriteTo(writer);
         }
     }

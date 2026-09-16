@@ -11,11 +11,7 @@ namespace ProvenceECS{
 
     public abstract class ProvenceEventArgs{
 
-        public byte senderID;
-
-        public ProvenceEventArgs(){
-            this.senderID = 0;
-        }
+        public ProvenceEventArgs(){}
 
     }
 

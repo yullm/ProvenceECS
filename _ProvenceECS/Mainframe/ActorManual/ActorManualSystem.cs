@@ -34,14 +34,14 @@ namespace ProvenceECS.Mainframe{
             world.eventManager.AddListener<SetEntityToManualEntry<ActorManualEntry>>(SetEntityToManualEntry);
             world.eventManager.AddListener<CreateEntryInstance<ActorManualEntry>>(CreateEntryInstance);
             if(Application.isPlaying) world.eventManager.AddListener<WakeSystemEvent>(SetInitialInstances);
-            world.eventManager.AddListener<ComponentAdded<SubActors>>(SubActorAdded);
+            world.eventManager.AddListener<ComponentAddedEarly<SubActors>>(SubActorAdded);
         }
 
         protected override void DeregisterEventListeners(){
             world.eventManager.RemoveListener<SetEntityToManualEntry<ActorManualEntry>>(SetEntityToManualEntry);
             world.eventManager.RemoveListener<CreateEntryInstance<ActorManualEntry>>(CreateEntryInstance);
             world.eventManager.RemoveListener<WakeSystemEvent>(SetInitialInstances);
-            world.eventManager.RemoveListener<ComponentAdded<SubActors>>(SubActorAdded);
+            world.eventManager.RemoveListener<ComponentAddedEarly<SubActors>>(SubActorAdded);
         }
 
         protected void SetInitialInstances(WakeSystemEvent args){
@@ -51,7 +51,11 @@ namespace ProvenceECS.Mainframe{
         }
 
         protected void SetEntityToManualEntry(SetEntityToManualEntry<ActorManualEntry> args){
-            ProvenceManager.Collections<ActorManualEntry>().SetEntityToEntry(world, args.entity, args.key, args.position, args.rotation);    
+            //try{
+                ProvenceManager.Collections<ActorManualEntry>().SetEntityToEntry(world, args.entity, args.key, args.position, args.rotation);  
+            /* }catch(System.Exception e){
+                Debug.Log(e);
+            } */  
         }
 
         protected void CreateEntryInstance(CreateEntryInstance<ActorManualEntry> args){
@@ -60,7 +64,7 @@ namespace ProvenceECS.Mainframe{
 
 #region SubActor
 
-        protected void SubActorAdded(ComponentAdded<SubActors> args){
+        protected void SubActorAdded(ComponentAddedEarly<SubActors> args){
             Entity parentEntity = args.handle.entity;
             List<SubActorEntry> subActors = args.handle.component.subActors;
 
@@ -71,7 +75,7 @@ namespace ProvenceECS.Mainframe{
             
                 EntityHandle subHandle = world.LookUpEntity(entry.subEntity) ?? world.CreateEntity();
                 Vector3 pos = go.transform.position + (go.transform.rotation * entry.position);
-                SetEntityToManualEntry(new SetEntityToManualEntry<ActorManualEntry>(subHandle.entity,entry.key,pos));
+                //SetEntityToManualEntry(new SetEntityToManualEntry<ActorManualEntry>(subHandle.entity,entry.key,pos));
             }
         }
 

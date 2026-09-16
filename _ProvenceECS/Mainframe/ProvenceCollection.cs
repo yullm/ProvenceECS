@@ -37,6 +37,18 @@ namespace ProvenceECS.Mainframe{
 
     }
 
+    public class SetToEntryModel<T> : ProvenceEventArgs where T : ProvenceCollectionEntry{
+        public World world;
+        public Entity entity;
+        public string key;
+        
+        public SetToEntryModel(World world, Entity entity, string key){
+            this.world = world;
+            this.entity = entity;
+            this.key = key;
+        }
+    }
+
     [ProvencePacket(11)]
     public class CreateEntryInstance<T> : ProvenceEventArgs where T : ProvenceCollectionEntry{
         
@@ -86,12 +98,14 @@ namespace ProvenceECS.Mainframe{
     public class ProvenceCollectionInstance<T> : ProvenceComponent where T : ProvenceCollectionEntry{
         public string key;
 
-        public ProvenceCollectionInstance(){
+        public ProvenceCollectionInstance() : base(){
             this.key = "";
+            this.sortingIndex = 1;
         }
 
-        public ProvenceCollectionInstance(string key){
+        public ProvenceCollectionInstance(string key) : base(){
             this.key = key;
+            this.sortingIndex = 1;
         }
     }
 
@@ -149,8 +163,16 @@ namespace ProvenceECS.Mainframe{
                 if(position != null) gameObject.transform.position = (Vector3)position;
                 if(rotation != null) gameObject.transform.rotation = Quaternion.Euler((Vector3)rotation);
                 world.AddComponentSet(entity, this[key].components.Values.ToSet().Clone());
-                world.AddComponent<ProvenceCollectionInstance<T>>(entity, new ProvenceCollectionInstance<T>(key));
+                world.AddComponent(entity, new ProvenceCollectionInstance<T>(key));
                 foreach(System.Type tag in this[key].tags) world.AddComponent(entity, (dynamic)System.Activator.CreateInstance(tag));
+            }
+        }
+
+        public void SetToModel(World world, Entity entity, string key){
+            if(this.ContainsKey(key)){
+                if(this[key].components.ContainsKey(typeof(Model))){
+                    world.AddComponent(entity, (Model)this[key].components[typeof(Model)]);
+                }
             }
         }
 

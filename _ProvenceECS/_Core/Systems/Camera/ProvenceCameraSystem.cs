@@ -34,17 +34,17 @@ namespace ProvenceECS{
         protected ProvenceAsset<Shader> bwShader;
     
         protected override void RegisterEventListeners(){
-            world.eventManager.AddListener<ComponentAdded<ProvenceCamera>>(CameraAdded);                        
-            world.eventManager.AddListener<ComponentAdded<MainCamera>>(MainCameraAdded);
-            world.eventManager.AddListener<ComponentAdded<BlackAndWhiteImageEffect>>(BlackAndWhiteComponentAdded);
-            world.eventManager.AddListener<ComponentRemoved<BlackAndWhiteImageEffect>>(BlackAndWhiteComponentRemoved);
+            world.eventManager.AddListener<ComponentAddedEarly<ProvenceCamera>>(CameraAdded);                        
+            world.eventManager.AddListener<ComponentAddedEarly<MainCamera>>(MainCameraAdded);
+            world.eventManager.AddListener<ComponentAddedEarly<BlackAndWhiteImageEffect>>(BlackAndWhiteComponentAdded);
+            world.eventManager.AddListener<ComponentRemovedLate<BlackAndWhiteImageEffect>>(BlackAndWhiteComponentRemoved);
         }
 
         protected override void DeregisterEventListeners(){
-            world.eventManager.RemoveListener<ComponentAdded<ProvenceCamera>>(CameraAdded);                                    
-            world.eventManager.RemoveListener<ComponentAdded<MainCamera>>(MainCameraAdded);
-            world.eventManager.RemoveListener<ComponentAdded<BlackAndWhiteImageEffect>>(BlackAndWhiteComponentAdded);
-            world.eventManager.RemoveListener<ComponentRemoved<BlackAndWhiteImageEffect>>(BlackAndWhiteComponentRemoved);
+            world.eventManager.RemoveListener<ComponentAddedEarly<ProvenceCamera>>(CameraAdded);                                    
+            world.eventManager.RemoveListener<ComponentAddedEarly<MainCamera>>(MainCameraAdded);
+            world.eventManager.RemoveListener<ComponentAddedEarly<BlackAndWhiteImageEffect>>(BlackAndWhiteComponentAdded);
+            world.eventManager.RemoveListener<ComponentRemovedLate<BlackAndWhiteImageEffect>>(BlackAndWhiteComponentRemoved);
         }
 
         public override void Awaken(WakeSystemEvent args){
@@ -52,7 +52,7 @@ namespace ProvenceECS{
             bwMat = new Material(bwShader.asset);
         }
 
-        protected void MainCameraAdded(ComponentAdded<MainCamera> args){
+        protected void MainCameraAdded(ComponentAddedEarly<MainCamera> args){
             ComponentHandle<ProvenceCamera> cameraHandle = world.GetOrCreateComponent<ProvenceCamera>(args.handle.entity);
             if(cameraHandle.component.camera == null) cameraHandle = world.AddComponent<ProvenceCamera>(args.handle.entity);
             cameraHandle.component.camera.gameObject.tag = "MainCamera";          
@@ -67,7 +67,7 @@ namespace ProvenceECS{
             }
         }
 
-        protected void CameraAdded(ComponentAdded<ProvenceCamera> args){
+        protected void CameraAdded(ComponentAddedEarly<ProvenceCamera> args){
             ComponentHandle<UnityGameObject> objectHandle = world.GetOrCreateComponent<UnityGameObject>(args.handle.entity);
             if(objectHandle != null && objectHandle.component.gameObject != null){
                 GameObject gameObject = objectHandle.component.gameObject;
@@ -81,11 +81,11 @@ namespace ProvenceECS{
             }
         }
 
-        protected void BlackAndWhiteComponentAdded(ComponentAdded<BlackAndWhiteImageEffect> args){
+        protected void BlackAndWhiteComponentAdded(ComponentAddedEarly<BlackAndWhiteImageEffect> args){
             world.eventManager.AddListener<ImageEffectArgs>(BlackAndWhiteEffect);
         }
 
-        protected void BlackAndWhiteComponentRemoved(ComponentRemoved<BlackAndWhiteImageEffect> args){
+        protected void BlackAndWhiteComponentRemoved(ComponentRemovedLate<BlackAndWhiteImageEffect> args){
             world.eventManager.RemoveListener<ImageEffectArgs>(BlackAndWhiteEffect);
         }
 

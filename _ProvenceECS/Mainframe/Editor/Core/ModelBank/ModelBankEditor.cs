@@ -56,7 +56,7 @@ namespace ProvenceECS.Mainframe{
 
         protected GameObject DrawObjectField(){
             Div container;
-            ListItem titleItem = DrawShelf("Model", out container);
+            ListItem titleItem = ListItem.DrawShelf("Model", out container);
 
             ListItem objectItem = new ListItem();
             objectItem.AddLabel("Resource:", true);
@@ -96,7 +96,7 @@ namespace ProvenceECS.Mainframe{
 
         protected void DrawDataControls(){
             Div container;
-            ListItem titleItem = DrawShelf("Offsets", out container);
+            ListItem titleItem = ListItem.DrawShelf("Offsets", out container);
 
             FieldControl<Vector3> posOffsetControl = new FieldControl<Vector3>(collection[chosenKey].positionOffset,"position-offset-control","Position Offset");
             posOffsetControl.eventManager.AddListener<FieldControlUpdated<Vector3>>(e =>{

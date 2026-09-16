@@ -1,4 +1,5 @@
 using ProvenceECS.Mainframe;
+using Ransacked.AI;
 using UnityEngine;
 
 namespace ProvenceECS.Network{
@@ -114,6 +115,14 @@ namespace ProvenceECS.Network{
     
     }
 
+    public class AddComponentAction : QueueAction{
+        public ProvenceComponent component;
+
+        public AddComponentAction(ProvenceComponent component){
+            this.component = component;
+        }
+    }
+
     public class ProvenceNetworkSystem : ProvenceSystem{
         protected override void RegisterEventListeners(){
             if(Application.isPlaying){
@@ -124,6 +133,7 @@ namespace ProvenceECS.Network{
                 world.eventManager.AddListener<RemoveAllComponents>(RemoveAllComponents);
                 world.eventManager.AddListener<AddSystem>(AddSystem);
                 world.eventManager.AddListener<AddSystemPackage>(AddSystemPackage);
+                world.eventManager.AddListener<ComponentAddedEarly<AddComponentAction>>(AddComponentAction);
             }
         }
     
@@ -134,7 +144,8 @@ namespace ProvenceECS.Network{
             world.eventManager.RemoveListener<RemoveComponent>(RemoveComponent);
             world.eventManager.RemoveListener<RemoveAllComponents>(RemoveAllComponents);
             world.eventManager.RemoveListener<AddSystem>(AddSystem);
-            world.eventManager.RemoveListener<AddSystemPackage>(AddSystemPackage);            
+            world.eventManager.RemoveListener<AddSystemPackage>(AddSystemPackage);
+            world.eventManager.RemoveListener<ComponentAddedEarly<AddComponentAction>>(AddComponentAction);            
         }
 
         protected void AddEntity(AddEntity args){
@@ -165,6 +176,11 @@ namespace ProvenceECS.Network{
 
         protected void AddSystemPackage(AddSystemPackage args){
             world.systemManager.AddSystemPackageAtRuntime(args.packageName);
+        }
+
+        protected void AddComponentAction(ComponentAddedEarly<AddComponentAction> args){
+            world.AddComponent(args.handle.entity, (dynamic) args.handle.component.component);
+            new QueueActionComplete(args.handle.entity);
         }
     
     }

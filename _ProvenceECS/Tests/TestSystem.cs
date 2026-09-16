@@ -5,6 +5,12 @@ using Sjena.Movement;
 using Ransacked.AI;
 using Sjena.Mainframe;
 using ProvenceECS.Mainframe;
+using Sjena.Selection;
+using Sjena.GameManagement;
+using System.Linq;
+using Newtonsoft.Json;
+using System.Threading.Tasks;
+using Ransacked;
 
 namespace ProvenceECS{
     [ProvencePacket(666)]
@@ -54,14 +60,12 @@ namespace ProvenceECS{
             world.eventManager.RemoveListener<TestEvent<ComponentA>>(TestEvent);
         }
 
-        public override void Awaken(WakeSystemEvent args){
-            /* Dictionary<Entity,ProvenceComponent> cache = world.componentManager.GetEntry<ComponentA>();
-            Debug.Log(cache.Count);
-            EntityHandle handle = world.CreateEntity();
-            handle.AddComponent<ComponentA>();
-            Debug.Log(cache.Count); */
-
-        }
+        /* public override async void Awaken(WakeSystemEvent args){
+            await Task.Delay(2000);
+            foreach(Entity entity in world.componentManager.GetAllComponentsAsDictionary<Unit>().Keys){
+                new ExecuteAttack(new Sjena.Stats.Attack(entity,entity,Sjena.Stats.ActionSource.ATTACK,40)).Raise(world);
+            }
+        } */
 
         protected void TestEvent(TestEvent<ProvenceComponent> args){
             Debug.Log("We're here. We did it, I think.");
@@ -76,10 +80,13 @@ namespace ProvenceECS{
     public class TestSystemB : ProvenceSystem{
 
         public Entity tempActor;
-        protected GameObject tempActorGO;
+        public Entity tempTile;
+        public ProvenceAsset<Texture2D> asset;
 
         public TestSystemB(){
             this.tempActor = null;
+            this.tempTile = null;
+            this.asset = new();
         }
 
         protected override void RegisterEventListeners(){
@@ -95,35 +102,46 @@ namespace ProvenceECS{
         }
 
         public override void Awaken(WakeSystemEvent args){
-            /* if(Application.isPlaying){
-                FactionMember member = world.AddComponent(tempActor, new FactionMember(FactionDataKeys.Primary)).component;
+            /* if(Application.isPlaying){                
+                new SetControlGroup(0,new(){tempActor}).Raise(world);
 
-                EntityHandle newEntity = world.CreateEntity();
-                FactionMember newMember = newEntity.AddComponent(new FactionMember(FactionDataKeys.Primary)).component;
+                if(tempTile != null && false){
+                    float distance = 6;
 
-                Debug.Log(newMember.factionData.alignment);
-                member.factionData.alignment = FactionAlignment.EVIL;
-                Debug.Log(newMember.factionData.alignment);
+                    ComponentCache<UnityGameObject> goCache = new();
+                    goCache.GatherCache(world);
+                    
+                    ComponentCache<Tile> tileCache = new();
+                    tileCache.GatherCache(world);
+
+                    Vector3 startingPosition = goCache[tempTile].component.gameObject.transform.position.Snap();
+
+                    foreach(ComponentHandle<Tile> tileHandle in tileCache.Values){
+                        if(tileHandle.entity == tempTile) continue;
+                        Vector3 position = goCache[tileHandle.entity].component.gameObject.transform.position.Snap();
+                        if(SjenaMainframe.RoundingDistance(startingPosition,position,distance)){
+                            Model model = world.GetComponent<Model>(tileHandle.entity)?.component;
+                            if(model != null){
+                                HashSet<Material> highlightMats = new ();
+                                highlightMats = model.renderers.Select(r => r.material).ToSet();
+                                foreach(Material highlight in highlightMats){
+                                    highlight.SetColor("_Highlight", ColourKeys.ransackedRed);
+                                }
+                            }
+                        }
+                    }
+                }
             } */
+            
         }
 
         protected void Tick(WorldUpdateEvent args){
-            //HeightTick(args);
-            if(Input.GetMouseButtonDown(0)){
-                if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, LayerMask.GetMask("Tile"))){
-                    Vector3 point = hit.collider.gameObject.transform.parent.transform.position.Snap();
-                    Entity tileEntity = world.eventManager.RaiseReturn<TileAtPointCheck,Entity>(new (point));
-                    if(tileEntity != null)TestFindPath(tileEntity);
-                }
-            }
+            int count = 5;
+            List<string> columnNames = new();
+            List<string> reader = new();
+            for(int i = 0; i < count; i++)
+            Debug.Log($"{columnNames[i]}: {reader[i]}");
         }  
-
-        protected void TestFindPath(Entity goal){   
-            TilePath path = world.eventManager.RaiseReturn<FindPathRequest,TilePath>(new FindPathRequest(tempActor,goal));
-            if(path != null){
-                new RegisterQueueAction(tempActor, new PathQueueAction(path)).Raise(world);
-            }
-        }
         
     }
 

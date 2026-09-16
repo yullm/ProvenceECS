@@ -19,7 +19,7 @@ namespace ProvenceECS.Mainframe{
         protected int highestIndex;
 
         public static void Open(ProvenceDelegate<MainframeKeySelection<int>> callback, int highestIndex = -1){
-            IndexSelector window = MainframeSelectorWindow<int>.Open<IndexSelector>("Index Selection", callback);
+            IndexSelector window = Open<IndexSelector>("Index Selection", callback);
             window.highestIndex = highestIndex;
         }
 
