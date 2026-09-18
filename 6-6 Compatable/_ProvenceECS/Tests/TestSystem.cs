@@ -2,6 +2,7 @@
 using ProvenceECS.Network;
 using System.Collections.Generic;
 using ProvenceECS.Mainframe;
+using System.Threading.Tasks;
 
 namespace ProvenceECS{
     [ProvencePacket(666)]
@@ -51,12 +52,12 @@ namespace ProvenceECS{
             world.eventManager.RemoveListener<TestEvent<ComponentA>>(TestEvent);
         }
 
-        /* public override async void Awaken(WakeSystemEvent args){
-            await Task.Delay(2000);
-            foreach(Entity entity in world.componentManager.GetAllComponentsAsDictionary<Unit>().Keys){
-                new ExecuteAttack(new Sjena.Stats.Attack(entity,entity,Sjena.Stats.ActionSource.ATTACK,40)).Raise(world);
+        public override async void Awaken(WakeSystemEvent args){
+            if(Application.isPlaying){
+                await Task.Delay(2000);
+                ProvenceManager.Instance.AddWorld("some-other-scene");
             }
-        } */
+        }
 
         protected void TestEvent(TestEvent<ProvenceComponent> args){
             Debug.Log("We're here. We did it, I think.");

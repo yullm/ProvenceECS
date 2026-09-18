@@ -12,8 +12,9 @@ namespace ProvenceECS{
         protected World world;
 
         void Start(){
-            if(!ProvenceManager.Instance.worlds.ContainsKey(id))
+            if(!ProvenceManager.Instance.worlds.ContainsKey(id)){
                 ProvenceManager.Instance.AddWorld(id);
+            }
             world = ProvenceManager.Instance.worlds[id];
         }
 

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProvenceECS.Network;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 
 namespace ProvenceECS.Mainframe{
 
@@ -137,8 +138,22 @@ namespace ProvenceECS.Mainframe{
 
         protected void SetMainWorldToScene(){
             if(ProvenceManager.Instance.worlds.Count == 1 && !Application.isPlaying){
-                ProvenceManager.Instance.worlds.ElementAt(0).Value.worldName = SceneManager.GetActiveScene().name;
-                eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
+                string activeSceneName = SceneManager.GetActiveScene().name;
+                World mainWorld = ProvenceManager.Instance.worlds.ElementAt(0).Value;
+                if(mainWorld.worldName != activeSceneName){
+                    mainWorld.worldName = activeSceneName;
+                    eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
+                }
+                string screenIDString = activeSceneName.ToLower().Replace(' ','-');
+                if(mainWorld.id != screenIDString){
+                    ProvenceManager.Instance.worlds.Remove(mainWorld.id);
+                    mainWorld.id = activeSceneName.ToLower().Replace(' ','-');
+                    ProvenceManager.Instance.worlds.Add(mainWorld.id,mainWorld);
+                    ProvenceSceneHook hook = FindAnyObjectByType<ProvenceSceneHook>();
+                    hook.id = mainWorld.id;
+                    eventManager.Raise<SetSceneDirtyEvent>(new SetSceneDirtyEvent(EditorSceneManager.GetActiveScene()));
+                }
+                
             }
         }
 
