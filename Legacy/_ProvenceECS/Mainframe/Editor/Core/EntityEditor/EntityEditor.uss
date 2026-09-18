@@ -1,0 +1,48 @@
+#select-menu{
+    top: 29px;
+    left: -1px;
+}
+
+#archetype-menu{
+    top: 29px;
+    left: 99px;
+}
+
+#page-wrapper{
+    flex-direction: column;
+}
+
+#component-list{
+    min-width: 200px;
+    max-width: 200px;
+}
+
+#editor{
+    border-right-width: 0px;
+}
+
+ListItemText.alternate.editor-label{
+    width: 150px;
+}
+
+#entity-name{
+    font-size: 16px;
+}
+
+#add-component-button{
+    border-width: 0px;
+    border-top-width: 1px;
+}
+
+#add-component-button ListItemImage{
+    margin-left:20px;
+}
+
+#add-component-button .list-item-text-display{
+    margin-left: -5px;
+    border-width: 0px;
+}
+
+#remove-gameobject-button{
+    border-left-width: 1px;
+}

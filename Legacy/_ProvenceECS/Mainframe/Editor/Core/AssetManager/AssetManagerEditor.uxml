@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns="ProvenceECS.Mainframe"
+    xsi:noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd"
+>
+    <Wrapper>
+        <MenuBar>
+            <ListItem class="spacer">
+                <Div class="list-item-indent"/>
+                <ListItemImage class="icon" src="Assets/Icons/book-open.png"/>
+                <ListItemText class="list-item-title third-alternate" text="Asset Pairs"/>
+                <Div class="list-item-filler"/>
+                <ListItemImage name="add-pair-button" class="selectable hoverable" src="Assets/Icons/plus.png"/>
+            </ListItem>
+        </MenuBar>
+        <TableWrapper>
+            <PageColumn name="pair-list">
+                <ColumnScroller name="pair-list-scroller"/>
+            </PageColumn>
+        </TableWrapper>
+    </Wrapper>
+</engine:UXML>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns="ProvenceECS.Mainframe"
+    xsi:noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd"
+>
+    <Wrapper>
+        <MenuBar name="world-table-menu-bar">
+            <ListItem class="alternate spacer">
+                <ListItemImage name="world-table-refresh" class="menu-bar-icon icon selectable hoverable" src="Assets/Icons/anchor.png"/>
+                <ListItemText class="list-item-title alternate" text="Provence ECS : World Manager"/>
+            </ListItem>
+        </MenuBar>
+        <MenuBar name="world-editor-menu-bar">
+            <ListItem class="alternate spacer">
+                <ListItemImage name="world-editor-back-button" class="icon selectable hoverable menu-bar-icon" src="Assets/Icons/chevron-left.png"/>
+                <ListItemImage class="icon" src="Assets/Icons/globe-europe.png"/>
+                <ListItemText class="list-item-title alternate" text="World Editor"/>
+            </ListItem>
+        </MenuBar>
+        <TableWrapper>
+            <PageColumn name="world-table">
+                <ListItem class="alternate spacer">
+                    <ListItemImage src="Assets/Icons/menuList.png"/>
+                    <ListItemText class="list-item-title alternate" text="World List:"/>
+                    <ListItemImage name="add-world-button" class="selectable hoverable" src="Assets/Icons/plus.png"/>
+                </ListItem>
+                <ColumnScroller name="world-table-scroller"/>
+                <ListItem class="alternate spacer">
+                    <ListItemImage src="Assets/Icons/menuList.png"/>
+                    <ListItemText class="list-item-title alternate" text="Editors:"/>
+                </ListItem>                
+                <ListItem name="actor-manual-button" class="selectable hoverable">
+                    <ListItemText class="list-item-title" text="Actor Manual"/>
+                </ListItem>
+                <ListItem name="model-bank-button" class="alternate selectable hoverable">
+                    <ListItemText class="list-item-title" text="Model Bank"/>
+                </ListItem>
+                <ListItem name="asset-manager-button" class="selectable hoverable">
+                    <ListItemText class="list-item-title" text="Create Asset Library"/>
+                </ListItem>
+                <ListItem name="packet-button" class="alternate selectable hoverable">
+                    <ListItemText class="list-item-title" text="Generate Packet List"/>
+                </ListItem>
+                <ListItem name="system-package-manager-button" class="selectable hoverable">
+                    <ListItemText class="list-item-title" text="System Package Manager"/>
+                </ListItem>
+            </PageColumn>
+            <PageColumn name="world-editor">
+                <ListItem>
+                    <ListItemText class="list-item-label alternate" text="World Name:"/> 
+                    <ListItemTextInput name="world-editor-name-input"/>
+                </ListItem>
+                <ListItem class="alternate">
+                    <ListItemText name="world-editor-active-display" class="list-item-text-display alternate" text="Is Current Active World"/> 
+                    <ListItemText name="world-editor-set-active-button" class="list-item-button third-alternate" text="Set As Active World"/>
+                </ListItem>
+                <ListItem class="alternate spacer">
+                    <ListItemImage name="world-editor-entity-toggle" class="menu-bar-icon selectable hoverable" src="Assets/Icons/menuList.png"/>
+                    <ListItemText class="list-item-title alternate" text="Entity List:"/>
+                    <ListItemImage name="add-entity-button" class="selectable hoverable" src="Assets/Icons/plus.png"/>
+                </ListItem>
+                <ColumnScroller name="world-editor-entity-scroller"/>
+                <ListItem class="alternate spacer">
+                    <ListItemImage name="world-editor-system-toggle" class="menu-bar-icon selectable hoverable" src="Assets/Icons/menuList.png"/>
+                    <ListItemText class="list-item-title alternate" text="System List:"/>
+                    <Div name="add-package-button" class="selectable hoverable alternate menu-button">
+                        <ListItemText class="list-item-text-display" text="Package"/>
+                        <ListItemImage name="add-system-button" class="selectable hoverable" src="Assets/Icons/plus.png"/>
+                    </Div>
+                    <Div name="add-system-button" class="selectable hoverable alternate menu-button">
+                        <ListItemText class="list-item-text-display" text="System"/>
+                        <ListItemImage name="add-system-button" class="selectable hoverable" src="Assets/Icons/plus.png"/>
+                    </Div>
+                </ListItem>
+                <ColumnScroller name="world-editor-system-scroller"/>
+                <ListItem name="world-editor-delete" class="alternate">
+                    <ListItemTextInput name="world-editor-delete-input" class="alternate" placeholder="Type DELETE to Remove World"/>
+                    <ListItemImage name="world-editor-delete-button" class="selectable hoverable icon" src="Assets/Icons/trash-alt.png"/>
+                </ListItem>
+            </PageColumn>
+        </TableWrapper>
+        <Div name="drop-downs">
+            <DropDownMenu name="entity-list-context-menu">
+                <ListItem>
+                    <ListItemText name="entity-list-context-menu-open-button" class="list-item-button third-alternate" text="Edit Entity"/>
+                </ListItem>
+                <ListItem>
+                    <ListItemText name="entity-list-context-menu-duplicate-button" class="list-item-button third-alternate" text="Duplicate Entity"/>
+                </ListItem>
+                <ListItem>
+                    <ListItemText name="entity-list-context-menu-remove-button" class="list-item-button third-alternate" text="Remove Entity"/>
+                </ListItem>
+            </DropDownMenu>
+            <DropDownMenu name="system-list-context-menu">
+                <ListItem>
+                    <ListItemText name="system-list-context-menu-remove-button" class="list-item-button third-alternate" text="Remove System"/>
+                </ListItem>
+            </DropDownMenu>
+        </Div>
+    </Wrapper>
+</engine:UXML>

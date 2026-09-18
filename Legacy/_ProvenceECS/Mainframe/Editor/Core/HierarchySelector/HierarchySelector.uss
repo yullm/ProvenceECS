@@ -1,0 +1,17 @@
+﻿.wrapper{
+    background-color: #2a2a2a;
+}
+
+.column-scroller{
+    border-bottom-width: 1px;
+    border-bottom-color: #1a1a1a;
+}
+
+.list-item-text-display{
+    padding-left: 5px;
+}
+
+.list-item-label.second-alternate{
+    border-width: 0px;
+    padding-left: 10px;
+}

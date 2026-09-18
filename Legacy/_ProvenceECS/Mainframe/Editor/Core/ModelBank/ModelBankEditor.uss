@@ -1,0 +1,20 @@
+﻿.coefficient-field{
+    flex: 0.5;
+}
+
+.animation-data-state-input{
+    flex: 0.7;
+}
+
+.animation-data-layer-input{
+    min-width: 30px;
+    max-width: 30px;
+    border-color: #1a1a1a;
+    border-left-width: 1px;
+    border-right-width: 1px;
+}
+
+.animation-data-layer-input IntegerInput, .animation-data-layer-input IntegerInput:hover{    
+    -unity-text-align: middle-center;
+    padding: 0px;
+}

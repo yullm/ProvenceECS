@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns="ProvenceECS.Mainframe"
+    xsi:noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd"
+>
+    <Wrapper>
+        <MenuBar>
+            <ListItem class="spacer">
+                <Div class="list-item-indent alternate"/>
+                <ListItemImage class="icon" src="Assets/Icons/hashtag.png"/>
+                <ListItemText class="list-item-title second-alternate" text="Index Selection:"></ListItemText>
+            </ListItem>
+        </MenuBar>
+        <TableWrapper>
+            <PageColumn>
+                <ListItem>
+                    <ListItemIntInput name="select-input" />
+                    <ListItemText name="select-button" class="list-item-button" text="Select Index"/>
+                </ListItem>
+                <ListItem>
+                    <ListItemText name="increment-button" class="list-item-button third-alternate" text="Auto-Increment"/>
+                </ListItem>
+            </PageColumn>
+        </TableWrapper>
+    </Wrapper>
+</engine:UXML>

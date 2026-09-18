@@ -1,0 +1,12 @@
+﻿TemplateContainer{
+    position: relative;
+    margin-left: -15px;
+    margin-right: -6px;
+    margin-top: -2px;
+    margin-bottom: -6px;
+}
+
+.table-wrapper{
+    position: relative;
+    top: 0px;
+}

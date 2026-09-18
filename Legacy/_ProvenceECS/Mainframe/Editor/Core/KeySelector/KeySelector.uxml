@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns="ProvenceECS.Mainframe"
+    xsi:noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd"
+>
+    <Wrapper>
+        <MenuBar>
+            <ListItem class="alternate">
+                <ListItemText class="list-item-label second-alternate" text="Search:"/>
+                <ListItemTextInput name="search-input" />
+                <ListItemImage name="clear-search-button" class="selectable hoverable" src="Assets/Icons/times.png"/>
+            </ListItem>
+        </MenuBar>
+        <TableWrapper>
+            <PageColumn>
+                <ColumnScroller name="list-scroller" />
+            </PageColumn>            
+        </TableWrapper>
+    </Wrapper>
+</engine:UXML>

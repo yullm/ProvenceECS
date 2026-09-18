@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns="ProvenceECS.Mainframe"
+    xsi:noNamespaceSchemaLocation="../../../../../../../UIElementsSchema/UIElements.xsd"
+>
+    <engine:VisualElement class="table-wrapper">
+        <engine:VisualElement class="page-column">
+            <ListItem class="alternate">
+                <engine:TextElement class="list-item-text-display alternate" text="Provence ECS"/>
+            </ListItem>
+            <ListItem>
+                <engine:TextElement class="list-item-label alternate" text="ID:"/>
+                <ListItemText name="id-display" class="list-item-text-display"/>
+            </ListItem>
+            <ListItem>
+                <ListItemText name="manager-button" class="list-item-button third-alternate" text="Open Manager Window"/>
+            </ListItem>
+        </engine:VisualElement>
+    </engine:VisualElement>
+    
+</engine:UXML>

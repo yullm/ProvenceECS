@@ -1,0 +1,213 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEditor;
+using UnityEngine.UIElements;
+
+namespace ProvenceECS.Mainframe{
+
+    public partial class StructureControl<T> : VisualElement {
+        
+        protected static void CreateControl<V>(StructureControl<HashSet<V>> control){
+            Div container = new Div();
+            ListItem addBar = new ListItem();
+            addBar.AddToClassList("spacer","alternate","add-bar");
+            addBar.AddDiv().AddToClassList("filler");
+            addBar.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/plus.png"));
+            addBar.eventManager.AddListener<MouseClickEvent>(e => {
+                if(e.button != 0) return;
+                control.structure.Add(default);
+                control.eventManager.Raise(new StructureControlUpdated<HashSet<V>>(control));
+                DrawSetControls(control, container);
+            });
+            control.Add(container,addBar);
+            DrawSetControls(control, container);
+        }
+
+        protected static void DrawSetControls<V>(StructureControl<HashSet<V>> control, Div container){
+            container.Clear();
+            foreach(V item in control.structure){
+                if(control.specifiedFields.Contains(typeof(V))){
+                    FieldControl<V> fieldControl = new FieldControl<V>(item, control.name + "list-item","item",false, control.world);
+                    fieldControl.eventManager.AddListener<FieldControlUpdated<V>>(e => {
+                        control.structure.Remove(item);
+                        control.structure.Add(e.control.value);
+                        control.eventManager.Raise(new StructureControlUpdated<HashSet<V>>(control));
+                    });
+                    ListItemImage delButton = fieldControl.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/times.png"));
+                    delButton.AddToClassList("selectable","hoverable","icon");
+                    delButton.eventManager.AddListener<MouseClickEvent>(e => {
+                        control.structure.Remove(item);
+                        control.eventManager.Raise(new StructureControlUpdated<HashSet<V>>(control));
+                        DrawSetControls<V>(control, container);
+                    });
+                    container.Add(fieldControl);
+                }else{
+                    V structure = item;
+                    StructureControl<V> structureControl = new StructureControl<V>(ref structure);
+                    structureControl.eventManager.AddListener<StructureControlUpdated<V>>(e => {
+                        control.eventManager.Raise(new StructureControlUpdated<HashSet<V>>(control));
+                    });
+                }
+            }
+        }
+
+        protected static void CreateControl<V>(StructureControl<List<V>> control) where V : new(){
+            Div container = new Div();
+            ListItem addBar = new ListItem();
+            addBar.AddToClassList("spacer","alternate","add-bar");
+            addBar.AddDiv().AddToClassList("filler");
+            addBar.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/plus.png"));
+            addBar.eventManager.AddListener<MouseClickEvent>(e => {
+                if(e.button != 0) return;
+                control.structure.Add(new V());
+                control.eventManager.Raise(new StructureControlUpdated<List<V>>(control));
+                DrawListControls(control, container);
+            });
+            control.Add(container,addBar);
+            DrawListControls(control, container);
+        }
+
+        protected static void CreateControl(StructureControl<List<ProvenceComponent>> control){
+            Div container = new Div();
+            ListItem addBar = new ListItem();
+            addBar.AddToClassList("spacer","alternate","add-bar");
+            addBar.AddDiv().AddToClassList("filler");
+            addBar.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/plus.png"));
+            addBar.eventManager.AddListener<MouseClickEvent>(e => {
+                if(e.button != 0) return;
+                List<System.Type> existingTypes = new(){};
+                TypeSelector.TypeSelectorParameters searchParameters = new (typeof(ProvenceComponent), false, existingTypes);
+                TypeSelector.Open(searchParameters, args =>{
+                    ProvenceComponent component = System.Activator.CreateInstance(args.value) as ProvenceComponent;
+                    control.structure.Add(component);
+                    control.eventManager.Raise(new StructureControlUpdated<List<ProvenceComponent>>(control));
+                    DrawListControls(control, container);
+                });                
+            });
+            control.Add(container,addBar);
+            DrawListControls(control, container);
+        }
+
+        protected static void DrawListControls<V>(StructureControl<List<V>> control, Div container){
+            container.Clear();
+            for(int i = 0; i < control.structure.Count; i++){
+                int index = i;
+                if(control.specifiedFields.Contains(typeof(V))){
+                    FieldControl<V> fieldControl = new FieldControl<V>(control.structure[index], control.name + "list-item","item",false,control.world);
+                    fieldControl.eventManager.AddListener<FieldControlUpdated<V>>(e => {
+                        control.structure[index] = e.control.value;
+                        control.eventManager.Raise(new StructureControlUpdated<List<V>>(control));
+                    });
+                    ListItemImage delButton = fieldControl.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/times.png"));
+                    delButton.AddToClassList("selectable","hoverable","icon");
+                    delButton.eventManager.AddListener<MouseClickEvent>(e => {
+                        control.structure.RemoveAt(index);
+                        control.eventManager.Raise(new StructureControlUpdated<List<V>>(control));
+                        DrawListControls<V>(control, container);
+                    });
+                    container.Add(fieldControl);
+                }else{
+                    V structure = control.structure[index];
+                    StructureControl<V> structureControl = new StructureControl<V>(ref structure);
+                    structureControl.eventManager.AddListener<StructureControlUpdated<V>>(e => {
+                        control.eventManager.Raise(new StructureControlUpdated<List<V>>(control));
+                    });
+
+                    ListItem titleItem = new();
+                    titleItem.MakeShelf(typeof(V).Name, out Div shelf);
+                    shelf.Add(structureControl);
+
+                    ListItemImage delButton = titleItem.AddImage(AssetDatabase.LoadAssetAtPath<Texture>("Assets/Icons/times.png"));
+                    delButton.AddToClassList("selectable","hoverable","icon");
+                    delButton.eventManager.AddListener<MouseClickEvent>(e => {
+                        control.structure.RemoveAt(index);
+                        control.eventManager.Raise(new StructureControlUpdated<List<V>>(control));
+                        DrawListControls<V>(control, container);
+                    });
+                    
+                    container.Add(titleItem,shelf);
+                }
+            }
+        }
+
+        protected static void CreateControl<V>(StructureControl<ProvenceCollectionInstance<V>> control) where V : ProvenceCollectionEntry{
+            //Change to picker
+            ListItem item = new ListItem();
+            KeySelectorElement keySelector = item.AddKeySelector("Entry Name:",control.structure.key,ProvenceManager.Collections<V>().Keys.ToSet());
+            keySelector.eventManager.AddListener<MainframeKeySelection<string>>(e=>{
+                control.structure.key = e.value;
+                control.eventManager.Raise<MainframeKeySelection<string>>(new MainframeKeySelection<string>(e.value));
+                control.eventManager.Raise(new StructureControlUpdated<ProvenceCollectionInstance<V>>(control));
+            });
+            item.AddButton("Set to Entry").eventManager.AddListener<MouseClickEvent>(e =>{
+                if(e.button != 0) return;
+                if(control.world != null && control.entity != null){
+                    control.world.eventManager.Raise(new SetEntityToManualEntry<V>(control.entity, keySelector.value));
+                    control.eventManager.Raise(new StructureControlUpdated<ProvenceCollectionInstance<V>>(control));
+                    control.eventManager.Raise(new StructureControlRefreshRequest(100));
+                }
+            });
+            item.AddButton("Set To Model").eventManager.AddListener<MouseClickEvent>(e => {
+                if(e.button == 0){
+                    if(control.world != null && control.entity != null){
+                        ProvenceManager.Collections<V>().SetToModel(control.world,control.entity,control.structure.key);
+                        control.eventManager.Raise(new StructureControlUpdated<ProvenceCollectionInstance<V>>(control));
+                    }
+                }
+            });
+            control.Add(item);
+        }
+
+        protected static void CreateControl(StructureControl<Model> control){
+            ListItem keySelectorItem = new ListItem();
+            KeySelectorElement keySelector = keySelectorItem.AddKeySelector("Model Bank Key", control.structure.manualKey, new HashSet<string>(ProvenceManager.ModelBank.Keys));
+            keySelector.eventManager.AddListener<MainframeKeySelection<string>>(e =>{
+                control.structure.manualKey = e.value;
+                control.eventManager.Raise<MainframeKeySelection<string>>(new MainframeKeySelection<string>(e.value));
+                control.eventManager.Raise<StructureControlUpdated<Model>>(new StructureControlUpdated<Model>(control));
+            });
+            keySelector.eventManager.AddListener<ListItemInputCancel>(e => {
+                control.structure.manualKey = "";
+                control.eventManager.Raise<ListItemInputCancel>(new ListItemInputCancel(control));
+                control.eventManager.Raise<StructureControlUpdated<Model>>(new StructureControlUpdated<Model>(control));
+            });
+            control.Add(keySelectorItem);
+        }
+
+        protected static void CreateControl(StructureControl<SubActorEntry> control){
+            ListItem keyItem = new();
+            HashSet<string> keys = ProvenceManager.Collections<ActorManualEntry>().Keys.ToSet();
+            KeySelectorElement keySelector = keyItem.AddKeySelector("Actor Key:",control.structure.key,keys);
+            keySelector.eventManager.AddListener<MainframeKeySelection<string>>(e=>{
+                control.structure.key = e.value;
+                control.eventManager.Raise(new MainframeKeySelection<string>(e.value));
+                control.eventManager.Raise(new StructureControlUpdated<SubActorEntry>(control));
+            });
+            FieldControl<Vector3> posControl = new (control.structure.position,"entry-position","position");
+            posControl.eventManager.AddListener<FieldControlUpdated<Vector3>>(e => {
+                control.structure.position = e.control.value;
+                control.eventManager.Raise(new StructureControlUpdated<SubActorEntry>(control));
+            });
+            control.Add(keyItem,posControl);
+        }
+
+        protected static void CreateControl<V>(StructureControl<ProvenceAsset<V>> control) where V : Object{
+            ListItem keyItem = new();
+            keyItem.AddLabel($"Resource Path:");
+            ListItemTextInput input = keyItem.AddTextField(control.structure.resourcePath);
+            input.eventManager.AddListener<ListItemInputCommit>(e =>{
+                try{
+                    control.structure.resourcePath = new(input.text);
+                    control.structure.asset = Resources.Load<V>(input.text);
+                    control.eventManager.Raise(new StructureControlUpdated<ProvenceAsset<V>>(control));
+                }catch(System.Exception ex){
+                    Debug.Log(ex);
+                }
+            });
+            control.Add(keyItem);
+        }
+
+    }
+
+}
